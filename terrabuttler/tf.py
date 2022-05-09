@@ -2,7 +2,7 @@ import os
 import signal
 import subprocess
 from colorama import Fore
-from app.settings import get_settings
+from terrabuttler.settings import get_settings
 
 # Values from Config
 backend_dir = os.path.realpath(get_settings()["locations"]["backend_dir"])
@@ -45,7 +45,7 @@ def terraform_args_builder(needed_args, site, backend_dir, var_dir):
     """
     Create array of needed arguments for backend or var files
     """
-    from app.env import get_current_env
+    from terrabuttler.env import get_current_env
     env = get_current_env()
 
     if needed_args == "backend":
@@ -83,7 +83,7 @@ def terraform_command_runner(command, args, needed_args, site):
     """
     Run tfenv and run the terraform command
     """
-    from app.env import get_current_env
+    from terrabuttler.env import get_current_env
     site_dir = os.path.realpath(f"site_{site}")
     env = get_current_env()
 

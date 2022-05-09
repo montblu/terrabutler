@@ -1,5 +1,5 @@
-from app.settings import get_settings
-from app.tf import terraform_init_all_sites
+from terrabuttler.settings import get_settings
+from terrabuttler.tf import terraform_init_all_sites
 from click import confirm
 from colorama import Fore
 import boto3
@@ -16,9 +16,9 @@ variables_dir = os.path.realpath(get_settings()["locations"]["variables_dir"])
 
 
 def create_env(env, confirmation, temporary, apply, s3):
-    from app.settings import write_settings
-    from app.tf import terraform_apply_all_sites
-    from app.variables import generate_var_files
+    from terrabuttler.settings import write_settings
+    from terrabuttler.tf import terraform_apply_all_sites
+    from terrabuttler.variables import generate_var_files
     available_envs = get_available_envs(s3)
 
     if env in available_envs:
@@ -52,7 +52,7 @@ def create_env(env, confirmation, temporary, apply, s3):
 
 
 def delete_env(env, confirmation, destroy, s3):
-    from app.tf import terraform_destroy_all_sites
+    from terrabuttler.tf import terraform_destroy_all_sites
     available_envs = get_available_envs(s3)
     current_env = get_current_env()
     org = get_settings()["general"]["organization"]

@@ -7,23 +7,23 @@ Pyhton wrapper used to manage environments and terraform commands
 import click
 from colorama import Fore
 from os import path
-from app.env import (
+from terrabuttler.env import (
     create_env,
     delete_env,
     get_current_env,
     set_current_env,
     get_available_envs
 )
-from app.tf import (
+from terrabuttler.tf import (
     terraform_args_print,
     terraform_command_runner
 )
-from app.settings import (
+from terrabuttler.settings import (
     check_settings,
     get_settings,
     validate_settings
 )
-from app.inception import (
+from terrabuttler.inception import (
     inception_init,
     inception_init_needed
 )

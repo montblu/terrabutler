@@ -13,7 +13,7 @@ from string import (
     ascii_letters,
     digits
 )
-from app.settings import get_settings
+from terrabuttler.settings import get_settings
 
 
 REGION = get_settings()["environments"]["default"]["region"]
