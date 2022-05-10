@@ -14,32 +14,37 @@ jobs:
       - name: Get Current Tag
         uses: WyriHaximus/github-action-get-previous-tag@master
         id: tag
+      - name: Setup Pyhton
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.10
       - name: Build Python Module
         uses: JackMcKew/pyinstaller-action-linux@main
-        with:
-          path: terrabutler
+        run: |
+          pip install -r requirements.txt pyinstaller
+          pyinstaller --clean -y --dist ./dist/linux --workpath /tmp terrabutler/terrabutler.spec
       - name: Copy needed files to build directory
         run: |
           ls -lha
-          cp README.md terrabutler/dist/linux
+          cp README.md dist/linux
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
         with:
           working-directory: "./"
-          path: "terrabutler/dist/linux"
+          path: "dist/linux"
           format: tar
           gzip: true
-          output: terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
+          output: terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Add artifact to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
+          files: terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Upload artifact to S3 bucket
         uses: zdurham/s3-upload-github-action@master
         with:
           args: --acl public-read
         env:
-          FILE: ./terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
+          FILE: ./terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           S3_KEY: ${{ secrets.AWS_S3_KEY }}
