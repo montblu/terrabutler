@@ -24,7 +24,6 @@ jobs:
           pyinstaller --clean -y --dist ./dist/linux --workpath /tmp terrabutler/terrabutler.spec
       - name: Copy needed files to build directory
         run: |
-          ls -lha
           cp README.md dist/linux
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
