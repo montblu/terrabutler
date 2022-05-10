@@ -29,17 +29,17 @@ jobs:
           path: "terrabutler/dist/linux"
           format: tar
           gzip: true
-          output: terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
+          output: terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Add artifact to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
+          files: terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Upload artifact to S3 bucket
         uses: zdurham/s3-upload-github-action@master
         with:
           args: --acl public-read
         env:
-          FILE: ./terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
+          FILE: ./terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           S3_KEY: ${{ secrets.AWS_S3_KEY }}
