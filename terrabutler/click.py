@@ -31,22 +31,22 @@ from terrabuttler.inception import (
 
 @click.group(context_settings=dict(help_option_names=['-h', '-help',
                                                       '--help']))
-def main_cli():
+def main():
     check_settings()
     validate_settings()
 
 
-@main_cli.group(name="env", help="Manage environments")
+@main.group(name="env", help="Manage environments")
 def env_cli():
     inception_init_needed()
 
 
-@main_cli.command(name="init", help="Initialize the manager")
+@main.command(name="init", help="Initialize the manager")
 def init_cli():
     inception_init()
 
 
-@main_cli.group(name="tf", help="Manage terraform commands")
+@main.group(name="tf", help="Manage terraform commands")
 @click.pass_context
 @click.option('-site', metavar='SITE', required=True, help="Site where to run"
                                                            "terraform.")
@@ -577,7 +577,3 @@ def tf_version_cli(ctx, json):
         args.append("-json")
 
     terraform_command_runner("version", args, "", ctx.obj['SITE'])
-
-
-if __name__ == '__main__':
-    main_cli()
