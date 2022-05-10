@@ -21,12 +21,12 @@ jobs:
           spec: terrabutler
       - name: Copy needed files to build directory
         run: |
-          cp README.md src/dist/linux
+          cp README.md dist/linux
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
         with:
-          working-directory: './'
-          path: 'src/dist/linux/**'
+          working-directory: "./"
+          path: "dist/linux/**"
           format: tar
           gzip: true
           output: terrabutler-${{ env.RUNNER_OS }}-${{ env.RUNNER_ARCH }}-${{ steps.tag.outputs.tag }}.tar.gz
