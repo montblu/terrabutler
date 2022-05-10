@@ -19,7 +19,6 @@ jobs:
         with:
           python-version: 3.10
       - name: Build Python Module
-        uses: JackMcKew/pyinstaller-action-linux@main
         run: |
           pip install -r requirements.txt pyinstaller
           pyinstaller --clean -y --dist ./dist/linux --workpath /tmp terrabutler/terrabutler.spec
