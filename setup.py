@@ -1,5 +1,15 @@
 import os
+import re
 from setuptools import setup
+
+
+def find_version(path):
+    version_file = read(path)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 
 # Utility function to read the README file.
@@ -12,7 +22,7 @@ def read(fname):
 
 setup(
     name="terrabutler",
-    version="1.0.0",
+    version=find_version("terrabutler/__init__.py"),
     author="AnguloSólido",
     description=("A tool to manage Terraform projects easier."),
     long_description=read("README.md"),
