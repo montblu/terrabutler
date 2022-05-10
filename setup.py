@@ -15,7 +15,7 @@ setup(
     version="1.0.0",
     author="AnguloSólido",
     description=("A tool to manage Terraform projects easier."),
-    long_description=read('README'),
+    long_description=read("README.md"),
     license="GPL-3.0",
     keywords="terraform manager",
     url="https://github.com/angulo-solido/terrabutler",
