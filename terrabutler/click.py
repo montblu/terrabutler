@@ -1,29 +1,33 @@
 #!/usr/bin/env python3
 
 """
-Pyhton wrapper used to manage environments and terraform commands
+Python wrapper used to manage environments and terraform commands
 """
 
 import click
 from colorama import Fore
 from os import path
-from terrabuttler.env import (
+from terrabutler.__init__ import (
+    __name__,
+    __version__
+)
+from terrabutler.env import (
     create_env,
     delete_env,
     get_current_env,
     set_current_env,
     get_available_envs
 )
-from terrabuttler.tf import (
+from terrabutler.tf import (
     terraform_args_print,
     terraform_command_runner
 )
-from terrabuttler.settings import (
+from terrabutler.settings import (
     check_settings,
     get_settings,
     validate_settings
 )
-from terrabuttler.inception import (
+from terrabutler.inception import (
     inception_init,
     inception_init_needed
 )
@@ -31,22 +35,24 @@ from terrabuttler.inception import (
 
 @click.group(context_settings=dict(help_option_names=['-h', '-help',
                                                       '--help']))
-def main_cli():
+@click.version_option(version=__version__, prog_name=__name__.capitalize(),
+                      message='%(prog)s v%(version)s')
+def main():
     check_settings()
     validate_settings()
 
 
-@main_cli.group(name="env", help="Manage environments")
+@main.group(name="env", help="Manage environments")
 def env_cli():
     inception_init_needed()
 
 
-@main_cli.command(name="init", help="Initialize the manager")
+@main.command(name="init", help="Initialize the manager")
 def init_cli():
     inception_init()
 
 
-@main_cli.group(name="tf", help="Manage terraform commands")
+@main.group(name="tf", help="Manage terraform commands")
 @click.pass_context
 @click.option('-site', metavar='SITE', required=True, help="Site where to run"
                                                            "terraform.")
@@ -577,7 +583,3 @@ def tf_version_cli(ctx, json):
         args.append("-json")
 
     terraform_command_runner("version", args, "", ctx.obj['SITE'])
-
-
-if __name__ == '__main__':
-    main_cli()

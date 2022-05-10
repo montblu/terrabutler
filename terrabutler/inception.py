@@ -21,8 +21,8 @@ def inception_init_needed():
 
 
 def inception_init():
-    from terrabuttler.env import reload_direnv
-    from terrabuttler.settings import get_settings
+    from terrabutler.env import reload_direnv
+    from terrabutler.settings import get_settings
     site_dir = path.realpath(get_settings()["locations"]["inception_dir"])
     backend_dir = path.realpath(get_settings()["locations"]["backend_dir"])
 
