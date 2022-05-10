@@ -20,8 +20,9 @@ jobs:
           python-version: 3.10
       - name: Build Python Module
         uses: JackMcKew/pyinstaller-action-linux@main
-        with:
-          path: terrabutler
+        run: |
+          pip install -r requirements.txt pyinstaller
+          pyinstaller --clean -y --dist ./dist/linux --workpath /tmp terrabutler/terrabutler.spec
       - name: Copy needed files to build directory
         run: |
           ls -lha
