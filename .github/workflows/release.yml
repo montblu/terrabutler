@@ -18,7 +18,6 @@ jobs:
         uses: JackMcKew/pyinstaller-action-linux@main
         with:
           path: terrabutler
-          spec: terrabutler
       - name: Copy needed files to build directory
         run: |
           cp README.md dist/linux
