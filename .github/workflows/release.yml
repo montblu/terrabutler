@@ -26,6 +26,7 @@ jobs:
       - name: Copy needed files to build directory
         run: |
           cp README.md dist/terrabutler
+          cp LICENSE dist/terrabutler
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
         with:
