@@ -1,0 +1,52 @@
+#!/bin/bash
+
+usage() {
+  cat 1>&2 <<EOF
+Installer of Terrabutler
+
+USAGE:
+    install [FLAGS] [OPTIONS]
+
+FLAGS:
+    -h, --help                Prints this help menu
+
+OPTIONS:
+    -i, --install-dir <path>  Directory where Terrabutler will be installed. By
+                              default, this directory is: /usr/share/terrabutler
+
+    -b, --links-dir <path>    The directory where the symlinks of the Terrabutler
+							  are stored. By default, the directory is: /usr/bin/
+EOF
+}
+
+cli() {
+  while test $# -gt 0
+  do
+    key="$1"
+	case "$key" in
+	  -i|--install-dir)
+	    USER_INSTALL_DIR="$2"
+		shift
+	   ;;
+	  -b|--links-dir)
+	    USER_LINKS_DIR="$2"
+		shift
+	   ;;
+	  -h|--help)
+	    usage
+        exit 0
+	  ;;
+	  *)
+	   printf "Got an unexpected argument: %s" "$1"
+	   exit 1
+	  ;;
+    esac
+	shift
+  done
+}
+
+main () {
+  cli "$@"
+}
+
+main "$@"
