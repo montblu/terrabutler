@@ -34,6 +34,9 @@ jobs:
           format: tar
           gzip: true
           output: terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
+      - name: Create duplicate archive with latest
+        run:
+          cp terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz terrabutler-${{ runner.os }}-${{ runner.arch }}-latest.tar.gz
       - name: Add artifact to Release
         uses: softprops/action-gh-release@v1
         with:
@@ -44,6 +47,17 @@ jobs:
           args: --acl public-read
         env:
           FILE: ./terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          S3_KEY: ${{ secrets.AWS_S3_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Upload as latest artifact to S3 bucket
+        uses: zdurham/s3-upload-github-action@master
+        with:
+          args: --acl public-read
+        env:
+          FILE: ./terrabutler-${{ runner.os }}-${{ runner.arch }}-latest.tar.gz
           AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           S3_KEY: ${{ secrets.AWS_S3_KEY }}
