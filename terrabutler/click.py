@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Pyhton wrapper used to manage environments and terraform commands
+Python wrapper used to manage environments and terraform commands
 """
 
 import click
