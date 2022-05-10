@@ -21,15 +21,16 @@ jobs:
       - name: Build Python Module
         run: |
           pip install -r requirements.txt pyinstaller
-          pyinstaller --clean -y --dist ./dist/linux --workpath /tmp terrabutler/terrabutler.spec
+          pyinstaller --clean -y --dist ./dist/terrabutler --workpath /tmp terrabutler/terrabutler.spec
+          mv dist/terrabutler/terrabutler dist/terrabutler/dist
       - name: Copy needed files to build directory
         run: |
-          cp README.md dist/linux
+          cp README.md dist/terrabutler
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
         with:
           working-directory: "./"
-          path: "dist/linux"
+          path: "dist/terrabutler"
           format: tar
           gzip: true
           output: terrabutler-${{ runner.os }}-${{ runner.arch }}-${{ steps.tag.outputs.tag }}.tar.gz
