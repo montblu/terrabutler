@@ -7,6 +7,10 @@ Pyhton wrapper used to manage environments and terraform commands
 import click
 from colorama import Fore
 from os import path
+from terrabutler.__init__ import (
+    __name__,
+    __version__
+)
 from terrabutler.env import (
     create_env,
     delete_env,
@@ -31,6 +35,8 @@ from terrabutler.inception import (
 
 @click.group(context_settings=dict(help_option_names=['-h', '-help',
                                                       '--help']))
+@click.version_option(version=__version__, prog_name=__name__.capitalize(),
+                      message='%(prog)s v%(version)s')
 def main():
     check_settings()
     validate_settings()
