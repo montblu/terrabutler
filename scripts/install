@@ -45,6 +45,20 @@ cli() {
   done
 }
 
+install () {
+  INSTALLER_DIR=$(pwd)
+  INSTALL_DIR=${USER_INSTALL_DIR:-/usr/share/terrabutler}
+  BINS_DIR=${USER_BIN_DIR:-/usr/bin}
+
+  # Copy distribution files to the installation directory
+  mkdir -p "$INSTALL_DIR" || exit 1
+  cp -a "$INSTALLER_DIR/dist/." "$INSTALL_DIR" || exit 1
+  
+  # Copy binaries to user's bin directory
+  mkdir -p "$BINS_DIR" || exit 1
+  ln -s "$INSTALLER_DIR/dist/terrabutler" "BINS_DIR/terrabutler" || exit 1
+}
+
 main () {
   cli "$@"
 }
