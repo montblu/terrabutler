@@ -14,7 +14,7 @@ OPTIONS:
     -i, --install-dir <path>  Directory where Terrabutler will be installed. By
                               default, this directory is: /usr/share/terrabutler
 
-    -b, --links-dir <path>    The directory where the symlinks of the Terrabutler
+    -b, --bins-dir <path>     The directory where the binaries of the Terrabutler
                               are stored. By default, the directory is: /usr/bin/
 EOF
 }
@@ -28,8 +28,8 @@ cli() {
       USER_INSTALL_DIR="$2"
 		shift
     ;;
-    -b|--links-dir)
-      USER_LINKS_DIR="$2"
+    -b|--bins-dir)
+      USER_BIN_DIR="$2"
 		shift
     ;;
     -h|--help)
