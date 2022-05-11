@@ -32,7 +32,7 @@ jobs:
         uses: sibiraj-s/action-archiver@v1
         with:
           working-directory: "./"
-          path: "dist/terrabutler"
+          path: "dist"
           format: tar
           gzip: true
           output: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
