@@ -45,6 +45,14 @@ cli() {
   done
 }
 
+apply_env () {
+  INSTALLER_DIR=$(pwd)
+  INSTALLER_DIST_DIR="$INSTALLER_DIR/dist/."
+  INSTALL_DIR=${USER_INSTALL_DIR:-/usr/share/terrabutler}
+  BINS_DIR=${USER_BIN_DIR:-/usr/bin}
+  BIN_FILE="$BINS_DIR/terrabutler"
+}
+
 check_preexisting_install () {
   if [ -d "${USER_INSTALL_DIR:-/usr/share/terrabutler}" ] && [ -f "${USER_BIN_DIR:-/usr/bin/terrabutler}" ]; then
     echo "Found preexisting Terrabutler installation: ${CURRENT_INSTALL_DIR:-/usr/share/terrabutler}."
