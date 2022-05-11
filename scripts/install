@@ -80,6 +80,7 @@ install () {
 
 main () {
   cli "$@"
+  apply_env
 }
 
 main "$@"
