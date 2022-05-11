@@ -45,6 +45,22 @@ cli() {
   done
 }
 
+check_preexisting_install () {
+  if [ -d "${USER_INSTALL_DIR:-/usr/share/terrabutler}" ] && [ -f "${USER_BIN_DIR:-/usr/bin/terrabutler}" ]; then
+    echo "Found preexisting Terrabutler installation: ${CURRENT_INSTALL_DIR:-/usr/share/terrabutler}."
+    read -r -p "Do you want to replace it? [y/N] " response
+    case "$response" in
+        [yY])
+            ;;
+        *)
+            echo "Aborting installation."
+            exit 1
+            ;;
+    esac
+  fi
+
+}
+
 install () {
   INSTALLER_DIR=$(pwd)
   INSTALL_DIR=${USER_INSTALL_DIR:-/usr/share/terrabutler}
