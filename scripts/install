@@ -76,6 +76,8 @@ install () {
   # Copy binaries to user's bin directory
   mkdir -p "$BINS_DIR" || exit 1
   ln -s "$INSTALL_DIR/terrabutler" "$BIN_FILE" || exit 1
+
+  printf "Install has finished successfully.\nYou may now use '%s' command.\n" "$BIN_FILE"
 }
 
 main () {
