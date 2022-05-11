@@ -16,7 +16,7 @@ Follow the officials docs to install **tfenv** [here](https://github.com/tfutils
 
 ## Install
 
-1. Download the installer 
+1. Download the installer
 `curl -o terrabutler.tar.gz https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux-x86_64-latest.tar.gz`
 
 2.Create folder to extract the installer
@@ -26,7 +26,10 @@ Follow the officials docs to install **tfenv** [here](https://github.com/tfutils
 `tar -xf terrabutler.tar.gz -C terrabutler`
 
 3. Run the installer
-`sudo ./terrabutler/install`
+```
+cd terrabutler
+sudo ./install
+```
 
 4. Remove the installer
 `rm terrabutler*`
