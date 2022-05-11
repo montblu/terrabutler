@@ -46,7 +46,7 @@ cli() {
 }
 
 apply_env () {
-  INSTALLER_DIR=$(pwd)
+  INSTALLER_DIR=$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )
   INSTALLER_DIST_DIR="$INSTALLER_DIR/dist/."
   INSTALL_DIR=${USER_INSTALL_DIR:-/usr/share/terrabutler}
   BINS_DIR=${USER_BIN_DIR:-/usr/bin}

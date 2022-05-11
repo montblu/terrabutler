@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-terrabutler:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
         uses: sibiraj-s/action-archiver@v1
         with:
           working-directory: "./"
-          path: "dist/terrabutler"
+          path: "dist"
           format: tar
           gzip: true
           output: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
