@@ -15,7 +15,7 @@ OPTIONS:
                               default, this directory is: /usr/share/terrabutler
 
     -b, --links-dir <path>    The directory where the symlinks of the Terrabutler
-							  are stored. By default, the directory is: /usr/bin/
+                              are stored. By default, the directory is: /usr/bin/
 EOF
 }
 
@@ -24,20 +24,20 @@ cli() {
   do
     key="$1"
 	case "$key" in
-	  -i|--install-dir)
-	    USER_INSTALL_DIR="$2"
+    -i|--install-dir)
+      USER_INSTALL_DIR="$2"
 		shift
-	   ;;
-	  -b|--links-dir)
-	    USER_LINKS_DIR="$2"
+    ;;
+    -b|--links-dir)
+      USER_LINKS_DIR="$2"
 		shift
-	   ;;
-	  -h|--help)
-	    usage
-        exit 0
-	  ;;
+    ;;
+    -h|--help)
+      usage
+      exit 0
+    ;;
 	  *)
-	   printf "Got an unexpected argument: %s" "$1"
+	   printf "Argument unrecognized: '%s'" "$1"
 	   exit 1
 	  ;;
     esac
