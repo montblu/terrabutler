@@ -54,8 +54,8 @@ apply_env () {
 }
 
 check_preexisting_install () {
-  if [ -d "${USER_INSTALL_DIR:-/usr/share/terrabutler}" ] && [ -f "${USER_BIN_DIR:-/usr/bin/terrabutler}" ]; then
-    echo "Found preexisting Terrabutler installation: ${CURRENT_INSTALL_DIR:-/usr/share/terrabutler}."
+  if [ -d "$INSTALL_DIR" ] && [ -f "$BINS_DIR" ]; then
+    echo "Found preexisting Terrabutler installation: $INSTALL_DIR."
     read -r -p "Do you want to replace it? [y/N] " response
     case "$response" in
         [yY])
@@ -66,21 +66,16 @@ check_preexisting_install () {
             ;;
     esac
   fi
-
 }
 
 install () {
-  INSTALLER_DIR=$(pwd)
-  INSTALL_DIR=${USER_INSTALL_DIR:-/usr/share/terrabutler}
-  BINS_DIR=${USER_BIN_DIR:-/usr/bin}
-
   # Copy distribution files to the installation directory
   mkdir -p "$INSTALL_DIR" || exit 1
-  cp -a "$INSTALLER_DIR/dist/." "$INSTALL_DIR" || exit 1
+  cp -a "$INSTALLER_DIST_DIR" "$INSTALL_DIR" || exit 1
   
   # Copy binaries to user's bin directory
   mkdir -p "$BINS_DIR" || exit 1
-  ln -s "$INSTALLER_DIR/dist/terrabutler" "BINS_DIR/terrabutler" || exit 1
+  ln -s "$INSTALL_DIR/terrabutler" "$BIN_FILE" || exit 1
 }
 
 main () {
