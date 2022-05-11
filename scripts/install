@@ -83,6 +83,8 @@ install () {
 main () {
   cli "$@"
   apply_env
+  check_preexisting_install
+  install
 }
 
 main "$@"
