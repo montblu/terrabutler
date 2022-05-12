@@ -3,15 +3,10 @@ import signal
 import subprocess
 from colorama import Fore
 from terrabutler.settings import get_settings
+from terrabutler.utils import paths
 
 # Values from Config
 org = get_settings()["general"]["organization"]
-backend_dir = os.path.realpath(get_settings()["locations"]["backend_dir"])
-environment_file = os.path.realpath(get_settings()
-                                    ["locations"]["environment_file"])
-inception_dir = os.path.realpath(get_settings()["locations"]["inception_dir"])
-templates_dir = os.path.realpath(get_settings()["locations"]["templates_dir"])
-variables_dir = os.path.realpath(get_settings()["locations"]["variables_dir"])
 
 
 def setup_tfenv(site):
@@ -37,8 +32,8 @@ def terraform_args_print(command, site):
     elif command == "plan" or command == "apply":
         needed_args = "var"
 
-    args = terraform_args_builder(needed_args, site, backend_dir,
-                                  variables_dir)
+    args = terraform_args_builder(needed_args, site, paths["backends"],
+                                  paths["variables"])
     return " ".join(args)
 
 
@@ -58,9 +53,9 @@ def terraform_args_builder(needed_args, site, backend_dir, var_dir):
                     f"{backend_dir}/{org}-{env}-{site}.tfvars"]
 
     elif needed_args == "var":
-        return ["-var-file", f"{variables_dir}/global.tfvars",
-                "-var-file", f"{variables_dir}/{org}-{env}.tfvars",
-                "-var-file", f"{variables_dir}/{org}-{env}-{site}.tfvars"
+        return ["-var-file", f"{paths['variables']}/global.tfvars",
+                "-var-file", f"{paths['variables']}/{org}-{env}.tfvars",
+                "-var-file", f"{paths['variables']}/{org}-{env}-{site}.tfvars"
                 ]
 
     return []
@@ -91,7 +86,7 @@ def terraform_command_runner(command, args, needed_args, site):
     setup_tfenv(site_dir)
 
     command = terraform_command_builder(command, args, needed_args, site,
-                                        backend_dir, variables_dir)
+                                        paths["backends"], paths["variables"])
     try:
         p = subprocess.Popen(args=command, cwd=site_dir)
         p.wait()
