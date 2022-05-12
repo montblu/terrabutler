@@ -6,7 +6,9 @@ import boto3
 import os
 import subprocess
 
-# Values from Config
+# Values from Settings
+org = get_settings()["general"]["organization"]
+default_env_name = get_settings()["environments"]["default"]["name"]
 backend_dir = os.path.realpath(get_settings()["locations"]["backend_dir"])
 environment_file = os.path.realpath(get_settings()
                                     ["locations"]["environment_file"])
@@ -55,7 +57,6 @@ def delete_env(env, confirmation, destroy, s3):
     from terrabutler.tf import terraform_destroy_all_sites
     available_envs = get_available_envs(s3)
     current_env = get_current_env()
-    org = get_settings()["general"]["organization"]
     permanent_environments = get_settings()["environments"]["permanent"]
 
     if env not in available_envs:
@@ -146,7 +147,8 @@ def get_available_envs(s3):
     directory = inception_dir
     subprocess.run(args=["terraform", "init", "-reconfigure",
                          "-backend-config",
-                         f"{environment_file}/pl-dev-inception.tfvars"],
+                         f"{backend_dir}/{org}-{default_env_name}-"
+                         "inception.tfvars"],
                    cwd=directory,
                    stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)
