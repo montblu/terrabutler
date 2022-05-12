@@ -23,21 +23,24 @@ def inception_init_needed():
 def inception_init():
     from terrabutler.env import reload_direnv
     from terrabutler.settings import get_settings
-    site_dir = path.realpath(get_settings()["locations"]["inception_dir"])
+    org = get_settings()["general"]["organization"]
+    default_env_name = get_settings()["environments"]["default"]["name"]
+    inception_dir = path.realpath(get_settings()["locations"]["inception_dir"])
     backend_dir = path.realpath(get_settings()["locations"]["backend_dir"])
 
     if not inception_init_check():
         try:
             subprocess.run(args=["terraform", "init", "-backend-config",
-                                 f"{backend_dir}/pl-dev-inception.tfvars"],
-                           cwd=site_dir, stdout=subprocess.DEVNULL,
+                                 f"{backend_dir}/{org}-{default_env_name}"
+                                 "-inception.tfvars"],
+                           cwd=inception_dir, stdout=subprocess.DEVNULL,
                            stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
             print(Fore.RED + "There was an error while doing the initializing")
             exit(1)
 
         try:
-            with open(f"{site_dir}/.terraform/environment", "w") as f:
+            with open(f"{inception_dir}/.terraform/environment", "w") as f:
                 f.write("dev")
         except FileNotFoundError:
             print(Fore.RED + "The file that manages the environments could not"
