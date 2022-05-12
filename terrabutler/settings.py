@@ -22,6 +22,7 @@ SCHEMA = Schema({
     "environments": {
         "default": {
             "domain": str,
+            "name": str,
             "profile_name": str,
             "region": str
         },
