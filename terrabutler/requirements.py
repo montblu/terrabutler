@@ -17,3 +17,7 @@ def check_requirements():
               " 'TERRABUTLER_ROOT' in your environment pointing"
               " to the root folder of your project.")
         exit(1)
+    if not path.exists(root + "configs/settings.yml"):
+        print(Fore.RED + "Terrabutler can't find you settings file\nPlease"
+              " create a 'settings.yml' file inside the 'configs' folder.")
+        exit(1)
