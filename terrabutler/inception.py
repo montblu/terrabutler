@@ -1,13 +1,14 @@
+from terrabutler.settings import get_settings
 from colorama import Fore
 from os import path
 import subprocess
 
 
 def inception_init_check():
-    site_dir = path.realpath("site_inception")
+    dir = path.realpath(get_settings()["locations"]["inception_dir"])
 
-    if (path.exists(f"{site_dir}/.terraform") and
-            path.exists(f"{site_dir}/.terraform/environment")):
+    if (path.exists(f"{dir}/.terraform") and
+            path.exists(f"{dir}/.terraform/environment")):
         return True
     return False
 
