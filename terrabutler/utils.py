@@ -7,7 +7,7 @@ paths = {
     "environment": ROOT_PATH + "/site_inception/.terraform/environment",
     "inception": ROOT_PATH + "/site_inception",
     "root": ROOT_PATH,
-    "settings": ROOT_PATH + "configs/settings.yml",
+    "settings": ROOT_PATH + "/configs/settings.yml",
     "templates": ROOT_PATH + "/configs/templates",
     "variables": ROOT_PATH + "/configs/variables"
 }
