@@ -7,9 +7,9 @@ def check_requirements():
     from colorama import Fore
 
     if getenv("TERRABUTLER_ENABLE") != "true":
-        print(Fore.YELLOW + "Terrabutler is running outside of a project"
-              " folder or Please set 'TERRABUTLER_ENABLE' in your environment."
-              "\nExiting...")
+        print(Fore.YELLOW + "Terrabutler is not currently enabled on this"
+              " folder. Please set 'TERRABUTLER_ENABLE' in your environment"
+              " to true to enable it.")
         exit(1)
     root = getenv("TERRABUTLER_ROOT")
     if root is None or not path.exists(root):
