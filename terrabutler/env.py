@@ -1,5 +1,6 @@
 from terrabutler.settings import get_settings
 from terrabutler.tf import terraform_init_all_sites
+from terrabutler.utils import paths
 from click import confirm
 from colorama import Fore
 import boto3
@@ -9,12 +10,6 @@ import subprocess
 # Values from Settings
 org = get_settings()["general"]["organization"]
 default_env_name = get_settings()["environments"]["default"]["name"]
-backend_dir = os.path.realpath(get_settings()["locations"]["backend_dir"])
-environment_file = os.path.realpath(get_settings()
-                                    ["locations"]["environment_file"])
-inception_dir = os.path.realpath(get_settings()["locations"]["inception_dir"])
-templates_dir = os.path.realpath(get_settings()["locations"]["templates_dir"])
-variables_dir = os.path.realpath(get_settings()["locations"]["variables_dir"])
 
 
 def create_env(env, confirmation, temporary, apply, s3):
@@ -31,7 +26,7 @@ def create_env(env, confirmation, temporary, apply, s3):
                                  " environment?", default=False):
         try:
             subprocess.run(args=['terraform', 'workspace', 'new', env],
-                           cwd=inception_dir, stdout=subprocess.DEVNULL,
+                           cwd=paths["inception"], stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL, check=True)
         except subprocess.CalledProcessError:
             print(Fore.RED + "There was an error while creating the new"
@@ -77,12 +72,12 @@ def delete_env(env, confirmation, destroy, s3):
                                  " environment?", default=False):
         if destroy and not is_protected_env(env):
             terraform_destroy_all_sites()  # Destroy all sites
-        for file in os.listdir(variables_dir):
+        for file in os.listdir(paths["variables"]):
             if file.startswith(f"{org}-{env}"):
-                os.remove(os.path.join(variables_dir, file))
+                os.remove(os.path.join(paths["variables"], file))
         try:
             subprocess.run(args=['terraform', 'workspace', 'delete', env],
-                           cwd=inception_dir, stdout=subprocess.DEVNULL,
+                           cwd=paths["inception"], stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL, check=True)
         except subprocess.CalledProcessError:
             print(Fore.RED + f"There was an error while deleting the '{env}'"
@@ -95,7 +90,7 @@ def delete_env(env, confirmation, destroy, s3):
 
 
 def get_current_env():
-    with open(environment_file, 'r') as f:
+    with open(paths["environment"], 'r') as f:
         return f.read()
 
 
@@ -113,7 +108,7 @@ def set_current_env(env, s3):
         exit(1)
     else:
         try:
-            with open(environment_file, "w") as f:
+            with open(paths["environment"], "w") as f:
                 f.write(env)
         except FileNotFoundError:
             print(Fore.RED + "The file that manages the environments could not"
@@ -145,10 +140,10 @@ def get_available_envs(s3):
         return envs
 
     # Get Environments by accessing the .terraform/environment file
-    directory = inception_dir
+    directory = paths["inception"]
     subprocess.run(args=["terraform", "init", "-reconfigure",
                          "-backend-config",
-                         f"{backend_dir}/{org}-{default_env_name}-"
+                         f"{paths['backends']}/{org}-{default_env_name}-"
                          "inception.tfvars"],
                    cwd=directory,
                    stdout=subprocess.DEVNULL,
