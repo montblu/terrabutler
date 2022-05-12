@@ -131,9 +131,10 @@ def get_available_envs(s3):
 
     # Get Environments by accessing S3
     if s3:
-        dev_env = boto3.session.Session(profile_name="pl-dev")
+        dev_env = boto3.session.Session(profile_name=f"{org}"
+                                        f"-{default_env_name}")
         s3 = dev_env.resource("s3")
-        bucket = s3.Bucket("pl-dev-site-inception-tfstate")
+        bucket = s3.Bucket(f"{org}-{default_env_name}-site-inception-tfstate")
 
         envs = []
 
