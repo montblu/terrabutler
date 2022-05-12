@@ -1,2 +1,2 @@
 __name__ = "terrabutler"
-__version__ = '1.0.0-beta'
+__version__ = '0.1.0-alpha.1'
