@@ -10,13 +10,6 @@ SCHEMA = Schema({
         "organization": str,
         "secrets_key_id": str
     },
-    "locations": {
-        "backend_dir": str,
-        "environment_file": str,
-        "inception_dir": str,
-        "templates_dir": str,
-        "variables_dir": str
-    },
     "sites": {
         "ordered": list
     },
