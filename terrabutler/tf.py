@@ -5,6 +5,7 @@ from colorama import Fore
 from terrabutler.settings import get_settings
 
 # Values from Config
+org = get_settings()["general"]["organization"]
 backend_dir = os.path.realpath(get_settings()["locations"]["backend_dir"])
 environment_file = os.path.realpath(get_settings()
                                     ["locations"]["environment_file"])
@@ -51,15 +52,15 @@ def terraform_args_builder(needed_args, site, backend_dir, var_dir):
     if needed_args == "backend":
         if site == "inception":
             return ["-backend-config",
-                    f"{backend_dir}/pl-dev-inception.tfvars"]
+                    f"{backend_dir}/{org}-dev-inception.tfvars"]
         else:
             return ["-backend-config",
-                    f"{backend_dir}/pl-{env}-{site}.tfvars"]
+                    f"{backend_dir}/{org}-{env}-{site}.tfvars"]
 
     elif needed_args == "var":
         return ["-var-file", f"{variables_dir}/global.tfvars",
-                "-var-file", f"{variables_dir}/pl-{env}.tfvars",
-                "-var-file", f"{variables_dir}/pl-{env}-{site}.tfvars"
+                "-var-file", f"{variables_dir}/{org}-{env}.tfvars",
+                "-var-file", f"{variables_dir}/{org}-{env}-{site}.tfvars"
                 ]
 
     return []

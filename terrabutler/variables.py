@@ -68,7 +68,7 @@ def encrypt_password(password):
     """
     Encrypt password with AWS KMS
     """
-    environment = boto3.session.Session(profile_name="pl-dev",
+    environment = boto3.session.Session(profile_name=f"{ORG}-dev",
                                         region_name=REGION)
     kms = environment.client("kms")
     encrypted = kms.encrypt(KeyId=KEY_ID, Plaintext=password)
