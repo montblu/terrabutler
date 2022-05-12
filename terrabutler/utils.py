@@ -8,5 +8,5 @@ paths = {
     "templates": ROOT_PATH + "/configs/templates",
     "variables": ROOT_PATH + "/configs/variables",
     "environment": ROOT_PATH + "/site_inception/.terraform/environment",
-    "inception": ROOT_PATH + "/inception",
+    "inception": ROOT_PATH + "/site_inception",
 }
