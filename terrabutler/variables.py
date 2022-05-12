@@ -1,7 +1,4 @@
-from os import (
-    listdir,
-    path
-)
+from os import listdir
 import boto3
 from base64 import b64encode
 from jinja2 import (
@@ -14,11 +11,10 @@ from string import (
     digits
 )
 from terrabutler.settings import get_settings
+from terrabutler.utils import paths
 
 
 REGION = get_settings()["environments"]["default"]["region"]
-TEMPLATES_DIR = path.realpath(get_settings()["locations"]["templates_dir"])
-VARIABLES_DIR = path.realpath(get_settings()["locations"]["variables_dir"])
 ORG = get_settings()["general"]["organization"]
 KEY_ID = get_settings()["general"]["secrets_key_id"]
 
@@ -27,8 +23,8 @@ def generate_var_files(env):
     """
     Create a variables files for a given environment
     """
-    templates = listdir(TEMPLATES_DIR)
-    file_loader = FileSystemLoader(TEMPLATES_DIR)
+    templates = listdir(paths["templates"])
+    file_loader = FileSystemLoader(paths["templates"])
     environment = Environment(loader=file_loader)
     sites = list(get_settings()["sites"]["ordered"])
     firebase_credentials = (get_settings()["environments"]["temporary"]
@@ -48,10 +44,11 @@ def generate_var_files(env):
                              firebase_credentials=firebase_credentials)
         name = template.replace(".j2", "")
         if name == 'env':
-            with open(f"{VARIABLES_DIR}/{ORG}-{env}.tfvars", "w") as fh:
+            with open(f"{paths['variables']}/{ORG}-{env}.tfvars", "w") as fh:
                 fh.write(output)
         else:
-            with open(f"{VARIABLES_DIR}/{ORG}-{env}-{name}.tfvars", "w")as fh:
+            with open(f"{paths['variables']}/{ORG}-{env}-{name}"
+                      ".tfvars", "w") as fh:
                 fh.write(output)
 
 
@@ -68,7 +65,7 @@ def encrypt_password(password):
     """
     Encrypt password with AWS KMS
     """
-    environment = boto3.session.Session(profile_name="pl-dev",
+    environment = boto3.session.Session(profile_name=f"{ORG}-dev",
                                         region_name=REGION)
     kms = environment.client("kms")
     encrypted = kms.encrypt(KeyId=KEY_ID, Plaintext=password)
