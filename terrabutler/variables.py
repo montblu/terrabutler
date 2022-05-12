@@ -1,7 +1,4 @@
-from os import (
-    listdir,
-    path
-)
+from os import listdir
 import boto3
 from base64 import b64encode
 from jinja2 import (
@@ -50,7 +47,8 @@ def generate_var_files(env):
             with open(f"{paths['variables']}/{ORG}-{env}.tfvars", "w") as fh:
                 fh.write(output)
         else:
-            with open(f"{paths['variables']}/{ORG}-{env}-{name}.tfvars", "w")as fh:
+            with open(f"{paths['variables']}/{ORG}-{env}-{name}"
+                      ".tfvars", "w") as fh:
                 fh.write(output)
 
 
