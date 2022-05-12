@@ -1,11 +1,11 @@
-from terrabutler.settings import get_settings
+from terrabutler.utils import paths
 from colorama import Fore
 from os import path
 import subprocess
 
 
 def inception_init_check():
-    dir = path.realpath(get_settings()["locations"]["inception_dir"])
+    dir = paths["inception"]
 
     if (path.exists(f"{dir}/.terraform") and
             path.exists(f"{dir}/.terraform/environment")):
@@ -26,8 +26,8 @@ def inception_init():
     from terrabutler.settings import get_settings
     org = get_settings()["general"]["organization"]
     default_env_name = get_settings()["environments"]["default"]["name"]
-    inception_dir = path.realpath(get_settings()["locations"]["inception_dir"])
-    backend_dir = path.realpath(get_settings()["locations"]["backend_dir"])
+    inception_dir = paths["inception"]
+    backend_dir = paths["backends"]
 
     if not inception_init_check():
         try:
