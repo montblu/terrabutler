@@ -1,9 +1,10 @@
+from terrabutler import paths
 from colorama import Fore
-from os import getenv, path
+from os import path
 from schema import Schema, SchemaError
 import yaml
 
-PATH = path.realpath(getenv("TERRABUTLER_ROOT") + "configs/settings.yml")
+PATH = paths["settings"]
 SCHEMA = Schema({
     "general": {
         "organization": str,
