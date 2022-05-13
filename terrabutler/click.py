@@ -283,7 +283,8 @@ def tf_destroy_cli(ctx, auto_approve, input, lock, lock_timeout, no_color,
 
 @tf_cli.command(name="fmt", help="Reformat your configuration in the standard"
                                  "style")
-@click.option("-diff", help="Display diffs of formatting changes")
+@click.option("-diff", is_flag=True,
+              help="Display diffs of formatting changes")
 @click.option("-no-color", is_flag=True,
               help="If specified, output won't contain any color.")
 @click.option("-recursive", is_flag=True,
@@ -291,7 +292,16 @@ def tf_destroy_cli(ctx, auto_approve, input, lock, lock_timeout, no_color,
                    " given directory (or current directory) is processed.")
 @click.pass_context
 def tf_fmt_cli(ctx, diff, no_color, recursive):
-    print(Fore.RED + "Function not implemented yet!")
+    args = []
+
+    if diff:
+        args.append("-diff")
+    if no_color:
+        args.append("-no-color")
+    if recursive:
+        args.append("-recursive")
+
+    terraform_command_runner("fmt", args, "none", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="force-unlock", help="Release a stuck lock on the current"
