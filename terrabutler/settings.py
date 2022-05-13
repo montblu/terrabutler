@@ -31,17 +31,6 @@ SCHEMA = Schema({
 })
 
 
-def check_settings():
-    """
-    Check if the settings file exists
-    """
-    if not path.exists(PATH):
-        print(Fore.YELLOW + "The settings file does not exist."
-              "\n\nPlease create a 'settings.yml' file inside the 'configs'"
-              " folder.")
-        exit(1)
-
-
 def get_settings():
     """
     Returns the settings object
