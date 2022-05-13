@@ -605,6 +605,7 @@ def tf_state_cli():
 
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
+@click.argument("address")
 @click.option("-allow-missing", is_flag=True,
               help="If specified, the command will succeed (exit code 0) even"
                    " if the resource is missing.")
@@ -617,9 +618,21 @@ def tf_state_cli():
               help="A rare option used for the remote backend only. See the"
                    " remote backend documentation for more information.")
 @click.pass_context
-def tf_taint_cli(ctx, allow_missing, lock, lock_timeout,
+def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
                  ignore_remote_version):
-    print(Fore.RED + "Function not implemented yet!")
+    args = []
+
+    args.append(address)
+    if allow_missing:
+        args.append("-allow-missing")
+    if lock is False:
+        args.append("-lock=false")
+    if lock_timeout:
+        args.append(f"-lock-timeout={lock_timeout}")
+    if ignore_remote_version:
+        args.append("-ignore-remote-version")
+
+    terraform_command_runner("taint", args, "none", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="untaint", help="Remove the 'tainted' state from a"
