@@ -578,14 +578,24 @@ def tf_refresh_cli(ctx, input, lock, no_color, target, var):
 
 
 @tf_cli.command(name="show", help="Show the current state or a saved plan")
+@click.argument("PATH", required=False)
 @click.option("-no-color", is_flag=True,
               help="If specified, output won't contain any color.")
 @click.option("-json", is_flag=True,
               help="If specified, machine readable output will be printed in"
               " JSON format.")
 @click.pass_context
-def tf_show_cli(ctx, no_color, json):
-    print(Fore.RED + "Function not implemented yet!")
+def tf_show_cli(ctx, path, no_color, json):
+    args = []
+
+    if path is not None:
+        args.append(path)
+    if no_color:
+        args.append("-no-color")
+    if json:
+        args.append("-json")
+
+    terraform_command_runner("show", args, "var", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="state", help="Advanced state management")
