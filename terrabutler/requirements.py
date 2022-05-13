@@ -1,3 +1,6 @@
+from sys import exit
+
+
 def check_requirements():
     """
     Check requirements before running the application.

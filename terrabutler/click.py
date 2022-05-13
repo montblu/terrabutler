@@ -6,6 +6,7 @@ Python wrapper used to manage environments and terraform commands
 
 import click
 from colorama import Fore
+from sys import exit
 from os import path
 from terrabutler.__init__ import (
     __name__,
