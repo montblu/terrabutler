@@ -2,7 +2,6 @@ def check_requirements():
     """
     Check requirements before running the application.
     """
-    # from terrabutler.settings import validate_settings
     from os import getenv, path
     from colorama import Fore
 
@@ -18,9 +17,8 @@ def check_requirements():
               " 'TERRABUTLER_ROOT' in your environment pointing"
               " to the root folder of your project." + Fore.RESET)
         exit(1)
-    if not path.exists(root + "configs/settings.yml"):
+    if not path.exists(root + "/configs/settings.yml"):
         print(Fore.RED + "Terrabutler can't find you settings file\nPlease"
               " create a 'settings.yml' file inside the 'configs' folder."
               + Fore.RESET)
         exit(1)
-    validate_settings()  # noqa: F821
