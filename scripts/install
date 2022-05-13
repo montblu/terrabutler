@@ -71,11 +71,11 @@ check_preexisting_install () {
 
 install () {
   # Copy distribution files to the installation directory
-  mkdir -p "$INSTALL_DIR" || exit 1
+  mkdir -p "$INSTALL_DIR"
   cp -a "$INSTALLER_DIST_DIR" "$INSTALL_DIR" || exit 1
   
   # Copy binaries to user's bin directory
-  mkdir -p "$BINS_DIR" || exit 1
+  mkdir -p "$BINS_DIR"
   ln -s "$INSTALL_DIR/terrabutler" "$BIN_FILE" || exit 1
 
   printf "Install has finished successfully.\nYou may now use '%s' command.\n" "$BIN_FILE"
