@@ -2,6 +2,7 @@ import os
 import signal
 import subprocess
 from colorama import Fore
+from sys import exit
 from terrabutler.settings import get_settings
 from terrabutler.utils import paths
 
