@@ -559,7 +559,22 @@ def tf_providers_cli():
                    "This flag can be set multiple times.")
 @click.pass_context
 def tf_refresh_cli(ctx, input, lock, no_color, target, var):
-    print(Fore.RED + "Function not implemented yet!")
+    args = []
+
+    if input is False:
+        args.append("-input=false")
+    if lock is False:
+        args.append("-lock=false")
+    if no_color:
+        args.append("-no-color")
+    if target:
+        for t in target:
+            args.append(f"-target={t}")
+    if var:
+        for v in var:
+            args.append(f"-var={v}")
+
+    terraform_command_runner("refresh", args, "var", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="show", help="Show the current state or a saved plan")
