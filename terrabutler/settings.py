@@ -1,6 +1,4 @@
 from terrabutler.utils import paths
-from colorama import Fore
-from os import path
 from schema import Schema, SchemaError
 import yaml
 
