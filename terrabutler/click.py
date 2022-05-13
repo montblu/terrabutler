@@ -31,12 +31,18 @@ from terrabutler.inception import (
     inception_init,
     inception_init_needed
 )
+from terrabutler.utils import is_semantic_version
+
+
+VERSION = (f"v{__version__}" if is_semantic_version(__version__)
+           else __version__
+           )
 
 
 @click.group(context_settings=dict(help_option_names=['-h', '-help',
                                                       '--help']))
-@click.version_option(version=__version__, prog_name=__name__.capitalize(),
-                      message='%(prog)s v%(version)s')
+@click.version_option(version=VERSION, prog_name=__name__.capitalize(),
+                      message='%(prog)s: %(version)s')
 def main():
     validate_settings()
 
