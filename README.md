@@ -32,7 +32,7 @@ $ sudo /tmp/terrabutler/install
 ```
 or without sudo:
 ```
-$ /tmp/install -i ~/.local/share/terrabutler -b ~/.local/bin/
+$ /tmp/terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
 ```
 
 4. Remove the archive and the installer
