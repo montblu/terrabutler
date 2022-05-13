@@ -22,7 +22,10 @@ from terrabutler.tf import (
     terraform_args_print,
     terraform_command_runner
 )
-from terrabutler.settings import get_settings
+from terrabutler.settings import (
+    get_settings,
+    validate_settings
+)
 from terrabutler.inception import (
     inception_init,
     inception_init_needed
@@ -34,7 +37,7 @@ from terrabutler.inception import (
 @click.version_option(version=__version__, prog_name=__name__.capitalize(),
                       message='%(prog)s v%(version)s')
 def main():
-    pass
+    validate_settings()
 
 
 @main.group(name="env", help="Manage environments")
