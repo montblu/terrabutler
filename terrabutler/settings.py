@@ -1,6 +1,4 @@
 from terrabutler.utils import paths
-from colorama import Fore
-from os import path
 from schema import Schema, SchemaError
 import yaml
 
@@ -31,17 +29,6 @@ SCHEMA = Schema({
 })
 
 
-def check_settings():
-    """
-    Check if the settings file exists
-    """
-    if not path.exists(PATH):
-        print(Fore.YELLOW + "The settings file does not exist."
-              "\n\nPlease create a 'settings.yml' file inside the 'configs'"
-              " folder.")
-        exit(1)
-
-
 def get_settings():
     """
     Returns the settings object
@@ -54,13 +41,25 @@ def validate_settings():
     """
     Validade settings file
     """
-    with open(PATH) as f:
-        configuration = yaml.safe_load(f)
+    try:
+        with open(PATH, "r") as f:
+            configuration = yaml.safe_load(f)
+    except FileNotFoundError:
+        print(f"File {PATH} not found.  Aborting")
+        exit(1)
+    except OSError:
+        print(f"OS error occurred trying to open {PATH}")
+        exit(1)
+    except Exception as err:
+        print(f"Unexpected error when reading {PATH}: {err}")
+        exit(1)
 
     try:
         SCHEMA.validate(configuration)
     except SchemaError as se:
-        raise se
+        print("Your settings file is not using the needed values:"
+              f" {se}")
+        exit(1)
 
 
 def write_settings(yaml_file):

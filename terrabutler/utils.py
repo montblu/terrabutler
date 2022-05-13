@@ -1,5 +1,7 @@
+from terrabutler.requirements import check_requirements
 from os import getenv
 
+check_requirements()
 ROOT_PATH = getenv("TERRABUTLER_ROOT")
 
 paths = {

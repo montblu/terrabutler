@@ -23,7 +23,6 @@ from terrabutler.tf import (
     terraform_command_runner
 )
 from terrabutler.settings import (
-    check_settings,
     get_settings,
     validate_settings
 )
@@ -38,7 +37,6 @@ from terrabutler.inception import (
 @click.version_option(version=__version__, prog_name=__name__.capitalize(),
                       message='%(prog)s v%(version)s')
 def main():
-    check_settings()
     validate_settings()
 
 
