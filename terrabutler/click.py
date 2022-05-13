@@ -201,12 +201,22 @@ def tf_apply_cli(ctx, auto_approve, destroy, input, lock, lock_timeout,
 
 @tf_cli.command(name="console", help="Try Terraform expressions at an "
                                      "interactive command prompt")
+@click.option("-state", help="Legacy option for the local backend only."
+              " See the local backend's documentation for more information.")
 @click.option("-var", multiple=True,
               help="Set a variable in the Terraform configuration. "
                    "This flag can be set multiple times.")
 @click.pass_context
-def tf_console_cli(ctx, var):
-    print(Fore.RED + "Function not implemented yet!")
+def tf_console_cli(ctx, state, var):
+    args = []
+
+    if state:
+        args.append(f"-state={state}")
+    if var:
+        for name in var:
+            args.append(f"-var='{name}'")
+
+    terraform_command_runner("console", args, "var", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="destroy", help="Prepare your working directory for other"
