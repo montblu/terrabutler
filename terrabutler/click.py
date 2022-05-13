@@ -595,7 +595,7 @@ def tf_show_cli(ctx, path, no_color, json):
     if json:
         args.append("-json")
 
-    terraform_command_runner("show", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("show", args, "none", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="state", help="Advanced state management")
