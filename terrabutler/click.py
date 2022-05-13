@@ -637,6 +637,7 @@ def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
 
 @tf_cli.command(name="untaint", help="Remove the 'tainted' state from a"
                                      " resource instance")
+@click.argument("address")
 @click.option("-allow-missing", is_flag=True,
               help="If specified, the command will succeed (exit code 0) even"
                    " if the resource is missing.")
@@ -649,9 +650,21 @@ def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
               help="A rare option used for the remote backend only. See the"
                    " remote backend documentation for more information.")
 @click.pass_context
-def tf_untaint_cli(ctx, allow_missing, lock, lock_timeout,
+def tf_untaint_cli(ctx, address, allow_missing, lock, lock_timeout,
                    ignore_remote_version):
-    print(Fore.RED + "Function not implemented yet!")
+    args = []
+
+    args.append(address)
+    if allow_missing:
+        args.append("-allow-missing")
+    if lock is False:
+        args.append("-lock=false")
+    if lock_timeout:
+        args.append(f"-lock-timeout={lock_timeout}")
+    if ignore_remote_version:
+        args.append("-ignore-remote-version")
+
+    terraform_command_runner("untaint", args, "none", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="version", help="Show the current Terraform version")
