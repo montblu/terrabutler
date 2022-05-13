@@ -59,6 +59,7 @@ check_preexisting_install () {
     read -r -p "Do you want to replace it? [y/N] " response
     case "$response" in
         [yY])
+            rm -rf "$INSTALL_DIR" "$BIN_FILE"
             ;;
         *)
             echo "Aborting installation."
