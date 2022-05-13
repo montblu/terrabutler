@@ -677,3 +677,20 @@ def tf_version_cli(ctx, json):
         args.append("-json")
 
     terraform_command_runner("version", args, "", ctx.obj['SITE'])
+
+
+@tf_cli.command(name="validate", help="Validate the configuration files")
+@click.option("-no-color", is_flag=True,
+              help="If specified, output won't contain any color.")
+@click.option("-json", is_flag=True,
+              help="Output the version information as a JSON object.")
+@click.pass_context
+def tf_validate_cli(ctx, no_color, json):
+    args = []
+
+    if no_color:
+        args.append("-no-color")
+    if json:
+        args.append("-json")
+
+    terraform_command_runner("validate", args, "", ctx.obj['SITE'])
