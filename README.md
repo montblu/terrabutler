@@ -37,5 +37,5 @@ $ /tmp/terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
 
 4. Remove the archive and the installer
 ```
-$ rm /tmp/terrabutler*
+$ rm -rf /tmp/terrabutler*
 ```
