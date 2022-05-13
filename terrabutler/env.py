@@ -3,7 +3,7 @@ from terrabutler.tf import terraform_init_all_sites
 from terrabutler.utils import paths
 from click import confirm
 from colorama import Fore
-from  sys import exit
+from sys import exit
 import boto3
 import os
 import subprocess
