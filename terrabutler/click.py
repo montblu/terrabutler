@@ -660,9 +660,9 @@ def tf_show_cli(ctx, path, no_color, json):
     terraform_command_runner("show", args, "none", ctx.obj['SITE'])
 
 
-@tf_cli.command(name="state", help="Advanced state management")
+@tf_cli.group(name="state", help="Advanced state management")
 def tf_state_cli():
-    print(Fore.RED + "Function not implemented yet!")
+    pass
 
 
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
