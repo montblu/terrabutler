@@ -81,7 +81,7 @@ def terraform_command_runner(command, args, needed_args, site):
     Run tfenv and run the terraform command
     """
     from terrabutler.env import get_current_env
-    site_dir = os.path.realpath(f"site_{site}")
+    site_dir = f"{paths['root']}/site_{site}"
     env = get_current_env()
 
     setup_tfenv(site_dir)
