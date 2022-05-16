@@ -708,6 +708,9 @@ def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
                     ignore_remote_version):
     args = []
 
+    args.append("mv")
+    args.append(source)
+    args.append(destination)
     if dry_run:
         args.append("-dry-run")
     if lock is False:
@@ -717,8 +720,7 @@ def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
     if ignore_remote_version:
         args.append("-ignore-remote-version")
 
-    terraform_command_runner(f"state mv {source} {destination}", args, "none",
-                             ctx.obj['SITE'])
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
 
 
 @tf_state_cli.command(name="pull", help="Pull current state and output to"
