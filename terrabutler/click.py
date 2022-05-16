@@ -661,8 +661,31 @@ def tf_show_cli(ctx, path, no_color, json):
 
 
 @tf_cli.group(name="state", help="Advanced state management")
-def tf_state_cli():
+@click.pass_context
+def tf_state_cli(ctx):
     pass
+
+
+@tf_state_cli.command(name="list", help="List resources in the state")
+@click.argument("address", nargs=-1, required=False)
+@click.option("-state", help="Path to a Terraform state file to use to look up"
+                             " Terraform-managed resources. By default,"
+                             " Terraform will consult the state of the"
+                             " currently-selected workspace.")
+@click.option("-id", help="Filters the results to include only instances"
+                          " whoseresource types have an attribute named 'id'"
+                          " whose value equals the given id string.")
+@click.pass_context
+def tf_state_list_cli(ctx, address, state, id):
+    args = []
+
+    args.append(address)
+    if state:
+        args.append(f"-state={state}")
+    if id:
+        args.append(f"-id={id}")
+
+    terraform_command_runner("state list", args, "none", ctx.obj['SITE'])
 
 
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
