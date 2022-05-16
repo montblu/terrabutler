@@ -731,6 +731,33 @@ def tf_state_pull_cli(ctx):
     terraform_command_runner("state", args, "none", ctx.obj['SITE'])
 
 
+@tf_state_cli.command(name="push", help="Update remote state from a local"
+                                        " state file")
+@click.argument("path", required=True)
+@click.option("-force", is_flag=True,
+              help="Write the state even if lineages don't match or the remote"
+                   " serial is higher.")
+@click.option("-lock", is_flag=True, default=True,
+              help="Don't hold a state lock during the operation. This is"
+                   " dangerous if others might concurrently run commands"
+                   " against the same workspace.")
+@click.option("-lock-timeout", help="Duration to retry a state lock.")
+@click.pass_context
+def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
+    args = []
+
+    args.append("push")
+    args.append(path)
+    if force:
+        args.append("-force")
+    if lock is False:
+        args.append("-lock=false")
+    if lock_timeout:
+        args.append(f"-lock-timeout={lock_timeout}")
+
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
 @click.argument("address")
