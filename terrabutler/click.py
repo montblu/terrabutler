@@ -568,6 +568,23 @@ def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
     terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
 
 
+@tf_providers_cli.command(name="mirror", help="Save local copies of all"
+                                              " required provider plugins")
+@click.argument("target-dir", required=True)
+@click.option("-platform", help="Choose a target platform to request package"
+                                " checksums for.")
+@click.pass_context
+def tf_providers_mirror_cli(ctx, target_dir, platform):
+    args = []
+
+    args.append("mirror")
+    args.append(target_dir)
+    if platform:
+        args.append(f"-platform={platform}")
+
+    terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="refresh", help="Update the state to match remote"
                                      " systems")
 @click.option("-input", default=True,
