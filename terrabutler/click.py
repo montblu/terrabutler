@@ -758,6 +758,42 @@ def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
     terraform_command_runner("state", args, "none", ctx.obj['SITE'])
 
 
+@tf_state_cli.command(name="replace-provider",
+                      help="Replace provider for resources in the Terraform"
+                           " state.")
+@click.argument("from_provider_fqdn", required=True)
+@click.argument("to_provider_fqdn", required=True)
+@click.option("-auto-approve", is_flag=True,
+              help="Skip interactive approval of plan before applying.")
+@click.option("-lock", is_flag=True, default=True,
+              help="Don't hold a state lock during the operation. This is"
+                   " dangerous if others might concurrently run commands"
+                   " against the same workspace.")
+@click.option("-lock-timeout", help="Duration to retry a state lock.")
+@click.option("-ignore-remote-version", is_flag=True,
+              help="A rare option used for the remote backend only. See the"
+                   " remote backend documentation for more information.")
+@click.pass_context
+def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
+                         auto_approve, lock, lock_timeout,
+                         ignore_remote_version):
+    args = []
+
+    args.append("replace-provider")
+    args.append(from_provider_fqdn)
+    args.append(to_provider_fqdn)
+    if auto_approve:
+        args.append("-auto-approve")
+    if lock is False:
+        args.append("-lock=false")
+    if lock_timeout:
+        args.append(f"-lock-timeout={lock_timeout}")
+    if ignore_remote_version:
+        args.append("-ignore-remote-version")
+
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
 @click.argument("address")
