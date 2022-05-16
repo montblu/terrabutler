@@ -534,10 +534,12 @@ def tf_plan_cli(ctx, destroy, input, lock, lock_timeout, no_color,
 
 
 @tf_cli.group(name="providers", help="Show the providers required for this"
-                                     " configuration")
+                                     " configuration",
+              invoke_without_command=True)
 @click.pass_context
 def tf_providers_cli(ctx):
-    terraform_command_runner("providers", [], "none", ctx.obj['SITE'])
+    if ctx.invoked_subcommand is None:
+        terraform_command_runner("providers", [], "none", ctx.obj['SITE'])
 
 
 @tf_providers_cli.command(name="lock", help="Write out dependency locks for"
