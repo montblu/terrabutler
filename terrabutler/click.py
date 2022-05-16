@@ -533,8 +533,8 @@ def tf_plan_cli(ctx, destroy, input, lock, lock_timeout, no_color,
     terraform_command_runner("plan", args, "var", ctx.obj['SITE'])
 
 
-@tf_cli.command(name="providers", help="Show the providers required for this"
-                                       " configuration")
+@tf_cli.group(name="providers", help="Show the providers required for this"
+                                     " configuration")
 @click.pass_context
 def tf_providers_cli(ctx):
     terraform_command_runner("providers", [], "none", ctx.obj['SITE'])
