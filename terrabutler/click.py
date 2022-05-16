@@ -688,6 +688,38 @@ def tf_state_list_cli(ctx, address, state, id):
     terraform_command_runner("state list", args, "none", ctx.obj['SITE'])
 
 
+@tf_state_cli.command(name="mv", help="Move an item in the state")
+@click.argument("source", nargs=-1, required=True)
+@click.argument("destination", nargs=-1, required=True)
+@click.option("-dry-run", is_flag=True, help="If set, prints out what would've"
+                                             " been moved but doesn't actually"
+                                             " move anything.")
+@click.option("-lock", is_flag=True, default=True,
+              help="Don't hold a state lock during the operation. This is"
+                   " dangerous if others might concurrently run commands"
+                   " against the same workspace.")
+@click.option("-lock-timeout", help="Duration to retry a state lock.")
+@click.option("-ignore-remote-version", is_flag=True,
+              help="A rare option used for the remote backend only."
+              "See the remote backend documentation for more information.")
+@click.pass_context
+def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
+                    ignore_remote_version):
+    args = []
+
+    if dry_run:
+        args.append("-dry-run")
+    if lock is False:
+        args.append("-lock=false")
+    if lock_timeout:
+        args.append(f"-lock-timeout={lock_timeout}")
+    if ignore_remote_version:
+        args.append("-ignore-remote-version")
+
+    terraform_command_runner(f"state mv {source} {destination}", args, "none",
+                             ctx.obj['SITE'])
+
+
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
 @click.argument("address")
