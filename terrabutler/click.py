@@ -585,6 +585,21 @@ def tf_providers_mirror_cli(ctx, target_dir, platform):
     terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
 
 
+@tf_providers_cli.command(name="schema", help="Show schemas for the providers"
+                                              " used in the configuration")
+@click.option("-json", help="Prints out a json representation of the schemas"
+                            " for all providers used in the current"
+                            " configuration.", is_flag=True)
+@click.pass_context
+def tf_providers_schema_cli(ctx, json):
+    args = []
+    args.append(json)
+    if json:
+        args.append("-json")
+
+    terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="refresh", help="Update the state to match remote"
                                      " systems")
 @click.option("-input", default=True,
