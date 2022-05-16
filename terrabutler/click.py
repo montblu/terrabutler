@@ -559,7 +559,7 @@ def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
     args = []
 
     args.append("lock")
-    args.append(providers)
+    args += providers
     if fs_mirror:
         args.append(f"-fs-mirror={fs_mirror}")
     if net_mirror:
