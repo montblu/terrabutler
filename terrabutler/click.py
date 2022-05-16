@@ -689,8 +689,8 @@ def tf_state_list_cli(ctx, address, state, id):
 
 
 @tf_state_cli.command(name="mv", help="Move an item in the state")
-@click.argument("source", nargs=-1, required=True)
-@click.argument("destination", nargs=-1, required=True)
+@click.argument("source", required=True)
+@click.argument("destination", required=True)
 @click.option("-dry-run", is_flag=True, help="If set, prints out what would've"
                                              " been moved but doesn't actually"
                                              " move anything.")
