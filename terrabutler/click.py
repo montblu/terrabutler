@@ -720,6 +720,17 @@ def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
                              ctx.obj['SITE'])
 
 
+@tf_state_cli.command(name="pull", help="Pull current state and output to"
+                                        " stdout")
+@click.pass_context
+def tf_state_pull_cli(ctx):
+    args = []
+
+    args.append("pull")
+
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
 @click.argument("address")
