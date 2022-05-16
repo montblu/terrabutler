@@ -835,6 +835,23 @@ def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
     terraform_command_runner("state", args, "none", ctx.obj['SITE'])
 
 
+@tf_state_cli.command(name="show",
+                      help="Show a resource in the state")
+@click.argument("address", required=True)
+@click.option("-state", help="Path to the state file to update. Defaults to"
+                             " the current workspace state.")
+@click.pass_context
+def tf_state_show_cli(ctx, address, state):
+    args = []
+
+    args.append("show")
+    args.append(address)
+    if state:
+        args.append(f"-state={state}")
+
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
 @click.argument("address")
