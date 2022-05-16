@@ -540,6 +540,34 @@ def tf_providers_cli(ctx):
     terraform_command_runner("providers", [], "none", ctx.obj['SITE'])
 
 
+@tf_providers_cli.command(name="lock", help="Write out dependency locks for"
+                                            " the configured providers")
+@click.argument("providers", nargs=-1, required=True)
+@click.option("-fs-mirror", help="Consult the given filesystem mirror"
+                                 " directory instead of the origin registry"
+                                 " for each of the given providers.")
+@click.option("-net-mirror", help="Consult the given network mirror"
+                                  " (given as a base URL) instead of the"
+                                  " origin registry for each of the given"
+                                  " providers.")
+@click.option("-platform", help="Choose a target platform to request package"
+                                " checksums for.")
+@click.pass_context
+def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
+    args = []
+
+    args.append("lock")
+    args.append(providers)
+    if fs_mirror:
+        args.append(f"-fs-mirror={fs_mirror}")
+    if net_mirror:
+        args.append(f"-net-mirror={net_mirror}")
+    if platform:
+        args.append(f"-platform={platform}")
+
+    terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="refresh", help="Update the state to match remote"
                                      " systems")
 @click.option("-input", default=True,
