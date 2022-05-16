@@ -794,6 +794,47 @@ def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
     terraform_command_runner("state", args, "none", ctx.obj['SITE'])
 
 
+@tf_state_cli.command(name="rm",
+                      help="Remove instances from the state")
+@click.argument("address", nargs=-1, required=True)
+@click.option("-dry-run", is_flag=True, help="If set, prints out what would've"
+                                             " been moved but doesn't actually"
+                                             " move anything.")
+@click.option("-backup", help="Path where Terraform should write the backup"
+                              " state.")
+@click.option("-lock", is_flag=True, default=True,
+              help="Don't hold a state lock during the operation. This is"
+                   " dangerous if others might concurrently run commands"
+                   " against the same workspace.")
+@click.option("-lock-timeout", help="Duration to retry a state lock.")
+@click.option("-state", help="Path to the state file to update. Defaults to"
+                             " the current workspace state.")
+@click.option("-ignore-remote-version", is_flag=True,
+              help="A rare option used for the remote backend only. See the"
+                   " remote backend documentation for more information.")
+@click.pass_context
+def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
+                    ignore_remote_version):
+    args = []
+
+    args.append("rm")
+    args += address
+    if dry_run:
+        args.append("-dry-run")
+    if backup:
+        args.append(f"-backup={backup}")
+    if lock is False:
+        args.append("-lock=false")
+    if lock_timeout:
+        args.append(f"-lock-timeout={lock_timeout}")
+    if state:
+        args.append(f"-state={state}")
+    if ignore_remote_version:
+        args.append("-ignore-remote-version")
+
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+
+
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
 @click.argument("address")
