@@ -679,13 +679,14 @@ def tf_state_cli(ctx):
 def tf_state_list_cli(ctx, address, state, id):
     args = []
 
-    args.append(address)
+    args.append("list")
+    args += address
     if state:
         args.append(f"-state={state}")
     if id:
         args.append(f"-id={id}")
 
-    terraform_command_runner("state list", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
 
 
 @tf_state_cli.command(name="mv", help="Move an item in the state")
