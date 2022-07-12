@@ -171,32 +171,33 @@ def env_show_cli():
 @click.pass_context
 def tf_apply_cli(ctx, auto_approve, destroy, input, lock, lock_timeout,
                  no_color, refresh_only, refresh, target, var):
-    args = []
+    options = []
 
     if auto_approve:
-        args.append("-auto-approve")
+        options.append("-auto-approve")
     if destroy:
-        args.append("-destroy")
+        options.append("-destroy")
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if refresh_only:
-        args.append("-refresh-only")
+        options.append("-refresh-only")
     if refresh is False:
-        args.append("-refresh=false")
+        options.append("-refresh=false")
     if target:
         for name in target:
-            args.append(f"-target={name}")
+            options.append(f"-target={name}")
     if var:
         for name in var:
-            args.append(f"-var='{name}'")
+            options.append(f"-var='{name}'")
 
-    terraform_command_runner("apply", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("apply", ctx.obj['SITE'], args=[],
+                             options=options, needed_options="var")
 
 
 @tf_cli.command(name="console", help="Try Terraform expressions at an "
