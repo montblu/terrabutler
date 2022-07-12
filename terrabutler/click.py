@@ -196,8 +196,8 @@ def tf_apply_cli(ctx, auto_approve, destroy, input, lock, lock_timeout,
         for name in var:
             options.append(f"-var='{name}'")
 
-    terraform_command_runner("apply", ctx.obj['SITE'], args=[],
-                             options=options, needed_options="var")
+    terraform_command_runner("apply", ctx.obj['SITE'], options=options,
+                             needed_options="var")
 
 
 @tf_cli.command(name="console", help="Try Terraform expressions at an "
@@ -209,15 +209,16 @@ def tf_apply_cli(ctx, auto_approve, destroy, input, lock, lock_timeout,
                    "This flag can be set multiple times.")
 @click.pass_context
 def tf_console_cli(ctx, state, var):
-    args = []
+    options = []
 
     if state:
-        args.append(f"-state={state}")
+        options.append(f"-state={state}")
     if var:
         for name in var:
-            args.append(f"-var='{name}'")
+            options.append(f"-var='{name}'")
 
-    terraform_command_runner("console", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("console", ctx.obj['SITE'], options=options,
+                             needed_options="var")
 
 
 @tf_cli.command(name="destroy", help="Prepare your working directory for other"
@@ -256,30 +257,31 @@ def tf_console_cli(ctx, state, var):
 @click.pass_context
 def tf_destroy_cli(ctx, auto_approve, input, lock, lock_timeout, no_color,
                    refresh_only, refresh, target, var):
-    args = []
+    options = []
 
     if auto_approve:
-        args.append("-auto-approve")
+        options.append("-auto-approve")
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if refresh_only:
-        args.append("-refresh-only")
+        options.append("-refresh-only")
     if refresh is False:
-        args.append("-refresh=false")
+        options.append("-refresh=false")
     if target:
         for name in target:
-            args.append(f"-target={name}")
+            options.append(f"-target={name}")
     if var:
         for name in var:
-            args.append(f"-var='{name}'")
+            options.append(f"-var='{name}'")
 
-    terraform_command_runner("destroy", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("destroy", ctx.obj['SITE'], options=options,
+                             needed_options="var")
 
 
 @tf_cli.command(name="fmt", help="Reformat your configuration in the standard"
@@ -293,16 +295,16 @@ def tf_destroy_cli(ctx, auto_approve, input, lock, lock_timeout, no_color,
                    " given directory (or current directory) is processed.")
 @click.pass_context
 def tf_fmt_cli(ctx, diff, no_color, recursive):
-    args = []
+    options = []
 
     if diff:
-        args.append("-diff")
+        options.append("-diff")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if recursive:
-        args.append("-recursive")
+        options.append("-recursive")
 
-    terraform_command_runner("fmt", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("fmt", ctx.obj['SITE'], options=options)
 
 
 @tf_cli.command(name="force-unlock", help="Release a stuck lock on the current"
@@ -312,13 +314,14 @@ def tf_fmt_cli(ctx, diff, no_color, recursive):
               help="Don't ask for input for unlock confirmation.")
 @click.pass_context
 def tf_force_unlock_cli(ctx, lock_id, force):
-    args = []
+    args, options = []
 
-    if force:
-        args.append("-force")
     args.append(lock_id)
+    if force:
+        options.append("-force")
 
-    terraform_command_runner("force-unlock", args, "", ctx.obj['SITE'])
+    terraform_command_runner("force-unlock", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_cli.command(name="generate-arguments", help="Generate terraform arguments")
@@ -419,32 +422,33 @@ def tf_init_cli(ctx, backend, force_copy, get, input, lock, no_color,
                 reconfigure, migrate_state, upgrade, lockfile,
                 ignore_remote_version):
 
-    args = []
+    options = []
 
     if backend is False:
-        args.append("-backend=false")
+        options.append("-backend=false")
     if force_copy:
-        args.append("-force-copy")
+        options.append("-force-copy")
     if get is False:
-        args.append("-get=false")
+        options.append("-get=false")
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if reconfigure:
-        args.append("-reconfigure")
+        options.append("-reconfigure")
     if migrate_state:
-        args.append("-migrate-state")
+        options.append("-migrate-state")
     if upgrade:
-        args.append("-upgrade")
+        options.append("-upgrade")
     if lockfile:
-        args.append(f"-lockfile={lockfile}")
+        options.append(f"-lockfile={lockfile}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("init", args, "backend", ctx.obj['SITE'])
+    terraform_command_runner("init", ctx.obj['SITE'], options=options,
+                             needed_options="backend")
 
 
 @tf_cli.command(name="output", help="Show output values from your root module")
