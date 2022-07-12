@@ -76,7 +76,8 @@ def terraform_command_builder(command, args, needed_args, site,
     return base_command
 
 
-def terraform_command_runner(command, args, needed_args, site):
+def terraform_command_runner(command, site, args=[], options=[],
+                             needed_options=""):
     """
     Run tfenv and run the terraform command
     """
@@ -86,8 +87,10 @@ def terraform_command_runner(command, args, needed_args, site):
 
     setup_tfenv(site_dir)
 
-    command = terraform_command_builder(command, args, needed_args, site,
-                                        paths["backends"], paths["variables"])
+    command = terraform_command_builder(command, site, paths["backends"],
+                                        paths["variables"], args=args,
+                                        options=options,
+                                        needed_options=needed_options)
     try:
         p = subprocess.Popen(args=command, cwd=site_dir)
         p.wait()
