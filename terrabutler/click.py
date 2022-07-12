@@ -351,25 +351,26 @@ def tf_generate_arguments_cli(ctx, command):
 @click.pass_context
 def tf_import_cli(ctx, addr, id, allow_missing_config, input, lock, no_color,
                   var, ignore_remote_version):
-    args = []
+    args, options = [], []
 
     args.append(addr)
     args.append(id)
     if allow_missing_config:
-        args.append("-allow-missing-config")
+        options.append("-allow-missing-config")
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if var:
         for v in var:
-            args.append(f"-var={v}")
+            options.append(f"-var={v}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("import", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("import", ctx.obj['SITE'], args=args,
+                             options=options, needed_options="var")
 
 
 @tf_cli.command(name="init", help="Prepare your working directory for other"
