@@ -66,18 +66,20 @@ def terraform_needed_options_builder(needed_options, site):
         return []
 
 
-def terraform_command_builder(command, args, needed_args, site,
-                              backend_dir, var_dir):
+def terraform_command_builder(command, site, args=[], options=[],
+                              needed_options=""):
     """
     Create the command to run terraform
     """
-    base_command = ["terraform", command]
+    aux = ["terraform", command]  # Start base command
 
-    base_command += args
-    base_command += terraform_args_builder(needed_args, site, backend_dir,
-                                           var_dir)
+    if needed_options == "backend" or needed_options == "var":
+        aux += terraform_needed_options_builder(needed_options, site)
 
-    return base_command
+    aux += options  # Add options passed by user
+    aux += args  # Add args passed by user
+
+    return aux
 
 
 def terraform_command_runner(command, site, args=[], options=[],
@@ -91,8 +93,7 @@ def terraform_command_runner(command, site, args=[], options=[],
 
     setup_tfenv(site_dir)
 
-    command = terraform_command_builder(command, site, paths["backends"],
-                                        paths["variables"], args=args,
+    command = terraform_command_builder(command, site, args=args,
                                         options=options,
                                         needed_options=needed_options)
     try:
