@@ -324,11 +324,11 @@ def tf_force_unlock_cli(ctx, lock_id, force):
                              options=options)
 
 
-@tf_cli.command(name="generate-arguments", help="Generate terraform arguments")
+@tf_cli.command(name="generate-options", help="Generate terraform options")
 @click.argument("command", type=click.Choice(["init", "plan", "apply"]))
 @click.pass_context
-def tf_generate_arguments_cli(ctx, command):
-    print(Fore.GREEN + "Needed args:" + Fore.RESET)
+def tf_generate_options_cli(ctx, command):
+    print(Fore.GREEN + "Options:" + Fore.RESET)
     print(terraform_args_print(command, ctx.obj['SITE']))
 
 

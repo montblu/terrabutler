@@ -29,13 +29,12 @@ def terraform_args_print(command, site):
     """
 
     if command == "init":
-        needed_args = "backend"
+        needed_options = "backend"
     elif command == "plan" or command == "apply":
-        needed_args = "var"
+        needed_options = "var"
 
-    args = terraform_args_builder(needed_args, site, paths["backends"],
-                                  paths["variables"])
-    return " ".join(args)
+    options = terraform_needed_options_builder(needed_options, site)
+    return " ".join(options)
 
 
 def terraform_needed_options_builder(needed_options, site):
