@@ -118,7 +118,7 @@ def set_current_env(env, s3, init=False):
 
         reload_direnv()
         if init:
-        terraform_init_all_sites()
+            terraform_init_all_sites()
         print("\n\n" + Fore.GREEN + f"Switched to environment '{env}'.")
 
 
