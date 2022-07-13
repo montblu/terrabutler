@@ -138,4 +138,5 @@ def terraform_init_all_sites():
         sites.remove("inception")
     for site in sites:
         print(Fore.YELLOW + f"Initializing {site} site")
-        terraform_command_runner("init", ["-reconfigure"], "backend", site)
+        terraform_command_runner("init", site, options=["-reconfigure"],
+                                 needed_options="backend")

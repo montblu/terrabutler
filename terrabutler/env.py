@@ -95,7 +95,7 @@ def get_current_env():
         return f.read()
 
 
-def set_current_env(env, s3):
+def set_current_env(env, s3, init=False):
     current_env = get_current_env()
     available_envs = get_available_envs(s3)
 
@@ -117,7 +117,8 @@ def set_current_env(env, s3):
             exit(1)
 
         reload_direnv()
-        terraform_init_all_sites()
+        if init:
+            terraform_init_all_sites()
         print("\n\n" + Fore.GREEN + f"Switched to environment '{env}'.")
 
 

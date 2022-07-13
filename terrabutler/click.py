@@ -121,10 +121,12 @@ def env_new_cli(name, y, t, a, s3):
 
 @env_cli.command(name="select", help="Select a environment")
 @click.argument('NAME')
+@click.option("-init", default=True,
+              help="Disable auto init of the sites")
 @click.option("-s3", is_flag=True,
               help="Access S3 instead of parsing terraform output")
-def env_select_cli(name, s3):
-    set_current_env(name, s3)
+def env_select_cli(name, init, s3):
+    set_current_env(name, s3, init=init)
 
 
 @env_cli.command(name="show", help="Show the name of the current environment")
