@@ -463,16 +463,16 @@ def tf_init_cli(ctx, backend, force_copy, get, input, lock, no_color,
               " human-oriented representation of the value.")
 @click.pass_context
 def tf_output_cli(ctx, no_color, json, raw):
-    args = []
+    options = []
 
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if json:
-        args.append("-json")
+        options.append("-json")
     if raw:
-        args.append("-raw")
+        options.append("-raw")
 
-    terraform_command_runner("output", args, "", ctx.obj['SITE'])
+    terraform_command_runner("output", ctx.obj['SITE'], options=options)
 
 
 @tf_cli.command(name="plan", help="Show changes required by the current"
@@ -513,30 +513,31 @@ def tf_output_cli(ctx, no_color, json, raw):
 @click.pass_context
 def tf_plan_cli(ctx, destroy, input, lock, lock_timeout, no_color,
                 refresh_only, refresh, target, var):
-    args = []
+    options = []
 
     if destroy:
-        args.append("-destroy")
+        options.append("-destroy")
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if refresh_only:
-        args.append("-refresh-only")
+        options.append("-refresh-only")
     if refresh is False:
-        args.append("-refresh=false")
+        options.append("-refresh=false")
     if target:
         for t in target:
-            args.append(f"-target={t}")
+            options.append(f"-target={t}")
     if var:
         for v in var:
-            args.append(f"-var={v}")
+            options.append(f"-var={v}")
 
-    terraform_command_runner("plan", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("plan", ctx.obj['SITE'], options=options,
+                             needed_options="var")
 
 
 @tf_cli.group(name="providers", help="Show the providers required for this"
@@ -545,7 +546,7 @@ def tf_plan_cli(ctx, destroy, input, lock, lock_timeout, no_color,
 @click.pass_context
 def tf_providers_cli(ctx):
     if ctx.invoked_subcommand is None:
-        terraform_command_runner("providers", [], "none", ctx.obj['SITE'])
+        terraform_command_runner("providers", ctx.obj['SITE'])
 
 
 @tf_providers_cli.command(name="lock", help="Write out dependency locks for"
@@ -562,18 +563,18 @@ def tf_providers_cli(ctx):
                                 " checksums for.")
 @click.pass_context
 def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
-    args = []
+    args, options = []
 
-    args.append("lock")
     args += providers
     if fs_mirror:
-        args.append(f"-fs-mirror={fs_mirror}")
+        options.append(f"-fs-mirror={fs_mirror}")
     if net_mirror:
-        args.append(f"-net-mirror={net_mirror}")
+        options.append(f"-net-mirror={net_mirror}")
     if platform:
-        args.append(f"-platform={platform}")
+        options.append(f"-platform={platform}")
 
-    terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("providers lock", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_providers_cli.command(name="mirror", help="Save local copies of all"
@@ -583,29 +584,30 @@ def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
                                 " checksums for.")
 @click.pass_context
 def tf_providers_mirror_cli(ctx, target_dir, platform):
-    args = []
+    args, options = []
 
-    args.append("mirror")
     args.append(target_dir)
     if platform:
-        args.append(f"-platform={platform}")
+        options.append(f"-platform={platform}")
 
-    terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("providers lock", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_providers_cli.command(name="schema", help="Show schemas for the providers"
                                               " used in the configuration")
 @click.option("-json", help="Prints out a json representation of the schemas"
                             " for all providers used in the current"
-                            " configuration.", is_flag=True)
+                            " configuration.", required=True, is_flag=True)
 @click.pass_context
 def tf_providers_schema_cli(ctx, json):
-    args = []
-    args.append(json)
-    if json:
-        args.append("-json")
+    options = []
 
-    terraform_command_runner("providers", args, "none", ctx.obj['SITE'])
+    if json:
+        options.append("-json")
+
+    terraform_command_runner("providers schema", ctx.obj['SITE'],
+                             options=options)
 
 
 @tf_cli.command(name="refresh", help="Update the state to match remote"
@@ -627,22 +629,23 @@ def tf_providers_schema_cli(ctx, json):
                    "This flag can be set multiple times.")
 @click.pass_context
 def tf_refresh_cli(ctx, input, lock, no_color, target, var):
-    args = []
+    options = []
 
     if input is False:
-        args.append("-input=false")
+        options.append("-input=false")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if target:
         for t in target:
-            args.append(f"-target={t}")
+            options.append(f"-target={t}")
     if var:
         for v in var:
-            args.append(f"-var={v}")
+            options.append(f"-var={v}")
 
-    terraform_command_runner("refresh", args, "var", ctx.obj['SITE'])
+    terraform_command_runner("refresh", ctx.obj['SITE'], options=options,
+                             needed_options="var")
 
 
 @tf_cli.command(name="show", help="Show the current state or a saved plan")
@@ -654,16 +657,16 @@ def tf_refresh_cli(ctx, input, lock, no_color, target, var):
               " JSON format.")
 @click.pass_context
 def tf_show_cli(ctx, path, no_color, json):
-    args = []
+    args, options = []
 
-    if path is not None:
-        args.append(path)
+    args.append(path)
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if json:
-        args.append("-json")
+        options.append("-json")
 
-    terraform_command_runner("show", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("show", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_cli.group(name="state", help="Advanced state management")
@@ -683,16 +686,17 @@ def tf_state_cli(ctx):
                           " whose value equals the given id string.")
 @click.pass_context
 def tf_state_list_cli(ctx, address, state, id):
-    args = []
+    args, options = []
 
-    args.append("list")
-    args += address
+    if len(address) > 0:
+        args += address
     if state:
-        args.append(f"-state={state}")
+        options.append(f"-state={state}")
     if id:
-        args.append(f"-id={id}")
+        options.append(f"-id={id}")
 
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state list", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_state_cli.command(name="mv", help="Move an item in the state")
@@ -712,32 +716,28 @@ def tf_state_list_cli(ctx, address, state, id):
 @click.pass_context
 def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
                     ignore_remote_version):
-    args = []
+    args, options = []
 
-    args.append("mv")
     args.append(source)
     args.append(destination)
     if dry_run:
-        args.append("-dry-run")
+        options.append("-dry-run")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state mv", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_state_cli.command(name="pull", help="Pull current state and output to"
                                         " stdout")
 @click.pass_context
 def tf_state_pull_cli(ctx):
-    args = []
-
-    args.append("pull")
-
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state pull", ctx.obj['SITE'])
 
 
 @tf_state_cli.command(name="push", help="Update remote state from a local"
@@ -753,18 +753,18 @@ def tf_state_pull_cli(ctx):
 @click.option("-lock-timeout", help="Duration to retry a state lock.")
 @click.pass_context
 def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
-    args = []
+    args, options = []
 
-    args.append("push")
     args.append(path)
     if force:
-        args.append("-force")
+        options.append("-force")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
 
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state push", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_state_cli.command(name="replace-provider",
@@ -786,21 +786,21 @@ def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
 def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
                          auto_approve, lock, lock_timeout,
                          ignore_remote_version):
-    args = []
+    args, options = []
 
-    args.append("replace-provider")
     args.append(from_provider_fqdn)
     args.append(to_provider_fqdn)
     if auto_approve:
-        args.append("-auto-approve")
+        options.append("-auto-approve")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state replace-provider", ctx.obj['SITE'],
+                             args=args, options=options)
 
 
 @tf_state_cli.command(name="rm",
@@ -824,24 +824,24 @@ def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
 @click.pass_context
 def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
                     ignore_remote_version):
-    args = []
+    args, options = []
 
-    args.append("rm")
     args += address
     if dry_run:
-        args.append("-dry-run")
+        options.append("-dry-run")
     if backup:
-        args.append(f"-backup={backup}")
+        options.append(f"-backup={backup}")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if state:
-        args.append(f"-state={state}")
+        options.append(f"-state={state}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state rm", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_state_cli.command(name="show",
@@ -851,19 +851,19 @@ def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
                              " the current workspace state.")
 @click.pass_context
 def tf_state_show_cli(ctx, address, state):
-    args = []
+    args, options = []
 
-    args.append("show")
     args.append(address)
     if state:
-        args.append(f"-state={state}")
+        options.append(f"-state={state}")
 
-    terraform_command_runner("state", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("state show", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_cli.command(name="taint", help="Mark a resource instance as not fully"
                                    " functional")
-@click.argument("address")
+@click.argument("address", required=True)
 @click.option("-allow-missing", is_flag=True,
               help="If specified, the command will succeed (exit code 0) even"
                    " if the resource is missing.")
@@ -878,24 +878,25 @@ def tf_state_show_cli(ctx, address, state):
 @click.pass_context
 def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
                  ignore_remote_version):
-    args = []
+    args, options = []
 
     args.append(address)
     if allow_missing:
-        args.append("-allow-missing")
+        options.append("-allow-missing")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("taint", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("taint", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_cli.command(name="untaint", help="Remove the 'tainted' state from a"
                                      " resource instance")
-@click.argument("address")
+@click.argument("address", required=True)
 @click.option("-allow-missing", is_flag=True,
               help="If specified, the command will succeed (exit code 0) even"
                    " if the resource is missing.")
@@ -910,31 +911,32 @@ def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
 @click.pass_context
 def tf_untaint_cli(ctx, address, allow_missing, lock, lock_timeout,
                    ignore_remote_version):
-    args = []
+    args, options = []
 
     args.append(address)
     if allow_missing:
-        args.append("-allow-missing")
+        options.append("-allow-missing")
     if lock is False:
-        args.append("-lock=false")
+        options.append("-lock=false")
     if lock_timeout:
-        args.append(f"-lock-timeout={lock_timeout}")
+        options.append(f"-lock-timeout={lock_timeout}")
     if ignore_remote_version:
-        args.append("-ignore-remote-version")
+        options.append("-ignore-remote-version")
 
-    terraform_command_runner("untaint", args, "none", ctx.obj['SITE'])
+    terraform_command_runner("untaint", ctx.obj['SITE'], args=args,
+                             options=options)
 
 
 @tf_cli.command(name="version", help="Show the current Terraform version")
 @click.option("-json", help="Output the version information as a JSON object.")
 @click.pass_context
 def tf_version_cli(ctx, json):
-    args = []
+    options = []
 
     if json:
-        args.append("-json")
+        options.append("-json")
 
-    terraform_command_runner("version", args, "", ctx.obj['SITE'])
+    terraform_command_runner("version", ctx.obj['SITE'], options=options)
 
 
 @tf_cli.command(name="validate", help="Validate the configuration files")
@@ -944,11 +946,11 @@ def tf_version_cli(ctx, json):
               help="Output the version information as a JSON object.")
 @click.pass_context
 def tf_validate_cli(ctx, no_color, json):
-    args = []
+    options = []
 
     if no_color:
-        args.append("-no-color")
+        options.append("-no-color")
     if json:
-        args.append("-json")
+        options.append("-json")
 
-    terraform_command_runner("validate", args, "", ctx.obj['SITE'])
+    terraform_command_runner("validate", ctx.obj['SITE'], options=options)
