@@ -29,54 +29,61 @@ def terraform_args_print(command, site):
     """
 
     if command == "init":
-        needed_args = "backend"
+        needed_options = "backend"
     elif command == "plan" or command == "apply":
-        needed_args = "var"
+        needed_options = "var"
 
-    args = terraform_args_builder(needed_args, site, paths["backends"],
-                                  paths["variables"])
-    return " ".join(args)
+    options = terraform_needed_options_builder(needed_options, site)
+    return " ".join(options)
 
 
-def terraform_args_builder(needed_args, site, backend_dir, var_dir):
+def terraform_needed_options_builder(needed_options, site):
     """
-    Create array of needed arguments for backend or var files
+    Create array of needed options for backend or var files
     """
     from terrabutler.env import get_current_env
     env = get_current_env()
 
-    if needed_args == "backend":
-        if site == "inception":
+    if needed_options == "backend":
+        backend_dir = paths["backends"]
+
+        if site == "inception":  # Inception backend does only exist in dev
             return ["-backend-config",
                     f"{backend_dir}/{org}-dev-inception.tfvars"]
         else:
             return ["-backend-config",
                     f"{backend_dir}/{org}-{env}-{site}.tfvars"]
 
-    elif needed_args == "var":
-        return ["-var-file", f"{paths['variables']}/global.tfvars",
-                "-var-file", f"{paths['variables']}/{org}-{env}.tfvars",
-                "-var-file", f"{paths['variables']}/{org}-{env}-{site}.tfvars"
+    elif needed_options == "var":
+        variables_dir = paths["variables"]
+
+        return ["-var-file", f"{variables_dir}/global.tfvars",
+                "-var-file", f"{variables_dir}/{org}-{env}.tfvars",
+                "-var-file", f"{variables_dir}/{org}-{env}-{site}.tfvars"
                 ]
 
-    return []
+    else:  # If needed_options is empty, return empty array
+        return []
 
 
-def terraform_command_builder(command, args, needed_args, site,
-                              backend_dir, var_dir):
+def terraform_command_builder(command, site, args=[], options=[],
+                              needed_options=""):
     """
     Create the command to run terraform
     """
-    base_command = ["terraform", command]
+    aux = ["terraform", command]  # Start base command
 
-    base_command += args
-    base_command += terraform_args_builder(needed_args, site, backend_dir,
-                                           var_dir)
+    if needed_options == "backend" or needed_options == "var":
+        aux += terraform_needed_options_builder(needed_options, site)
 
-    return base_command
+    aux += options  # Add options passed by user
+    aux += args  # Add args passed by user
+
+    return aux
 
 
-def terraform_command_runner(command, args, needed_args, site):
+def terraform_command_runner(command, site, args=[], options=[],
+                             needed_options=""):
     """
     Run tfenv and run the terraform command
     """
@@ -86,8 +93,9 @@ def terraform_command_runner(command, args, needed_args, site):
 
     setup_tfenv(site_dir)
 
-    command = terraform_command_builder(command, args, needed_args, site,
-                                        paths["backends"], paths["variables"])
+    command = terraform_command_builder(command, site, args=args,
+                                        options=options,
+                                        needed_options=needed_options)
     try:
         p = subprocess.Popen(args=command, cwd=site_dir)
         p.wait()
