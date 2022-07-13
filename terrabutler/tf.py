@@ -38,28 +38,34 @@ def terraform_args_print(command, site):
     return " ".join(args)
 
 
-def terraform_args_builder(needed_args, site, backend_dir, var_dir):
+def terraform_needed_options_builder(needed_options, site, backend_dir,
+                                     var_dir):
     """
-    Create array of needed arguments for backend or var files
+    Create array of needed options for backend or var files
     """
     from terrabutler.env import get_current_env
     env = get_current_env()
 
-    if needed_args == "backend":
-        if site == "inception":
+    if needed_options == "backend":
+        backend_dir = paths["backends"]
+
+        if site == "inception":  # Inception backend does only exist in dev
             return ["-backend-config",
                     f"{backend_dir}/{org}-dev-inception.tfvars"]
         else:
             return ["-backend-config",
                     f"{backend_dir}/{org}-{env}-{site}.tfvars"]
 
-    elif needed_args == "var":
-        return ["-var-file", f"{paths['variables']}/global.tfvars",
-                "-var-file", f"{paths['variables']}/{org}-{env}.tfvars",
-                "-var-file", f"{paths['variables']}/{org}-{env}-{site}.tfvars"
+    elif needed_options == "var":
+        variables_dir = paths["variables"]
+
+        return ["-var-file", f"{variables_dir}/global.tfvars",
+                "-var-file", f"{variables_dir}/{org}-{env}.tfvars",
+                "-var-file", f"{variables_dir}/{org}-{env}-{site}.tfvars"
                 ]
 
-    return []
+    else:  # If needed_options is empty, return empty array
+        return []
 
 
 def terraform_command_builder(command, args, needed_args, site,
