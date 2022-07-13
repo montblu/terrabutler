@@ -38,8 +38,7 @@ def terraform_args_print(command, site):
     return " ".join(args)
 
 
-def terraform_needed_options_builder(needed_options, site, backend_dir,
-                                     var_dir):
+def terraform_needed_options_builder(needed_options, site):
     """
     Create array of needed options for backend or var files
     """
