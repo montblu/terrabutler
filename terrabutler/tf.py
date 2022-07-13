@@ -99,6 +99,11 @@ def terraform_command_runner(command, site, args=[], options=[],
     try:
         p = subprocess.Popen(args=command, cwd=site_dir)
         p.wait()
+
+        if p.returncode != 0:
+            print(Fore.RED + "There was an error while running the terraform"
+                  " command.")
+            exit(1)
     except KeyboardInterrupt:
         p.send_signal(signal.SIGINT)
         p.wait()
