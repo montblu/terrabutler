@@ -1,4 +1,3 @@
-import os
 import signal
 import subprocess
 from colorama import Fore
@@ -120,7 +119,8 @@ def terraform_destroy_all_sites():
     """
     sites = list(reversed(get_settings()["sites"]["ordered"]))
     for site in sites:
-        terraform_command_runner("destroy", [], "var", site)
+        terraform_command_runner("destroy", site, options=["-auto-approve"],
+                                 needed_options="var")
 
 
 def terraform_apply_all_sites():
