@@ -1,4 +1,3 @@
-import os
 import signal
 import subprocess
 from colorama import Fore
