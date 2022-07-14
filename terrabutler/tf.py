@@ -130,8 +130,10 @@ def terraform_apply_all_sites():
     sites = list(get_settings()["sites"]["ordered"])
     for site in sites:
         if site != "inception":
-            terraform_command_runner("init", ["-reconfigure"], "backend", site)
-        terraform_command_runner("apply", [], "var", site)
+            terraform_command_runner("init", site, options=["-reconfigure"],
+                                     needed_options="backend")
+        terraform_command_runner("apply", site, options=["-auto-approve"],
+                                 needed_options="var")
 
 
 def terraform_init_all_sites():
