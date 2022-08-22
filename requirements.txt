@@ -15,4 +15,4 @@ s3transfer==0.6.0
 schema==0.7.5
 semantic-version==2.10.0
 six==1.16.0
-urllib3==1.26.10
+urllib3==1.26.12
