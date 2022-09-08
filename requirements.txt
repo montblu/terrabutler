@@ -6,7 +6,7 @@ contextlib2==21.6.0
 flake8==4.0.1
 Jinja2==3.1.2
 jmespath==1.0.1
-mccabe==0.6.1
+mccabe==0.7.0
 pycodestyle==2.8.0
 pyflakes==2.4.0
 python-dateutil==2.8.2
