@@ -47,7 +47,7 @@ def terraform_needed_options_builder(needed_options, site):
     if needed_options == "backend":
         backend_dir = paths["backends"]
 
-        if site == "inception":  # Inception backend does only exist in the default ENV
+        if site == "inception":  # Init inception with default ENV
             return ["-backend-config",
                     f"{backend_dir}/{org}-{default_env}-inception.tfvars"]
         else:
