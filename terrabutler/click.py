@@ -316,7 +316,7 @@ def tf_fmt_cli(ctx, diff, no_color, recursive):
               help="Don't ask for input for unlock confirmation.")
 @click.pass_context
 def tf_force_unlock_cli(ctx, lock_id, force):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(lock_id)
     if force:
@@ -357,7 +357,7 @@ def tf_generate_options_cli(ctx, command):
 @click.pass_context
 def tf_import_cli(ctx, addr, id, allow_missing_config, input, lock, no_color,
                   var, ignore_remote_version):
-    args, options = [], []
+    args, options = ([] for i in range(2)), []
 
     args.append(addr)
     args.append(id)
@@ -565,7 +565,7 @@ def tf_providers_cli(ctx):
                                 " checksums for.")
 @click.pass_context
 def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args += providers
     if fs_mirror:
@@ -586,7 +586,7 @@ def tf_providers_lock_cli(ctx, providers, fs_mirror, net_mirror, platform):
                                 " checksums for.")
 @click.pass_context
 def tf_providers_mirror_cli(ctx, target_dir, platform):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(target_dir)
     if platform:
@@ -659,7 +659,7 @@ def tf_refresh_cli(ctx, input, lock, no_color, target, var):
               " JSON format.")
 @click.pass_context
 def tf_show_cli(ctx, path, no_color, json):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(path)
     if no_color:
@@ -688,7 +688,7 @@ def tf_state_cli(ctx):
                           " whose value equals the given id string.")
 @click.pass_context
 def tf_state_list_cli(ctx, address, state, id):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     if len(address) > 0:
         args += address
@@ -718,7 +718,7 @@ def tf_state_list_cli(ctx, address, state, id):
 @click.pass_context
 def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
                     ignore_remote_version):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(source)
     args.append(destination)
@@ -755,7 +755,7 @@ def tf_state_pull_cli(ctx):
 @click.option("-lock-timeout", help="Duration to retry a state lock.")
 @click.pass_context
 def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(path)
     if force:
@@ -788,7 +788,7 @@ def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
 def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
                          auto_approve, lock, lock_timeout,
                          ignore_remote_version):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(from_provider_fqdn)
     args.append(to_provider_fqdn)
@@ -826,7 +826,7 @@ def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
 @click.pass_context
 def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
                     ignore_remote_version):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args += address
     if dry_run:
@@ -853,7 +853,7 @@ def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
                              " the current workspace state.")
 @click.pass_context
 def tf_state_show_cli(ctx, address, state):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(address)
     if state:
@@ -880,7 +880,7 @@ def tf_state_show_cli(ctx, address, state):
 @click.pass_context
 def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
                  ignore_remote_version):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(address)
     if allow_missing:
@@ -913,7 +913,7 @@ def tf_taint_cli(ctx, address, allow_missing, lock, lock_timeout,
 @click.pass_context
 def tf_untaint_cli(ctx, address, allow_missing, lock, lock_timeout,
                    ignore_remote_version):
-    args, options = []
+    args, options = ([] for i in range(2))
 
     args.append(address)
     if allow_missing:
