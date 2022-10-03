@@ -690,6 +690,7 @@ def tf_state_cli(ctx):
 def tf_state_list_cli(ctx, address, state, id):
     args, options = ([] for i in range(2))
 
+    args.append("list")
     if len(address) > 0:
         args += address
     if state:
@@ -697,7 +698,7 @@ def tf_state_list_cli(ctx, address, state, id):
     if id:
         options.append(f"-id={id}")
 
-    terraform_command_runner("state list", ctx.obj['SITE'], args=args,
+    terraform_command_runner("state", ctx.obj['SITE'], args=args,
                              options=options)
 
 
