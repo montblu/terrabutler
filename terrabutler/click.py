@@ -741,7 +741,11 @@ def tf_state_mv_cli(ctx, source, destination, dry_run, lock, lock_timeout,
                                         " stdout")
 @click.pass_context
 def tf_state_pull_cli(ctx):
-    terraform_command_runner("state pull", ctx.obj['SITE'])
+    args = []
+
+    args.append("pull")
+
+    terraform_command_runner("state", ctx.obj['SITE'], args=args)
 
 
 @tf_state_cli.command(name="push", help="Update remote state from a local"
