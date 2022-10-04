@@ -864,11 +864,12 @@ def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
 def tf_state_show_cli(ctx, address, state):
     args, options = ([] for i in range(2))
 
+    args.append("show")
     args.append(address)
     if state:
         options.append(f"-state={state}")
 
-    terraform_command_runner("state show", ctx.obj['SITE'], args=args,
+    terraform_command_runner("state", ctx.obj['SITE'], args=args,
                              options=options)
 
 
