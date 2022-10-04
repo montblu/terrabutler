@@ -1,41 +1,24 @@
+<div align="center">
+
+<!-- <img src="https://github.com/angulo-solido/terrabutler/raw/main/docs/assets/logo.png" align="center"/> -->
+<img src="docs/assets/logo.png" align="center"/>
+
 # Terrabutler
 
-## Requirements
+**The utility that helps keeping your IaC in one piece**
 
-The tools required to run the application are:
-- [direnv](https://direnv.net/)
-- [tfenv](https://github.com/tfutils/tfenv)
+</div>
 
-### Installation of direnv
+<div align="center">
 
-Follow the officials docs to install **direnv** [here](https://direnv.net/docs/installation.html)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/angulo-solido/terrabutler?color=8956c4&label=Latest%20Version&logo=Github&style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/angulo-solido/terrabutler/Release%20Terrabutler?color=8956c4&logo=Github&style=for-the-badge)
+![GitHub](https://img.shields.io/github/license/angulo-solido/terrabutler?color=8956c4&logo=Github&style=for-the-badge)
+![GitHub Repo stars](https://img.shields.io/github/stars/angulo-solido/terrabutler?color=8956c4&label=Repo%20Stars&style=for-the-badge)
+</div>
 
-### Installation of tfenv
+---
 
-Follow the officials docs to install **tfenv** [here](https://github.com/tfutils/tfenv#installation)
+## 📖 Documentation
 
-## Install
-
-1. Download the installer
-```
-curl -o /tmp/terrabutler.tar.gz https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux-x86_64-latest.tar.gz
-```
-
-2. Extract the installer
-```
-tar -xf /tmp/terrabutler.tar.gz -C /tmp
-```
-
-3. Run the installer
-```
-sudo /tmp/terrabutler/install
-```
-or without sudo:
-```
-/tmp/terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
-```
-
-4. Remove the archive and the installer
-```
-rm -rf /tmp/terrabutler*
-```
+All the documentation can be found [here](https://docs.solidangle.eu/terrabutler).
