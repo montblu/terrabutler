@@ -836,6 +836,7 @@ def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
                     ignore_remote_version):
     args, options = ([] for i in range(2))
 
+    args.append("rm")
     args += address
     if dry_run:
         options.append("-dry-run")
@@ -850,7 +851,7 @@ def tf_state_rm_cli(ctx, address, dry_run, backup, lock, lock_timeout, state,
     if ignore_remote_version:
         options.append("-ignore-remote-version")
 
-    terraform_command_runner("state rm", ctx.obj['SITE'], args=args,
+    terraform_command_runner("state", ctx.obj['SITE'], args=args,
                              options=options)
 
 
