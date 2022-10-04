@@ -1,7 +1,6 @@
 <div align="center">
 
-<!-- <img src="https://github.com/angulo-solido/terrabutler/raw/main/docs/assets/logo.png" align="center"/> -->
-<img src="docs/assets/logo.png" align="center"/>
+<img src="https://github.com/angulo-solido/terrabutler/raw/main/docs/assets/logo.png" align="center"/>
 
 # Terrabutler
 
