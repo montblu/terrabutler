@@ -797,6 +797,7 @@ def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
                          ignore_remote_version):
     args, options = ([] for i in range(2))
 
+    args.append("replace-provider")
     args.append(from_provider_fqdn)
     args.append(to_provider_fqdn)
     if auto_approve:
@@ -808,7 +809,7 @@ def tf_state_replace_cli(ctx, from_provider_fqdn, to_provider_fqdn,
     if ignore_remote_version:
         options.append("-ignore-remote-version")
 
-    terraform_command_runner("state replace-provider", ctx.obj['SITE'],
+    terraform_command_runner("state", ctx.obj['SITE'],
                              args=args, options=options)
 
 
