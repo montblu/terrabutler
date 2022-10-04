@@ -763,6 +763,7 @@ def tf_state_pull_cli(ctx):
 def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
     args, options = ([] for i in range(2))
 
+    args.append("push")
     args.append(path)
     if force:
         options.append("-force")
@@ -771,7 +772,7 @@ def tf_state_push_cli(ctx, path, force, lock, lock_timeout):
     if lock_timeout:
         options.append(f"-lock-timeout={lock_timeout}")
 
-    terraform_command_runner("state push", ctx.obj['SITE'], args=args,
+    terraform_command_runner("state", ctx.obj['SITE'], args=args,
                              options=options)
 
 
