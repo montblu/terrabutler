@@ -6,6 +6,7 @@ edit_uri: ""
 docs_dir: docs
 repo_name: angulo-solido/terrabutler
 repo_url: https://github.com/angulo-solido/terrabutler
+copyright: Copyright &copy; 2022 SolidAngle
 
 theme:
   name: material
