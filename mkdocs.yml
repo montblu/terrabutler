@@ -29,6 +29,10 @@ theme:
   icon:
     repo: fontawesome/brands/github
 
+markdown_extensions:
+  - attr_list
+  - md_in_html
+
 extra:
   social:
     - icon: fontawesome/solid/building
