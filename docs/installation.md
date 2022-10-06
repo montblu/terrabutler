@@ -78,3 +78,7 @@ Do you want to replace it? [y/N]
 ```
 
 Just press `y` and press *enter* and **Terrabutler** should be updated to the version that you downloaded.
+
+???+ danger
+    In case you have installed the **Terrabutler** earlier with different locations, you will need to pass them, otherwise the
+    install script **won't prompt** you to update it.
