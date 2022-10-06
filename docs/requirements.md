@@ -16,4 +16,4 @@ In the list below you have the install instruction for each tool:
 
 ## After checking requirements
 
-You can now proceed to the [install](installation.md) process of **Terrabutler**.
+You can now proceed to the [installation](installation.md) process of **Terrabutler**.
