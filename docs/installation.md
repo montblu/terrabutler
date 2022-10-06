@@ -50,3 +50,15 @@ Terrabutler: v0.1.0
 ```
 
 If the output is not similar to the one above, then **something went wrong during the installation**.
+
+## How to update to a newer version?
+
+If you have **Terrabutler** already installed and want to update to a newer version just do all the installation process again.
+When you will be running the installer script it should prompt if you want to upgrade the **Terrabutler**, as we can see below:
+
+```
+Found preexisting Terrabutler installation: /usr/share/terrabutler.
+Do you want to replace it? [y/N]
+```
+
+Just press `y` and press *enter* and **Terrabutler** should be updated to the version that you downloaded.
