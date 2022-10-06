@@ -1,0 +1,42 @@
+site_name: Terrabutler
+site_description: A Python utility to manage IaC via Terraform by dividing code into categories and changing environments
+site_author: SolidAngle
+site_url: https://solidangle.eu/terrabutler/
+edit_uri: ""
+docs_dir: docs
+repo_name: angulo-solido/terrabutler
+repo_url: https://github.com/angulo-solido/terrabutler
+copyright: Copyright &copy; 2022 SolidAngle
+
+theme:
+  name: material
+  language: en
+  features:
+    - search.highlight
+    - search.share
+    - search.suggest
+  palette:
+    scheme: slate
+    primary: black
+    accent: deep purple
+  font:
+    text: Exo 2
+    code: JetBrains Mono
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+  include_search_page: false
+  search_index_only: true
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+
+extra:
+  social:
+    - icon: fontawesome/solid/building
+      link: https://www.solidangle.eu
+
+nav:
+  - Home: index.md
