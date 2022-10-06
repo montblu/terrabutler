@@ -24,13 +24,13 @@ All the binaries will be placed inside the `/usr/share/terrabutler` folder and t
     If you wanna set the location where terrabutler will be installed you can define it by passing arguments when running the install script.
     This arguments can be seen by running:
     
-    ```
+    ``` shell
     terrabutler/install -h
     ```
 
     Example of installing for local user only **(no need to run the install script as sudo)**:
     
-    ```
+    ``` shell
     terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
     ```
 
@@ -38,14 +38,14 @@ All the binaries will be placed inside the `/usr/share/terrabutler` folder and t
 
 You should be able to run:
 
-```
+``` shell
 terrabutler --version
 ```
 
 and the output should be:
 
 
-```
+``` shell
 Terrabutler: v0.1.0
 ```
 
@@ -56,7 +56,7 @@ If the output is not similar to the one above, then **something went wrong durin
 If you have **Terrabutler** already installed and want to update to a newer version just do all the installation process again.
 When you will be running the installer script it should prompt if you want to upgrade the **Terrabutler**, as we can see below:
 
-```
+``` shell
 Found preexisting Terrabutler installation: /usr/share/terrabutler.
 Do you want to replace it? [y/N]
 ```
