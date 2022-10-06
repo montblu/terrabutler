@@ -52,4 +52,5 @@ extra:
 
 nav:
   - Home: index.md
+  - Requirements: requirements.md
   - Installation: installation.md
