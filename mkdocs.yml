@@ -52,5 +52,6 @@ extra:
 
 nav:
   - Home: index.md
+  - Philosophy: philosophy.md
   - Requirements: requirements.md
   - Installation: installation.md
