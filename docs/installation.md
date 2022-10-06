@@ -33,3 +33,20 @@ All the binaries will be placed inside the `/usr/share/terrabutler` folder and t
     ```
     terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
     ```
+
+## Check if the installation was successful
+
+You should be able to run:
+
+```
+terrabutler --version
+```
+
+and the output should be:
+
+
+```
+Terrabutler: v0.1.0
+```
+
+If the output is not similar to the one above, then **something went wrong during the installation**.
