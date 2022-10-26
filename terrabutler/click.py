@@ -21,7 +21,8 @@ from terrabutler.env import (
 )
 from terrabutler.tf import (
     terraform_args_print,
-    terraform_command_runner
+    terraform_command_runner,
+    terraform_init_all_sites
 )
 from terrabutler.settings import (
     get_settings,
