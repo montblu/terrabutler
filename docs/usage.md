@@ -41,6 +41,7 @@ Subcommands:
 - `delete`: "Delete an environment"
 - `list`: "List environments"
 - `new`: "Create a new environment"
+- `reload`: "Reload the current environment"
 - `select`: "Select a environment"
 - `show`: "Show the name of the current environment"
 

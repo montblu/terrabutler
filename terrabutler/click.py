@@ -21,7 +21,8 @@ from terrabutler.env import (
 )
 from terrabutler.tf import (
     terraform_args_print,
-    terraform_command_runner
+    terraform_command_runner,
+    terraform_init_all_sites
 )
 from terrabutler.settings import (
     get_settings,
@@ -117,6 +118,11 @@ def env_list_cli(s3):
               help="Access S3 instead of parsing terraform output")
 def env_new_cli(name, y, t, a, s3):
     create_env(name, y, t, a, s3)
+
+
+@env_cli.command(name="reload", help="Reload the current environment")
+def env_reload_cli():
+    terraform_init_all_sites()
 
 
 @env_cli.command(name="select", help="Select a environment")
