@@ -120,6 +120,11 @@ def env_new_cli(name, y, t, a, s3):
     create_env(name, y, t, a, s3)
 
 
+@env_cli.command(name="reload", help="Reload the current environment")
+def env_reload_cli():
+    terraform_init_all_sites()
+
+
 @env_cli.command(name="select", help="Select a environment")
 @click.argument('NAME')
 @click.option("-init", default=True,
