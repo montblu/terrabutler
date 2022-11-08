@@ -29,7 +29,7 @@ Start by downloading the Terrabutler Template Project from the repository releas
 
 [![Version-shield]](https://raw.githubusercontent.com/lucascanero/terrabutler-template/***********)
 
-Inside the terrabutler-template.zip, downloaded before, in `~/configs/` folder, copy the template file `settings.yml`, and edit the variables as below:
+Inside the terrabutler-template.zip, downloaded before, in the `~/configs/` folder, copy the template file `settings.yml`, and edit the variables as below:
 
 
 ```
