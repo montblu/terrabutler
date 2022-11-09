@@ -60,7 +60,7 @@ sites:
 
 ## Terraform
 
-Start installing Terraform with tfenv:
+Start by installing Terraform with tfenv:
 
 ```shell
 $ tfenv install 
