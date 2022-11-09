@@ -27,7 +27,7 @@ export TERRABUTLER_ROOT=$(pwd)
 
 Start by downloading the Terrabutler Template Project from the repository release below: 
 
-[![Version-shield]](https://raw.githubusercontent.com/lucascanero/terrabutler-template/***********)
+[![Version-shield]](https://github.com/lucascanero/terrabutler-template/archive/refs/heads/example-template.zip)
 
 Inside the terrabutler-template.zip, downloaded before, in the `~/configs/` folder, copy the template file `settings.yml`, and edit the variables as below:
 
