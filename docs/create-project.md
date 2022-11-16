@@ -1,4 +1,4 @@
-# Create Project
+# Create a new project
 
 Before proceeding make sure that you have followed the [Installation](installation.md). 
 
@@ -14,49 +14,61 @@ If not, add the following line at the end of your `~/.bashrc` file:
 eval "$(direnv hook bash)"
 ```
 
-## Add direnv to your project
-
-Create a `.envrc` file in the project root directory, containing the following lines:
-
-```
-export TERRABUTLER_ENABLE=TRUE
-export TERRABUTLER_ROOT=$(pwd)
-```
 
 ## Configure Terrabutler
 
-Start by downloading the Terrabutler Template Project from the repository release below: 
+### Create your project folder
+
+```shell
+mkdir <project_name>
+```
+
+### Download Template
+
+Start by downloading the Terrabutler Template Project from the repository source below: 
 
 [![Version-shield]](https://github.com/lucascanero/terrabutler-template/archive/refs/heads/example-template.zip)
 
-Inside the terrabutler-template.zip, downloaded before, in the `~/configs/` folder, copy the template file `settings.yml`, and edit the variables as below:
+Copy the files inside `./terrabutler-template/` to the root of your project folder.
 
-
-```
-environments:
-  default:
-    domain: example.com
-    name: staging
-    profile_name: example-staging
-    region: eu-central-1
-  permanent:
-    - staging
-  temporary:
-    secrets:
-      firebase_credentials: DUMMY
-      mail_password: DUMMY
-general:
-  organization: example-organization
-  secrets_key_id: alias/secrets
-sites:
-  ordered:
-    - inception
-    - network
+```shell
+$ cp -a /terrabutler-template/. /<project_name>/
 ```
 
-???+ tip
-    You can get this template file in repository folder: 
-    `~/terrabutler-template/configs/settings.yml`
+### Create a new workspace
+
+Before configuring terrabutler, inside `<project_name>/site_inception` folder, you will need to create a Terraform Workspace: 
+For example, we are gonna call it "staging"
+
+```shell
+$ cd site_inception
+$ terraform workspace new staging
+```
+
+### Change Variables
+
+Run the script `./<project_name>/config_template.sh`, with the following arguments, located inside the project folder root:
+
+```shell
+$ ./config_template.sh -d <domain> -e <environment_name> -p <project_name>
+
+USAGE:
+   ./config_template [FLAG] [STRING]
+FLAGS:
+   -p <project_name>        The name for your project.  
+                            Example: -p montblu
+
+   -d <domain>              The domain of your project. 
+                            Example: -d montblu.eu
+
+   -e <environment_name>    The environment name of your project. 
+                            Example: -e staging
+```
+
+
+???+ danger
+    This script only works with the template folder! Don't use it in another project folders!
+    `./terrabutler-template/config_template.sh`
 
 ## Terraform
 
@@ -64,15 +76,6 @@ Start by installing Terraform with tfenv:
 
 ```shell
 $ tfenv install 
-```
-
-### Change Variables
-
-Change all project variables and settings in the template, starting by replacing `example` to your project name.
-
-```shell
-Project Variables File:
-~/terrabutler-template/variables/example-staging.tfvars
 ```
 
 ### Initialize the Project
@@ -90,30 +93,23 @@ $ terraform apply
 
 ### Change local to remote backend
 
-#### Edit the bucket configuration variables
-
-Edit the variable files inside `/configs/backends/` as your bucket configuration in AWS, like the example below:
-```
-region         = "eu-central-1"
-profile        = "example-development"
-key            = "staging-network.tfstate"
-bucket         = "mb-staging-site-network-tfstate"
-dynamodb_table = "mb_staging_site_network_tfstatelock"
-
-```
-
-#### Uncommit the remote backend line
- Remove the commited line as below, in the `terrabutler-template` in the path `/site-inception/terraform.tf` to change from local to remote.
+#### Uncomment the remote backend line
+Remove the commented line as below, in the `terrabutler-template` in the path `./site-inception/terraform.tf` to change from local to remote.
 
 ```
 backend "s3" {}
 ```
 
-Perform an Terraform initialization with the backend config to update the new changes:
+Perform an Terraform initialization with the backend config file,located in `/configs/backend/ to update the new changes:
 
 ```shell
-terraform init -backend-config="/configs/backends/example-staging.tfvars"
+$ terraform init -backend-config=<inception_backend_path>  
 ```
+
+???+ tip
+   Example:
+   $ terraform init -backend-config="./configs/backends/<project_name>-<environment_name>-inception.tfvars"
+
 
 
 
