@@ -116,11 +116,37 @@ $ terraform init -backend-config=<inception_backend_path>
    Example:
    $ terraform init -backend-config="./configs/backends/<project_name>-<environment_name>-inception.tfvars"
 
+#### Delete the local state
 
+Delete the local state in `/site_inception`, as it is not necessary:
 
+```shell
+$ rm -rf terraform.tfstate.d/ terraform.tfstate terraform.tfstate.backup
+```
 
+### Terrabutler commands
 
+#### Terrabutler Plan
 
+Perform an Terrabutler Plan to ensure everything is ok, and plan any changes:
+
+```shell
+$ terrabutler tf -site inception plan
+```
+#### Terrabutler Apply
+
+Perform an Terrabutler Apply to apply the planned changes:
+
+```shell
+$ terrabutler tf -site inception apply
+```
+#### Terrabutler Destroy
+
+Perform an Terrabutler Destroy to delete or undo any changes made in the provider:
+
+```shell 
+$ terrabutler tf -site inception destroy
+```
 
 
  [Version-shield]: https://img.shields.io/badge/terrabutler_Template-Download-%23121011.svg?style=for-the-badge&logo=github&colorA=273133&colorB=0093ee "Latest version"
