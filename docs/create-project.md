@@ -54,6 +54,7 @@ $ ./config_template.sh -d <domain> -e <environment_name> -p <project_name>
 
 USAGE:
    ./config_template [FLAG] [STRING]
+
 FLAGS:
    -p <project_name>        The name for your project.  
                             Example: -p montblu
@@ -80,15 +81,20 @@ $ tfenv install
 
 ### Initialize the Project
  
-Perform an Terraform Initialization:
+Perform an Terraform Initialization inside site_inception:
 
 ```shell
+$ cd /site_inception/
 $ terraform init
 ```
-Perform an Terraform Apply:
+Perform an Terraform Apply with the `.tfvars` inside `/config/variables/`:
+
+`./configs/variables/global.tfvars` </br>
+`./configs/variables/<project_name>-<environment_name>.tfvars"` </br>
+`./configs/variables/<project_name>-<environment_name>-inception.tfvars"`</br>
 
 ```shell
-$ terraform apply
+$ terraform apply -var-file="../configs/variables/global.tfvars" -var-file="../configs/variables/<project_name>-<environment_name>.tfvars" -var-file="../configs/variables/<project_name>-<environment_name>-inception.tfvars"
 ```
 
 ### Change local to remote backend
@@ -100,7 +106,7 @@ Remove the commented line as below, in the `terrabutler-template` in the path `.
 backend "s3" {}
 ```
 
-Perform an Terraform initialization with the backend config file,located in `/configs/backend/ to update the new changes:
+Perform an Terraform initialization with the backend config file,located in `/configs/backend/` to update the new changes:
 
 ```shell
 $ terraform init -backend-config=<inception_backend_path>  
