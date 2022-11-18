@@ -7,7 +7,9 @@ In the project folder root, create a new diretory called `site_<site-name>`:
 ```shell
 $ mkdir site_<site-name>
 ```
-
+???+ tip
+  Replace `<site-name>`  with your new site name!
+  
 ## Configure the new `site_`
 
 
