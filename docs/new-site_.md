@@ -9,7 +9,7 @@ $ mkdir site_<site-name>
 ```
 ???+ tip
   Replace `<site-name>`  with your new site name!
-  
+
 ## Configure the new `site_`
 
 
@@ -60,8 +60,8 @@ Create the Terraform files inside the site_`<site-name>`
 
 ### Perform an init in `site_`
 
-Run the following command, with the `site_<site-name>` backend config:
+Run the following command:
 
 ```shell
-$ terrabutler tf -site data init -backend-config="./configs/backends/<project_name>-<environment_name>-<site-name>.tfvars"
+$ terrabutler tf -site data init 
 ```
