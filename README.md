@@ -24,4 +24,4 @@ All the documentation can be found [here](https://docs.solidangle.eu/terrabutler
 
 ## 📋 Project Template
 
-A project template can be found [here](https://github.com/lucascanero/terrabutler-aws-template)
+A project template can be found [here](https://github.com/lucascanero/terrabutler-aws-template).
