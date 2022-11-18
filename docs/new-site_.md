@@ -18,7 +18,7 @@ $ mkdir site_<site-name>
 Add `<site-name>` to the following file, in `inception_projects = []` line:
 
 ```
-../configs/variables/<project>-<env>-inception.tfvars
+./configs/variables/<project>-<env>-inception.tfvars
 ```
 
 ### Add the new site to Terrabutler settings
@@ -26,7 +26,7 @@ Add `<site-name>` to the following file, in `inception_projects = []` line:
 Add `<site-name>` to the following file, in `sites: ordered: - <site-name>` line:
 
 ```
-../configs/settings.yml
+./configs/settings.yml
 ```
 
 ### Add a new variable file to the Variables Folder
@@ -34,7 +34,7 @@ Add `<site-name>` to the following file, in `sites: ordered: - <site-name>` line
 Create a new file called `<project-name>-<env>-<site-name>.tfvars` to the following directory:
 
 ```
-../configs/variables/<project-name>-<env>-<site-name>.tfvars
+./configs/variables/<project-name>-<env>-<site-name>.tfvars
 ```
 
 ### Perform an apply in `site_inception`
@@ -49,15 +49,37 @@ $ terrabutler tf -site inception apply
 
 ### Add terraform files
 
-Create the Terraform files inside the site_`<site-name>`
+Run the following commands to copy the following Terraform files to the site_`<site-name>`:
 
-```
-- site_<site-name>
-  - provider.tf
-  - terraform.tf
-  - variables-global.tf (Symbolic Link) -> site_inception
+```shell
+$ cd site_<site-name>
 ```
 
+```shell
+$ cp ../site_inception/terraform.tf .
+```
+
+```shell
+$ cp ../site_inception/provider.tf .
+```
+
+### Create Symbolic Links
+
+Run the following commands to create the Symbolic Links:
+
+```shell
+$ cd site_<site-name>
+```
+
+```shell
+$ ln -s ../globals/data.tf ./data_global.tf
+```
+```shell
+$ ln -s ../globals/locals.tf ./locals_globals.tf
+```
+```shell
+$ $ ln -s ../globals/variables.tf ./variables_globals.tf
+```
 ### Perform an init in `site_`
 
 Run the following command:
