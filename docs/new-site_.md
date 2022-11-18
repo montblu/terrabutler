@@ -1,4 +1,4 @@
-# New site_
+# Add a new site_
 
 ## Create a new directory 
 
