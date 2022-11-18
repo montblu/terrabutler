@@ -57,10 +57,10 @@ USAGE:
 
 FLAGS:
    -p <project_name>        The name for your project.  
-                            Example: -p montblu
+                            Example: -p example
 
    -d <domain>              The domain of your project. 
-                            Example: -d montblu.eu
+                            Example: -d example.com
 
    -e <environment_name>    The environment name of your project. 
                             Example: -e staging
