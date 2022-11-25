@@ -78,7 +78,7 @@ $ ln -s ../globals/data.tf ./data_global.tf
 $ ln -s ../globals/locals.tf ./locals_globals.tf
 ```
 ```shell
-$ $ ln -s ../globals/variables.tf ./variables_globals.tf
+$ ln -s ../globals/variables.tf ./variables_globals.tf
 ```
 ### Perform an init in `site_`
 
