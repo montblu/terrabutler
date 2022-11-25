@@ -56,13 +56,13 @@ USAGE:
    ./config_template [FLAG] [STRING]
 
 FLAGS:
-   -p <project_name>        The name for your project.  
-                            Example: -p example
+   -o <organization_name>   The name for your organization.  
+                            Example: -o example
 
-   -d <domain>              The domain of your project. 
+   -d <domain>              The domain of your organization. 
                             Example: -d example.com
 
-   -e <environment_name>    The environment name of your project. 
+   -e <environment_name>    The environment name of your organization. 
                             Example: -e staging
 ```
 
