@@ -1,4 +1,4 @@
-# Add a new site_
+# Add a new site
 
 ## Create a new directory 
 
@@ -10,7 +10,7 @@ $ mkdir site_<site-name>
 ???+ tip
   Replace `<site-name>`  with your new site name!
 
-## Configure the new `site_`
+## Configure the new site
 
 
 ### Add the new site to `site_inception` variables file
@@ -45,7 +45,7 @@ Run the following command, to update the new configuration on `site_inception`:
 $ terrabutler tf -site inception apply
 ```
 
-## Add files to the new `site_`
+## Add files to the new site
 
 ### Add terraform files
 
@@ -80,7 +80,7 @@ $ ln -s ../globals/locals.tf ./locals_globals.tf
 ```shell
 $ ln -s ../globals/variables.tf ./variables_globals.tf
 ```
-### Perform an init in `site_`
+### Perform an init in the new site
 
 Run the following command:
 
