@@ -5,14 +5,9 @@ Before proceeding make sure that you have followed the [Installation](installati
 ## Configure direnv
 
 For direnv to work properly it needs to be hooked into the shell.
+Check direnv docs to know more: https://direnv.net/docs/hook.html
 
-Make sure that you have hooked direnv into your bash shell before proceeding. 
-
-If not, add the following line at the end of your `~/.bashrc` file:
-
-```
-eval "$(direnv hook bash)"
-```
+Make sure that you have followed direnv documentation before proceeding. 
 
 
 ## Configure Terrabutler
