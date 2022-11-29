@@ -7,6 +7,9 @@ Before you start using you will need to have some tools installed.
 
 These tools are required to be installed for a **Terrabutler** to work properly.
 
+???+ danger
+  This repository only works on Intel based Processors (x86/x64). Arm/Arm64 or another processor architectures are incompatible!
+
 ## Installing requirements
 
 In the list below you have the install instruction for each tool:
