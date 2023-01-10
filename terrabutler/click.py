@@ -363,7 +363,7 @@ def tf_generate_options_cli(ctx, command):
 @click.pass_context
 def tf_import_cli(ctx, addr, id, allow_missing_config, input, lock, no_color,
                   var, ignore_remote_version):
-    args, options = ([] for i in range(2)), []
+    args, options = ([] for i in range(2))
 
     args.append(addr)
     args.append(id)
