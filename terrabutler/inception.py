@@ -43,7 +43,7 @@ def inception_init():
 
         try:
             with open(f"{inception_dir}/.terraform/environment", "w") as f:
-                f.write("dev")
+                f.write(default_env_name)
         except FileNotFoundError:
             print(Fore.RED + "The file that manages the environments could not"
                   " be created.")
