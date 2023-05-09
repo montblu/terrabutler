@@ -39,9 +39,6 @@ jobs:
           format: tar
           gzip: true
           output: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
-      - name: Create duplicate archive with latest
-        run:
-          cp terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz terrabutler-linux-x86_64-latest.tar.gz
       - name: Add artifact to Release
         uses: softprops/action-gh-release@v1
         with:
