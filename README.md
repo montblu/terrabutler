@@ -20,7 +20,7 @@
 
 ## 📖 Documentation
 
-All the documentation can be found [here](https://docs.solidangle.eu/terrabutler).
+All the documentation can be found [here](https://docs.montblu.eu/terrabutler).
 
 ## 📋 Project Template
 
