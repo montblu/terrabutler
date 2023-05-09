@@ -48,7 +48,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/solid/building
-      link: https://www.solidangle.eu
+      link: https://www.montblu.eu
 
 nav:
   - Home: index.md
