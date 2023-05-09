@@ -6,7 +6,7 @@ edit_uri: ""
 docs_dir: docs
 repo_name: montblu/terrabutler
 repo_url: https://github.com/montblu/terrabutler
-copyright: Copyright &copy; 2022 SolidAngle
+copyright: Copyright &copy; 2023 MontBlu
 
 theme:
   name: material
