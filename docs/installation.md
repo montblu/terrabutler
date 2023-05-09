@@ -4,7 +4,7 @@ Before proceeding make sure that you have the [requirements](requirements.md).
 
 ## Download the binaries and extract them
 
-All the binaries versions are available inside the [releases pages](https://github.com/angulo-solido/terrabutler/releases)
+All the binaries versions are available inside the [releases pages](https://github.com/montblu/terrabutler/releases)
 
 To download the latest binaries run the following command:
 
@@ -14,7 +14,7 @@ wget -qO- https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux
 
 ???+ tip
     If you wanna get a specific version just change the `<VERSION>` in the command below. All the **Terrabutler releases** are
-    available in the [repository releases pages](https://github.com/angulo-solido/terrabutler/releases)
+    available in the [repository releases pages](https://github.com/montblu/terrabutler/releases)
 
     ``` shell
     wget -qO- https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux-x86_64-<VERSION>.tar.gz | tar -zxvf - terrabutler
