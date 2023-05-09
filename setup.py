@@ -23,12 +23,12 @@ def read(fname):
 setup(
     name="terrabutler",
     version=find_version("terrabutler/__init__.py"),
-    author="AnguloSólido",
+    author="MontBlu",
     description=("A tool to manage Terraform projects easier."),
     long_description=read("README.md"),
     license="GPL-3.0",
     keywords="terraform manager",
-    url="https://github.com/angulo-solido/terrabutler",
+    url="https://github.com/montblu/terrabutler",
     scripts=["bin/terrabutler"],
     packages=["terrabutler"],
     install_requires=[
@@ -61,7 +61,7 @@ setup(
         "Topic :: Utilities"
     ],
     project_urls={
-        "Source": "https://github.com/angulo-solido/terrabutler",
-        "Changelog": "https://github.com/angulo-solido/terrabutler/releases",
+        "Source": "https://github.com/montblu/terrabutler",
+        "Changelog": "https://github.com/montblu/terrabutler/releases",
     },
 )
