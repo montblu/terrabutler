@@ -1,7 +1,7 @@
 site_name: Terrabutler
 site_description: A Python utility to manage IaC via Terraform by dividing code into categories and changing environments
 site_author: MontBlu
-site_url: https://docs.solidangle.eu/terrabutler/
+site_url: https://docs.montblu.eu/terrabutler/
 edit_uri: ""
 docs_dir: docs
 repo_name: angulo-solido/terrabutler
