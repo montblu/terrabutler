@@ -9,22 +9,16 @@ All the binaries versions are available inside the [releases pages](https://gith
 To download the latest binaries run the following command:
 
 ``` shell
-wget -qO- https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux-x86_64-latest.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/<VERSION>/terrabutler-linux-x86_64-<VERSION>.tar.gz | tar -zxvf - terrabutler
 ```
 
-???+ tip
-    If you wanna get a specific version just change the `<VERSION>` in the command below. All the **Terrabutler releases** are
-    available in the [repository releases pages](https://github.com/montblu/terrabutler/releases)
+Where `<VERSION>` is the version of the release.
 
-    ``` shell
-    wget -qO- https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux-x86_64-<VERSION>.tar.gz | tar -zxvf - terrabutler
-    ```
+For example, to download **Terrabutler v0.1.0**, just run:
 
-    For example, to download **Terrabutler v0.1.0**, just run:
-
-    ```
-    wget -qO- https://terrabutler-public.s3.amazonaws.com/releases/terrabutler-linux-x86_64-v0.1.0.tar.gz | tar -zxvf - terrabutler
-    ```
+```
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v0.1.0/terrabutler-linux-x86_64-v0.1.0.tar.gz | tar -zxvf - terrabutler
+```
 
 ## Install the binaries
 
