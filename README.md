@@ -24,4 +24,4 @@ All the documentation can be found [here](https://docs.montblu.eu/terrabutler).
 
 ## 📋 Project Template
 
-A project template can be found [here](https://github.com/montblu/terrabutler-aws-template).
+A project template can be found [here](https://github.com/montblu/template-terrabutler-aws).
