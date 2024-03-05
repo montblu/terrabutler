@@ -7,7 +7,7 @@ flake8==6.0.0
 Jinja2==3.1.2
 jmespath==1.0.1
 mccabe==0.7.0
-pycodestyle==2.9.1
+pycodestyle==2.11.1
 pyflakes==3.0.1
 python-dateutil==2.8.2
 PyYAML==6.0
