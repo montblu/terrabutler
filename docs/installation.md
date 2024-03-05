@@ -14,10 +14,10 @@ wget -qO- https://github.com/montblu/terrabutler/releases/download/<VERSION>/ter
 
 Where `<VERSION>` is the version of the release.
 
-For example, to download **Terrabutler v0.2.0** for Linux x64, just run:
+For example, to download **Terrabutler v1.0.0** for Linux x64, just run:
 
 ```
-wget -qO- https://github.com/montblu/terrabutler/releases/download/v0.2.0/terrabutler-linux-x64-v0.2.0.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v1.0.0/terrabutler-linux-x64-v1.0.0.tar.gz | tar -zxvf - terrabutler
 ```
 
 ## Install the binaries
@@ -56,7 +56,7 @@ and the output should be:
 
 
 ``` shell
-Terrabutler: v0.2.0
+Terrabutler: v1.0.0
 ```
 
 If the output is not similar to the one above, then **something went wrong during the installation**.
