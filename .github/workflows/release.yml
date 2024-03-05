@@ -7,17 +7,25 @@ on:
 
 jobs:
   release-terrabutler:
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - macos-13 # MacOS on x64
+          - macos-14 # MacOS on ARM64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Get Current Tag
-        uses: WyriHaximus/github-action-get-previous-tag@master
+        uses: WyriHaximus/github-action-get-previous-tag@v1
         id: tag
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Set version based on tag
         run: |
           sed -i 's/dev/${{ steps.tag.outputs.tag }}/g' terrabutler/__init__.py
@@ -31,6 +39,16 @@ jobs:
           cp README.md dist/terrabutler
           cp LICENSE dist/terrabutler
           cp scripts/install dist/terrabutler
+      - name: OS of the runner 
+        uses: ASzc/change-string-case-action@v6
+        id: os
+        with:
+          string: ${{ runner.os }}
+      - name: Arch of the runner
+        uses: ASzc/change-string-case-action@v6
+        id: arch
+        with:
+          string: ${{ runner.arch }}
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
         with:
@@ -38,8 +56,8 @@ jobs:
           path: "dist"
           format: tar
           gzip: true
-          output: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
+          output: terrabutler-${{ steps.os.outputs.lowercase }}-${{ steps.arch.outputs.lowercase }}-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Add artifact to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
+          files: terrabutler-${{ steps.os.outputs.lowercase }}-${{ steps.arch.outputs.lowercase }}-${{ steps.tag.outputs.tag }}.tar.gz
