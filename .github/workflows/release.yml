@@ -56,8 +56,8 @@ jobs:
           path: "dist"
           format: tar
           gzip: true
-          output: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
+          output: terrabutler-${{ steps.os.outputs.lowercase }}-${{ steps.arch.outputs.lowercase }}-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Add artifact to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: terrabutler-linux-x86_64-${{ steps.tag.outputs.tag }}.tar.gz
+          files: terrabutler-${{ steps.os.outputs.lowercase }}-${{ steps.arch.outputs.lowercase }}-${{ steps.tag.outputs.tag }}.tar.gz
