@@ -28,7 +28,7 @@ To install the binaries into your system simply run the installer script inside 
 sudo terrabutler/install
 ```
 
-All the binaries will be placed inside the `/usr/share/terrabutler` folder and the bin inside the `/usr/bin` folder
+All the binaries will be placed inside the `/usr/local/share/terrabutler` folder and the bin inside the `/usr/local/bin` folder
 
 ???+ tip
     If you wanna set the location where terrabutler will be installed you can define it by passing arguments when running the install script.
