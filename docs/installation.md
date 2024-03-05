@@ -9,15 +9,15 @@ All the binaries versions are available inside the [releases pages](https://gith
 To download the latest binaries run the following command:
 
 ``` shell
-wget -qO- https://github.com/montblu/terrabutler/releases/download/<VERSION>/terrabutler-linux-x86_64-<VERSION>.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/<VERSION>/terrabutler-<OS>-<ARCH>-<VERSION>.tar.gz | tar -zxvf - terrabutler
 ```
 
 Where `<VERSION>` is the version of the release.
 
-For example, to download **Terrabutler v0.1.0**, just run:
+For example, to download **Terrabutler v0.2.0** for Linux x64, just run:
 
 ```
-wget -qO- https://github.com/montblu/terrabutler/releases/download/v0.1.0/terrabutler-linux-x86_64-v0.1.0.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v0.2.0/terrabutler-linux-x64-v0.2.0.tar.gz | tar -zxvf - terrabutler
 ```
 
 ## Install the binaries
@@ -56,7 +56,7 @@ and the output should be:
 
 
 ``` shell
-Terrabutler: v0.1.0
+Terrabutler: v0.2.0
 ```
 
 If the output is not similar to the one above, then **something went wrong during the installation**.
