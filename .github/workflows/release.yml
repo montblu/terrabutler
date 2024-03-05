@@ -39,6 +39,16 @@ jobs:
           cp README.md dist/terrabutler
           cp LICENSE dist/terrabutler
           cp scripts/install dist/terrabutler
+      - name: OS of the runner 
+        uses: ASzc/change-string-case-action@v6
+        id: os
+        with:
+          string: ${{ runner.os }}
+      - name: Arch of the runner
+        uses: ASzc/change-string-case-action@v6
+        id: arch
+        with:
+          string: ${{ runner.arch }}
       - name: Create archive of build (.tar.gz)
         uses: sibiraj-s/action-archiver@v1
         with:
