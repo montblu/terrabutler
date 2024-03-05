@@ -14,11 +14,20 @@ wget -qO- https://github.com/montblu/terrabutler/releases/download/<VERSION>/ter
 
 Where `<VERSION>` is the version of the release.
 
-For example, to download **Terrabutler v0.2.0** for Linux x64, just run:
+For example, to download **Terrabutler v1.0.0** for Linux x64, just run:
 
 ```
-wget -qO- https://github.com/montblu/terrabutler/releases/download/v0.2.0/terrabutler-linux-x64-v0.2.0.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v1.0.0/terrabutler-linux-x64-v1.0.0.tar.gz | tar -zxvf - terrabutler
 ```
+
+To download **Terrabutler v1.0.0** for MacOS arm64, just run:
+
+```
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v1.0.0/terrabutler-macos-arm64-v1.0.0.tar.gz | tar -zxvf - terrabutler
+```
+
+???+ warning
+    In case you have installed downloaded the archive via Safari you won't be able to use Terrabutler as the file will be marked as "quarantined" and you won't be able to use it as stated in this [issue](https://github.com/borgbackup/borg/issues/5622#issuecomment-774617595). 
 
 ## Install the binaries
 
@@ -28,7 +37,7 @@ To install the binaries into your system simply run the installer script inside 
 sudo terrabutler/install
 ```
 
-All the binaries will be placed inside the `/usr/share/terrabutler` folder and the bin inside the `/usr/bin` folder
+All the binaries will be placed inside the `/usr/local/share/terrabutler` folder and the bin inside the `/usr/local/bin` folder
 
 ???+ tip
     If you wanna set the location where terrabutler will be installed you can define it by passing arguments when running the install script.
@@ -56,7 +65,7 @@ and the output should be:
 
 
 ``` shell
-Terrabutler: v0.2.0
+Terrabutler: v1.0.0
 ```
 
 If the output is not similar to the one above, then **something went wrong during the installation**.
