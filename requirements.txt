@@ -10,7 +10,7 @@ mccabe==0.7.0
 pycodestyle==2.9.1
 pyflakes==3.0.1
 python-dateutil==2.8.2
-PyYAML==6.0
+PyYAML==6.0.1
 s3transfer==0.6.0
 schema==0.7.5
 semantic-version==2.10.0
