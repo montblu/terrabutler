@@ -667,7 +667,8 @@ def tf_refresh_cli(ctx, input, lock, no_color, target, var):
 def tf_show_cli(ctx, path, no_color, json):
     args, options = ([] for i in range(2))
 
-    args.append(path)
+    if path:
+        args.append(path)
     if no_color:
         options.append("-no-color")
     if json:
