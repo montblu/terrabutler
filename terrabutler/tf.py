@@ -9,19 +9,6 @@ from terrabutler.utils import paths
 org = get_settings()["general"]["organization"]
 
 
-def setup_tfenv(site):
-    """
-    Use desired version of terraform
-    """
-    process = subprocess.run(args=['tfenv', 'install'],
-                             cwd=site,
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
-    if process.returncode != 0:
-        print('Error: tfenv failed to install the terraform version')
-        exit(1)
-
-
 def terraform_args_print(command, site):
     """
     Print Args
@@ -90,8 +77,6 @@ def terraform_command_runner(command, site, args=[], options=[],
     from terrabutler.env import get_current_env
     site_dir = f"{paths['root']}/site_{site}"
     env = get_current_env()
-
-    setup_tfenv(site_dir)
 
     command = terraform_command_builder(command, site, args=args,
                                         options=options,
