@@ -212,15 +212,23 @@ def tf_apply_cli(ctx, auto_approve, destroy, input, lock, lock_timeout,
                                      "interactive command prompt")
 @click.option("-state", help="Legacy option for the local backend only."
               " See the local backend's documentation for more information.")
+@click.option("-plan", is_flag=True, default=False,
+              help="Create a new plan (as if running \"terraform plan\") and"
+              " then evaluate expressions against its planned state,"
+              " instead of evaluating against the current state."
+              " You can use this to inspect the effects of configuration"
+              " changes that haven't been applied yet..")
 @click.option("-var", multiple=True,
               help="Set a variable in the Terraform configuration. "
                    "This flag can be set multiple times.")
 @click.pass_context
-def tf_console_cli(ctx, state, var):
+def tf_console_cli(ctx, state, plan, var):
     options = []
 
     if state:
         options.append(f"-state={state}")
+    if plan:
+        options.append("-plan")
     if var:
         for name in var:
             options.append(f"-var='{name}'")
