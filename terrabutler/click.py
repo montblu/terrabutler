@@ -526,9 +526,12 @@ def tf_output_cli(ctx, no_color, json, raw):
               help="Set a value for one of the input variables in the"
               " root module of the configuration. Use this option"
               " more than once to set more than one variable.")
+@click.option("-out",
+              help="Write a plan file to the given path. This can be"
+              " used as input to the \"apply\" command.")
 @click.pass_context
 def tf_plan_cli(ctx, destroy, input, lock, lock_timeout, no_color,
-                refresh_only, refresh, target, var):
+                refresh_only, refresh, target, var, out):
     options = []
 
     if destroy:
@@ -551,6 +554,8 @@ def tf_plan_cli(ctx, destroy, input, lock, lock_timeout, no_color,
     if var:
         for v in var:
             options.append(f"-var={v}")
+    if out:
+        options.append(f"-out={out}")
 
     terraform_command_runner("plan", ctx.obj['SITE'], options=options,
                              needed_options="var")
