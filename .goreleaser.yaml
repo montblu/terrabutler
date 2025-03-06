@@ -1,0 +1,15 @@
+project_name: "terrabutler"
+builds:
+  - binary: "terrabutler"
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.revision={{.Commit}} -X main.buildTime={{.CommitTimestamp}}
+    goarch:
+      - "386"
+      - "amd64"
+      - "arm"
+      - "arm64"
+    goos:
+      - "darwin"
+      - "linux"
+    env:
+      - CGO_ENABLED=0
