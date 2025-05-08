@@ -4,6 +4,7 @@ from colorama import Fore
 from sys import exit
 from terrabutler.settings import get_settings
 from terrabutler.utils import paths
+from terrabutler.env import get_current_env
 
 # Values from Config
 org = get_settings()["general"]["organization"]
@@ -27,7 +28,6 @@ def terraform_needed_options_builder(needed_options, site):
     """
     Create array of needed options for backend or var files
     """
-    from terrabutler.env import get_current_env
     env = get_current_env()
     default_env = get_settings()["environments"]["default"]["name"]
 
@@ -74,9 +74,13 @@ def terraform_command_runner(command, site, args=[], options=[],
     """
     Run tfenv and run the terraform command
     """
-    from terrabutler.env import get_current_env
     site_dir = f"{paths['root']}/site_{site}"
     env = get_current_env()
+
+    path_variables = paths["variables"]
+    if not os.path.exists(f"{path_variables}/{org}-{env}-{site}.tfvars"):
+        print((Fore.YELLOW + f"Site '{site}' is not enabled on env '{env}' (no {org}-{env}-{site}.tfvars)"))
+        return
 
     command = terraform_command_builder(command, site, args=args,
                                         options=options,
@@ -112,7 +116,7 @@ def terraform_destroy_all_sites():
 
 def terraform_apply_all_sites():
     """
-    Destroy all sites by looping through all sites
+    Apply all sites by looping through all sites
     """
     sites = list(get_settings()["sites"]["ordered"])
     for site in sites:
