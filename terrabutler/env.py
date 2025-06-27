@@ -193,7 +193,7 @@ def get_available_envs(s3):
             envs.append(workspace.decode(
                 "utf-8").replace(" ", "").replace("*", ""))
         return envs
-    
+
     except subprocess.CalledProcessError as e:
         print(Fore.RED + f"There was an error from terraform workspace for "
               f"{org}-{default_env_name} environment." + Fore.RESET)
