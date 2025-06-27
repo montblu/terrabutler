@@ -29,14 +29,14 @@ def create_env(env, confirmation, temporary, apply, s3):
             process = subprocess.run(
                 args=['terraform', 'workspace', 'new', env],
                 cwd=paths["inception"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, # stdout == combine to pipe
                 check=True,
             )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             print(Fore.RED + "There was an error while creating the new"
-                  " environment:")
-            print(process.stderr)
+                  " environment:" + Fore.RESET)
+            print(e.output.decode("utf-8"))
             exit(1)
         if temporary:  # Generate only for temporary environments
             generate_var_files(env)
@@ -85,14 +85,14 @@ def delete_env(env, confirmation, destroy, s3):
             process = subprocess.run(
                 args=['terraform', 'workspace', 'delete', env],
                 cwd=paths["inception"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, # stdout == combine to pipe
                 check=True,
             )
-        except subprocess.CalledProcessError:
-            print(Fore.RED + f"There was an error while deleting the '{env}'"
-                  "environment:")
-            print(process.stderr)
+        except subprocess.CalledProcessError as e:
+            print(Fore.RED + f"There was an error while deleting the '{env}' "
+                  "environment:" + Fore.RESET)
+            print(e.output.decode("utf-8"))
             exit(1)
         print(Fore.GREEN + f"The environment '{env}' was deleted!")
     else:
@@ -164,13 +164,15 @@ def get_available_envs(s3):
                 "inception.tfvars"
             ],
             cwd=directory,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, # stdout == combine to pipe
+            check=True,
         )
-    except subprocess.CalledProcessError:
+
+    except subprocess.CalledProcessError as e:
         print(Fore.RED + f"There was an error from terraform for "
-              f"{org}-{default_env_name} environment:")
-        print(process.stderr)
+              f"{org}-{default_env_name} environment:" + Fore.RESET)
+        print(e.output.decode("utf-8"))
         exit(1)
 
     try:
@@ -180,11 +182,12 @@ def get_available_envs(s3):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=False,
+            check=True
         )
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         print(Fore.RED + f"There was an error from terraform for "
-              f"{org}-{default_env_name} environment.")
-        print(process.stderr)
+              f"{org}-{default_env_name} environment." + Fore.RESET)
+        print(e.output.decode("utf-8"))
         exit(1)
 
     workspaces = process.stdout.splitlines()
@@ -201,7 +204,7 @@ def reload_direnv():
     try:
         subprocess.run(args=['direnv', 'reload'])
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print(e.output.decode("utf-8"))
 
 
 def is_protected_env(env):
