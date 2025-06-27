@@ -26,11 +26,11 @@ def create_env(env, confirmation, temporary, apply, s3):
     elif confirmation or confirm(f"Do you really want to create '{env}'" +
                                  " environment?", default=False):
         try:
-            process = subprocess.run(
+            subprocess.run(
                 args=['terraform', 'workspace', 'new', env],
                 cwd=paths["inception"],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, # stdout == combine to pipe
+                stderr=subprocess.STDOUT,  # stdout == combine to pipe
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -82,11 +82,11 @@ def delete_env(env, confirmation, destroy, s3):
             if file.startswith(f"{org}-{env}"):
                 os.remove(os.path.join(paths["variables"], file))
         try:
-            process = subprocess.run(
+            subprocess.run(
                 args=['terraform', 'workspace', 'delete', env],
                 cwd=paths["inception"],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, # stdout == combine to pipe
+                stderr=subprocess.STDOUT,  # stdout == combine to pipe
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -154,7 +154,7 @@ def get_available_envs(s3):
     # Get Environments by accessing the .terraform/environment file
     directory = paths["inception"]
     try:
-        process = subprocess.run(
+        subprocess.run(
             args=[
                 "terraform",
                 "init",
@@ -165,7 +165,7 @@ def get_available_envs(s3):
             ],
             cwd=directory,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, # stdout == combine to pipe
+            stderr=subprocess.STDOUT,  # stdout == combine to pipe
             check=True,
         )
 
@@ -184,20 +184,21 @@ def get_available_envs(s3):
             universal_newlines=False,
             check=True
         )
+
+        workspaces = process.stdout.splitlines()
+        if len(workspaces) > 1:  # Only run if we have already done a init
+            workspaces.pop()  # Remove null entry
+            workspaces.pop(0)  # Pop default workspace
+        for workspace in workspaces:
+            envs.append(workspace.decode(
+                "utf-8").replace(" ", "").replace("*", ""))
+        return envs
+    
     except subprocess.CalledProcessError as e:
         print(Fore.RED + f"There was an error from terraform for "
               f"{org}-{default_env_name} environment." + Fore.RESET)
         print(e.stderr.decode("utf-8"))
         exit(1)
-
-    workspaces = process.stdout.splitlines()
-    if len(workspaces) > 1:  # Only run if we have already done a init
-        workspaces.pop()  # Remove null entry
-        workspaces.pop(0)  # Pop default workspace
-    for workspace in workspaces:
-        envs.append(workspace.decode(
-            "utf-8").replace(" ", "").replace("*", ""))
-    return envs
 
 
 def reload_direnv():
