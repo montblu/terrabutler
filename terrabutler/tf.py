@@ -1,5 +1,7 @@
+import os
 import signal
 import subprocess
+
 from colorama import Fore
 from sys import exit
 from terrabutler.settings import get_settings
@@ -79,7 +81,8 @@ def terraform_command_runner(command, site, args=[], options=[],
 
     path_variables = paths["variables"]
     if not os.path.exists(f"{path_variables}/{org}-{env}-{site}.tfvars"):
-        print((Fore.YELLOW + f"Site '{site}' is not enabled on env '{env}' (no {org}-{env}-{site}.tfvars)"))
+        print(Fore.YELLOW + f"Site '{site}' is not enabled on env '{env}' "
+              f"(no {org}-{env}-{site}.tfvars)")
         return
 
     command = terraform_command_builder(command, site, args=args,
