@@ -12,9 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-22.04
-          - macos-13 # MacOS on x64
-          - macos-14 # MacOS on ARM64
+          - ubuntu-latest
+          - macos-15-intel # MacOS on x64
+          - macos-latest # MacOS on ARM64
 
     steps:
       - name: Checkout
