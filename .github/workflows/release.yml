@@ -14,7 +14,7 @@ jobs:
         os:
           - ubuntu-24.04
           - macos-15-intel # MacOS on x64
-          - macos-latest # MacOS on ARM64
+          - macos-15 # MacOS on ARM64
 
     steps:
       - name: Checkout
