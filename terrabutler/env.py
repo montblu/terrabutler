@@ -47,7 +47,6 @@ def create_env(env, confirmation, temporary, apply, s3):
             write_settings(config_file)
         if apply and temporary:
             terraform_apply_all_sites()
-        reload_direnv()
         print(Fore.GREEN + f"Created and switched to the environment '{env}'!")
     else:
         print(Fore.RED + "Creation cancelled.")
@@ -126,7 +125,6 @@ def set_current_env(env, s3, init=False):
                   " be found.")
             exit(1)
 
-        reload_direnv()
         if init:
             terraform_init_all_sites()
         print("\n\n" + Fore.GREEN + f"Switched to environment '{env}'.")
