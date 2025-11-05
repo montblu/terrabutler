@@ -201,13 +201,6 @@ def get_available_envs(s3):
         exit(1)
 
 
-def reload_direnv():
-    try:
-        subprocess.run(args=['direnv', 'reload'])
-    except subprocess.CalledProcessError as e:
-        print(e.stdout.decode("utf-8"))
-
-
 def is_protected_env(env):
     protected_envs = get_settings()["environments"]["permanent"]
     if env in protected_envs:
