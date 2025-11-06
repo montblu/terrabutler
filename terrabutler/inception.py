@@ -23,7 +23,6 @@ def inception_init_needed():
 
 
 def inception_init():
-    from terrabutler.env import reload_direnv
     from terrabutler.settings import get_settings
     org = get_settings()["general"]["organization"]
     default_env_name = get_settings()["environments"]["default"]["name"]
@@ -49,7 +48,6 @@ def inception_init():
                   " be created.")
             exit(1)
 
-        reload_direnv()
         print(Fore.GREEN + "The initialization was successfull!")
 
     else:
