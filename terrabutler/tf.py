@@ -18,6 +18,8 @@ def terraform_args_print(command, site):
         needed_options = "backend"
     elif command == "plan" or command == "apply":
         needed_options = "var"
+    else:
+        needed_options = ""
 
     options = terraform_needed_options_builder(needed_options, site)
     return " ".join(options)
