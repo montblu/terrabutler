@@ -85,9 +85,17 @@ def terraform_command_runner(command, site, args=[], options=[],
                                         options=options,
                                         needed_options=needed_options)
 
+    env_vars = dict(os.environ)  # make a copy of the environment
+    lp_key = 'LD_LIBRARY_PATH'  # for Linux and *BSD.
+    lp_orig = env_vars.get(lp_key + '_ORIG')  # pyinstaller >= 20160820 has this
+    if lp_orig is not None:
+        env_vars[lp_key] = lp_orig  # restore the original, unmodified value
+    else:
+        env_vars.pop(lp_key, None)  # last resort: remove the env var
+
     prev_sigint_handler = signal.getsignal(signal.SIGINT)
     try:
-        p = subprocess.Popen(args=command, cwd=site_dir)
+        p = subprocess.Popen(args=command, cwd=site_dir, env=env_vars)
         signal.signal(signal.SIGINT, signal.SIG_IGN)  # ignore on python thread
         p.wait()
 
