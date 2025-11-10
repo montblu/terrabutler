@@ -87,7 +87,7 @@ def terraform_command_runner(command, site, args=[], options=[],
 
     env_vars = dict(os.environ)  # make a copy of the environment
     lp_key = 'LD_LIBRARY_PATH'  # for Linux and *BSD.
-    lp_orig = env_vars.get(lp_key + '_ORIG')  # pyinstaller >= 20160820 has this
+    lp_orig = env_vars.get(lp_key + '_ORIG')  # pyinstaller has this
     if lp_orig is not None:
         env_vars[lp_key] = lp_orig  # restore the original, unmodified value
     else:
