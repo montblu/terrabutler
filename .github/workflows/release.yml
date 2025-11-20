@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Get Current Tag
         uses: WyriHaximus/github-action-get-previous-tag@v1
         id: tag
