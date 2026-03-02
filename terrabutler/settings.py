@@ -1,5 +1,5 @@
 from terrabutler.utils import paths
-from schema import Schema, SchemaError
+from schema import Schema, SchemaError, Optional
 import yaml
 
 PATH = paths["settings"]
@@ -25,6 +25,10 @@ SCHEMA = Schema({
                 "mail_password": str
             }
         }
+    },
+    Optional("hooks"): {
+        Optional("pre_env_select"): str,
+        Optional("post_env_select"): str
     }
 })
 
