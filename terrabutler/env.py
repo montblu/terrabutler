@@ -107,6 +107,8 @@ def get_current_env():
 def set_current_env(env, s3, init=False):
     current_env = get_current_env()
     available_envs = get_available_envs(s3)
+    settings = get_settings()
+    hooks = settings.get("hooks", {})
 
     if env == current_env:
         print(Fore.YELLOW + "The environment you selected is the current one."
@@ -117,6 +119,23 @@ def set_current_env(env, s3, init=False):
               " create this environment with the 'new' command.")
         exit(1)
     else:
+        # Run pre_env_select hook if configured
+        pre_hook = hooks.get("pre_env_select")
+
+        if pre_hook:
+            try:
+                subprocess.run(
+                    pre_hook,
+                    shell=True,
+                    check=True,
+                    env={**os.environ,
+                         "TERRABUTLER_OLD_ENV": current_env,
+                         "TERRABUTLER_NEW_ENV": env}
+                )
+            except subprocess.CalledProcessError as e:
+                print(Fore.RED + f"pre_env_select hook failed: {e}")
+                exit(1)
+
         try:
             with open(paths["environment"], "w") as f:
                 f.write(env)
@@ -127,6 +146,23 @@ def set_current_env(env, s3, init=False):
 
         if init:
             terraform_init_all_sites()
+
+        # Run post_env_select hook if configured
+        post_hook = hooks.get("post_env_select")
+
+        if post_hook:
+            try:
+                subprocess.run(
+                    post_hook,
+                    shell=True,
+                    check=True,
+                    env={**os.environ,
+                         "TERRABUTLER_OLD_ENV": current_env,
+                         "TERRABUTLER_NEW_ENV": env}
+                )
+            except subprocess.CalledProcessError as e:
+                print(Fore.YELLOW + f"post_env_select hook failed: {e}")
+
         print("\n\n" + Fore.GREEN + f"Switched to environment '{env}'.")
 
 
