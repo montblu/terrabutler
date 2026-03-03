@@ -135,7 +135,7 @@ def set_current_env(env, s3, init=False):
             except subprocess.CalledProcessError as e:
                 print(Fore.RED + f"pre_env_select hook failed: {e}")
                 exit(1)
-        
+
         try:
             with open(paths["environment"], "w") as f:
                 f.write(env)
@@ -146,10 +146,10 @@ def set_current_env(env, s3, init=False):
 
         if init:
             terraform_init_all_sites()
-        
+
         # Run post_env_select hook if configured
         post_hook = hooks.get("post_env_select")
-        
+
         if post_hook:
             try:
                 subprocess.run(
@@ -162,7 +162,7 @@ def set_current_env(env, s3, init=False):
                 )
             except subprocess.CalledProcessError as e:
                 print(Fore.YELLOW + f"post_env_select hook failed: {e}")
-        
+ 
         print("\n\n" + Fore.GREEN + f"Switched to environment '{env}'.")
 
 
