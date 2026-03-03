@@ -162,7 +162,7 @@ def set_current_env(env, s3, init=False):
                 )
             except subprocess.CalledProcessError as e:
                 print(Fore.YELLOW + f"post_env_select hook failed: {e}")
- 
+
         print("\n\n" + Fore.GREEN + f"Switched to environment '{env}'.")
 
 
