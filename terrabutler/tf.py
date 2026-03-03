@@ -90,8 +90,8 @@ def terraform_command_runner(command, site, args=[], options=[],
     )
 
     if p.returncode != 0:
-        print(Fore.RED + "There was an error while running the terraform"
-              " command.")
+        print(Fore.RED + f"There was an error while running the '{command}'"
+              f" command inside the '{site}' site in '{env}' environment.")
         exit(1)
 
 
