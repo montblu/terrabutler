@@ -1,4 +1,4 @@
-from terrabutler.utils import paths
+from terrabutler.utils import paths, run_subprocess
 from colorama import Fore
 from os import path
 from sys import exit
@@ -31,11 +31,14 @@ def inception_init():
 
     if not inception_init_check():
         try:
-            subprocess.run(args=["terraform", "init", "-backend-config",
-                                 f"{backend_dir}/{org}-{default_env_name}"
-                                 "-inception.tfvars"],
-                           cwd=inception_dir, stdout=subprocess.DEVNULL,
-                           stderr=subprocess.STDOUT)
+            run_subprocess(
+                ["terraform", "init", "-backend-config",
+                 f"{backend_dir}/{org}-{default_env_name}"
+                 "-inception.tfvars"],
+                cwd=inception_dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT
+            )
         except subprocess.CalledProcessError:
             print(Fore.RED + "There was an error while doing the initializing")
             exit(1)

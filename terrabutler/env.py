@@ -1,6 +1,6 @@
 from terrabutler.settings import get_settings
 from terrabutler.tf import terraform_init_all_sites
-from terrabutler.utils import paths
+from terrabutler.utils import paths, run_subprocess
 from click import confirm
 from colorama import Fore
 from sys import exit
@@ -26,11 +26,10 @@ def create_env(env, confirmation, temporary, apply, s3):
     elif confirmation or confirm(f"Do you really want to create '{env}'" +
                                  " environment?", default=False):
         try:
-            subprocess.run(
-                args=['terraform', 'workspace', 'new', env],
+            run_subprocess(
+                ['terraform', 'workspace', 'new', env],
                 cwd=paths["inception"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # stdout == combine to pipe
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -81,11 +80,10 @@ def delete_env(env, confirmation, destroy, s3):
             if file.startswith(f"{org}-{env}"):
                 os.remove(os.path.join(paths["variables"], file))
         try:
-            subprocess.run(
-                args=['terraform', 'workspace', 'delete', env],
+            run_subprocess(
+                ['terraform', 'workspace', 'delete', env],
                 cwd=paths["inception"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # stdout == combine to pipe
+                capture_output=True,
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -124,13 +122,14 @@ def set_current_env(env, s3, init=False):
 
         if pre_hook:
             try:
-                subprocess.run(
+                run_subprocess(
                     pre_hook,
                     shell=True,
                     check=True,
-                    env={**os.environ,
-                         "TERRABUTLER_OLD_ENV": current_env,
-                         "TERRABUTLER_NEW_ENV": env}
+                    env={
+                        "TERRABUTLER_OLD_ENV": current_env,
+                        "TERRABUTLER_NEW_ENV": env
+                    }
                 )
             except subprocess.CalledProcessError as e:
                 print(Fore.RED + f"pre_env_select hook failed: {e}")
@@ -152,13 +151,14 @@ def set_current_env(env, s3, init=False):
 
         if post_hook:
             try:
-                subprocess.run(
+                run_subprocess(
                     post_hook,
                     shell=True,
                     check=True,
-                    env={**os.environ,
-                         "TERRABUTLER_OLD_ENV": current_env,
-                         "TERRABUTLER_NEW_ENV": env}
+                    env={
+                        "TERRABUTLER_OLD_ENV": current_env,
+                        "TERRABUTLER_NEW_ENV": env
+                    }
                 )
             except subprocess.CalledProcessError as e:
                 print(Fore.YELLOW + f"post_env_select hook failed: {e}")
@@ -188,8 +188,8 @@ def get_available_envs(s3):
     # Get Environments by accessing the .terraform/environment file
     directory = paths["inception"]
     try:
-        subprocess.run(
-            args=[
+        run_subprocess(
+            [
                 "terraform",
                 "init",
                 "-reconfigure",
@@ -198,8 +198,7 @@ def get_available_envs(s3):
                 "inception.tfvars"
             ],
             cwd=directory,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # stdout == combine to pipe
+            capture_output=True,
             check=True,
         )
 
@@ -210,12 +209,11 @@ def get_available_envs(s3):
         exit(1)
 
     try:
-        process = subprocess.run(
-            args=['terraform', 'workspace', 'list'],
+        process = run_subprocess(
+            ['terraform', 'workspace', 'list'],
             cwd=directory,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=False,
+            capture_output=True,
+            text=False,
             check=True
         )
 
