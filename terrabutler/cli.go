@@ -40,7 +40,7 @@ func main() {
 		Usage:     "The utility that helps keeping your IaC in one piece",
 		UsageText: "terrabutler [OPTIONS] COMMAND [ARGS]...",
 		Version:   "v1.1.2",
-		//Hides Help Command, but not disabling it, can cause issues in parsing? names help
+		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
 		EnableShellCompletion: true,
 		Suggest:               true,
@@ -49,11 +49,10 @@ func main() {
 			//
 			// What is Done:
 			// Added all SubCommands
+			// All Flags and Arguments of the SubCommands
 			//
 			// TODO:
-			// Add Missing arguments for the other subcommands
-			// Add Missing Flags to the rest os the SubCommands
-			// Fix not be able to read a environment with the name help
+			// Rearrange the UsageText of the SubCommands
 			{
 				Name:            "env",
 				Usage:           "Manage environments",
@@ -109,9 +108,34 @@ func main() {
 							return nil
 						}},
 					{
-						Name:    "new",
-						Aliases: []string{""},
-						Usage:   "Create a new environment",
+						Name:            "new",
+						Aliases:         []string{""},
+						Usage:           "Create a new environment",
+						HideHelpCommand: true,
+						ArgsUsage:       "NAME",
+						Arguments:       []cli.Argument{&cli.StringArg{Name: "ENV"}},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:    "y",
+								Aliases: []string{""},
+								Usage:   "Delete without asking for confirmation.",
+							},
+							&cli.BoolFlag{
+								Name:    "t",
+								Aliases: []string{"temp"},
+								Usage:   "Create a temporary environment.",
+							},
+							&cli.BoolFlag{
+								Name:    "a",
+								Aliases: []string{"apply"},
+								Usage:   "Apply all terraform sites prior the creation of the environment.",
+							},
+							&cli.BoolFlag{
+								Name:    "s3",
+								Aliases: []string{"S3"},
+								Usage:   "Access S3 instead of parsing terraform output.",
+							},
+						},
 						Action: func(context.Context, *cli.Command) error {
 							//Test Ouput
 							fmt.Println("Created Environment")
@@ -127,9 +151,24 @@ func main() {
 							return nil
 						}},
 					{
-						Name:    "select",
-						Aliases: []string{""},
-						Usage:   "Select a environment",
+						Name:            "select",
+						Aliases:         []string{""},
+						Usage:           "Select a environment",
+						HideHelpCommand: true,
+						ArgsUsage:       "NAME",
+						Arguments:       []cli.Argument{&cli.StringArg{Name: "ENV"}},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:    "init",
+								Aliases: []string{},
+								Usage:   "Disable auto init of the sites.",
+							},
+							&cli.BoolFlag{
+								Name:    "s3",
+								Aliases: []string{"S3"},
+								Usage:   "Access S3 instead of parsing terraform output.",
+							},
+						},
 						Action: func(context.Context, *cli.Command) error {
 							//Test Ouput
 							fmt.Println("Selected Enviroment")
@@ -164,7 +203,7 @@ func main() {
 			//
 			// What is done:
 			// The required flag -site
-			// (With String flags it is possible to add "help" sites)
+			// (With String flags it is possible to add "help" sites, without hiding Help Command)
 			//
 			// TODO:
 			// Add all subcommands
