@@ -11,31 +11,34 @@ import (
 
 func main() {
 
-	//Criação da Version Flag
+	//Changing the default version flag
 	cli.VersionFlag = &cli.BoolFlag{
 		Name:    "version",
 		Aliases: []string{},
 		Usage:   "Show the version and exit",
 	}
-	//Custom Version Flag
+	//Custom Version Flag Text
 	cli.VersionPrinter = func(cmd *cli.Command) {
 		fmt.Fprintf(cmd.Root().Writer, "%s: %s\n", cmd.Root().Name, cmd.Root().Version)
 	}
-	//Alteração da Help flag defaulf
+
+	//Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
 		Name:    "help",
 		Aliases: []string{"H", "h"},
 		Usage:   "Show this message and exit",
 	}
 
-	//Comando Base
+	//CLI
 	//
 	// TODO:
+	// Make version flag not global
+	// Text Wrapper, for longer text msgs
 	// Error Handling with wrong flags
 	// Version with Semantic Versioning
 	// Logs (Using Prints for Debugging)
-	// Fix being possible to use -version flag in all subcommands
 	//
+
 	cmd := &cli.Command{
 		Name:      "terrabutler",
 		Usage:     "The utility that helps keeping your IaC in one piece",
@@ -43,8 +46,8 @@ func main() {
 		Version:   "v1.1.2",
 		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
+		HideVersion:           true,
 		EnableShellCompletion: true,
-		Suggest:               true,
 		Commands: []*cli.Command{
 			// env Command
 			//
@@ -55,10 +58,9 @@ func main() {
 			// TODO:
 			// Finished for now...
 			{
-				Name:            "env",
-				Usage:           "Manage environments",
-				UsageText:       "terrabutler env [OPTIONS] COMMAND [ARGS]...",
-				HideHelpCommand: true,
+				Name:      "env",
+				Usage:     "Manage environments",
+				UsageText: "terrabutler env [OPTIONS] COMMAND [ARGS]...",
 				Commands: []*cli.Command{
 					//Subcommands of Env
 					{
@@ -66,7 +68,6 @@ func main() {
 						Aliases:   []string{""},
 						Usage:     "Delete an environment",
 						UsageText: "terrabutler env delete [OPTIONS] NAME",
-						HideHelp:  true,
 						ArgsUsage: "NAME",
 						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
@@ -95,10 +96,9 @@ func main() {
 						}},
 
 					{
-						Name:     "list",
-						Aliases:  []string{""},
-						Usage:    "List environments",
-						HideHelp: true,
+						Name:    "list",
+						Aliases: []string{""},
+						Usage:   "List environments",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "s3",
@@ -194,6 +194,9 @@ func main() {
 							return nil
 						}},
 				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return nil
+				},
 			},
 			// init Command
 			//
@@ -221,10 +224,10 @@ func main() {
 			// Add the missing arguments and flags of the subcommands
 			//
 			{
-				Name:      "tf",
-				Usage:     "Initialize the manager",
-				UsageText: "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
-				HideHelp:  true,
+				Name:            "tf",
+				Usage:           "Manage terraform commands",
+				UsageText:       "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
+				HideHelpCommand: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "site", Required: true, Usage: "Site where to run terraform.  [required]"}},
 				Commands: []*cli.Command{
@@ -233,7 +236,24 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Create or update infrastructure.",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
+							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this Terraform configuration instead of the usual behavior."},
+							// Requires BOOLEAN value
+							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
+							// Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: `Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace.`},
+							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
+							&cli.BoolFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
+							// To verify if its possible multiple "Targets" and if i get its values.
+							fmt.Println(c.StringSlice("target"))
 							return nil
 						},
 					},
@@ -242,6 +262,14 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Try Terraform expressions at an interactive command...",
 						UsageText: "",
+						Flags: []cli.Flag{
+							//Way of formatting the text, but not the best
+							&cli.StringFlag{Name: "state", Usage: `Legacy option for the local backend only. See the local backend's documentation for more information.`},
+							&cli.BoolFlag{Name: "plan", Usage: `Create a new plan (as if running "terraform plan") and then evaluate expressions against its planned state, 
+		instead of evaluating against the current state. You can use this to inspect the effects of configuration 
+		changes that haven't been applied yet..`},
+							&cli.StringFlag{Name: "var", Usage: `Set a variable in the Terraform configuration. This flag can be set multiple times.`},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -390,6 +418,10 @@ func main() {
 							return nil
 						},
 					},
+				},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					fmt.Println("Missing Command.")
+					return nil
 				},
 			}},
 	}
