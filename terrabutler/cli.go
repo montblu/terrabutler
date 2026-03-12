@@ -217,11 +217,11 @@ func main() {
 			//
 			// What is done:
 			// The required flag -site
-			// All subcommands
+			// All subcommands, flags and arguments
 			//
 			//
 			// TODO:
-			// Add the missing arguments and flags of the subcommands
+			// Finished for now...
 			//
 			{
 				Name:            "tf",
@@ -279,6 +279,20 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Prepare your working directory for other commands",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
+							// Requires BOOLEAN value
+							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
+							// Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "refresh", Usage: " Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							&cli.StringFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
+							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -288,6 +302,11 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Reformat your configuration in the standardstyle",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "diff", Usage: "Display diffs of formatting changes."},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "recursive", Usage: "Also process files in subdirectories. By default, only the given directory (or current directory) is processed."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -297,6 +316,14 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Release a stuck lock on the current workspace",
 						UsageText: "",
+						ArgsUsage: "LOCK-ID",
+						Arguments: []cli.Argument{&cli.Int16Arg{Name: "LOCK-ID"}},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "force",
+								Usage: "Don't ask for input for unlock confirmation.",
+							},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -306,6 +333,10 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Generate terraform options",
 						UsageText: "",
+						ArgsUsage: "{init|plan|apply}",
+						Arguments: []cli.Argument{
+							&cli.StringArg{Name: "Choice"},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -315,6 +346,21 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Associate existing infrastructure with a Terraform...",
 						UsageText: "",
+						ArgsUsage: "ADDR ID",
+						Arguments: []cli.Argument{
+							&cli.StringArgs{Min: 1, Max: 1, Name: "ADDR"},
+							&cli.Int16Args{Min: 1, Max: 1, Name: "ID"},
+						},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "allow-missing-config", Usage: "Allow import when no resource configuration block exists."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
+							&cli.StringFlag{Name: "ignore-remote-version", Usage: ""},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -324,6 +370,23 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Prepare your working directory for other commands",
 						UsageText: "",
+						Flags: []cli.Flag{
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "backend", Usage: "Disable backend or Terraform Cloud initialization for this configuration and use what what was previously initialized instead."},
+							&cli.BoolFlag{Name: "force-copy", Usage: "Allow import when no resource configuration block exists."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "get", Usage: "Disable downloading modules for this configuration."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "input", Usage: "Disable interactive prompts. Note that some actions may require interactive prompts and will error if input is disabled."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: ""},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "reconfigure", Usage: "Reconfigure a backend, ignoring any saved configuration."},
+							&cli.BoolFlag{Name: "migrate-state", Usage: "Reconfigure a backend, and attempt to migrate any existing state."},
+							&cli.BoolFlag{Name: "upgrade", Usage: "Install the latest module and provider versions allowed within configured constraints, overriding the default behavior of selecting exactly the version recorded in the dependency lockfile."},
+							&cli.StringFlag{Name: "lockfile", Usage: "Set a dependency lockfile mode. Currently only 'readonly' is valid."},
+							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for Terraform Cloud and the remote backend only. Set this to ignore checking that the local and remote Terraform versions use compatible state representations, making an operation proceed even when there is a potential mismatch. See the documentation on configuring Terraform with Terraform Cloud for more information."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -333,6 +396,11 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Show output values from your root module",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "json", Usage: "If specified, machine readable output will be printed in JSON format."},
+							&cli.BoolFlag{Name: "raw", Usage: "For value types that can be automatically converted to a string, will print the raw string directly, rather than a human-oriented representation of the value."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -342,6 +410,21 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Show changes required by the current configuration",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this"},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
+							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -351,8 +434,48 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Show the providers required for this configuration",
 						UsageText: "",
-						Action: func(ctx context.Context, c *cli.Command) error {
-							return nil
+						/*
+								lock    Write out dependency locks for the configured providers
+							  mirror  Save local copies of all required provider plugins
+							  schema  Show schemas for the providers used in the configuration
+
+						*/
+						Commands: []*cli.Command{
+							//Makeup Providers...
+							{
+								Name:      "lock",
+								Usage:     "Write out dependency locks for the configured providers",
+								ArgsUsage: "PROVIDERS...",
+								Arguments: []cli.Argument{
+									&cli.StringArgs{Name: "Providers"},
+								},
+								Flags: []cli.Flag{
+									&cli.StringFlag{Name: "fs-mirror", Usage: "Consult the given filesystem mirror directory instead of the origin registry for each of the given providers."},
+									&cli.StringFlag{Name: "net-mirror", Usage: "Consult the given network mirror (given as a base URL) instead of the origin registry for each of the given providers."},
+									&cli.StringFlag{Name: "platform", Usage: "Choose a target platform to request package checksums for."},
+								},
+								HideHelp: true,
+							}, //Makeup DIRS..
+							{
+								Name:      "mirror",
+								Usage:     "Save local copies of all required provider plugins",
+								ArgsUsage: "TARGET_DIR",
+								Arguments: []cli.Argument{
+									&cli.StringArgs{Name: "DIR"},
+								},
+								Flags: []cli.Flag{
+									&cli.StringFlag{Name: "platform", Usage: "Choose a target platform to request package checksums for."},
+								},
+								HideHelp: true,
+							},
+							{
+								Name:  "schema",
+								Usage: "Show schemas for the providers used in the configuration",
+								Flags: []cli.Flag{
+									&cli.BoolFlag{Name: "json", Required: true, Usage: "Prints out a json representation of the schemas for all providers used in the current configuration.  [required]"},
+								},
+								HideHelp: true,
+							},
 						},
 					},
 					{
@@ -360,6 +483,15 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Update the state to match remote systems",
 						UsageText: "",
+						Flags: []cli.Flag{
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.StringFlag{Name: "target", Usage: "Resource to target. Operation will be limited to this resource and its dependencies. This flag can be used multiple times."},
+							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -369,6 +501,14 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Show the current state or a saved plan",
 						UsageText: "",
+						ArgsUsage: "[PATH]",
+						Arguments: []cli.Argument{
+							&cli.StringArg{Name: "PATH"},
+						},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "json", Usage: " Output the version information as a JSON object."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -378,6 +518,94 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Advanced state management",
 						UsageText: "",
+						Commands: []*cli.Command{
+							{
+								Name:      "list",
+								Usage:     "List resources in the state",
+								ArgsUsage: "[ADDRESS]",
+								Arguments: []cli.Argument{
+									&cli.StringArgs{Name: "ADDR"},
+								},
+								Flags: []cli.Flag{
+									&cli.StringFlag{Name: "state", Usage: "Path to a Terraform state file to use to look up Terraform-managed resources. By default, Terraform will consult the state of the currently-selected workspace."},
+									&cli.StringFlag{Name: "id", Usage: "Filters the results to include only instances whose resource types have an attribute named 'id' whose value equals the given id string."},
+								},
+							},
+							{
+								Name:      "mv",
+								Usage:     "Move an item in the state",
+								ArgsUsage: "SOURCE DESTINATION",
+								Arguments: []cli.Argument{
+									&cli.StringArgs{Name: "SOURCE"},
+									&cli.StringArg{Name: "DESTINATION"},
+								},
+								Flags: []cli.Flag{
+									&cli.BoolFlag{Name: "dry-run", Usage: "If set, prints out what would've been moved but doesn't actually move anything."},
+									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+								},
+							},
+							{
+								Name:  "pull",
+								Usage: "Pull current state and output to stdouts",
+							},
+							{
+								Name:      "push",
+								Usage:     "Update remote state from a local state file",
+								ArgsUsage: "PATH",
+								Arguments: []cli.Argument{
+									&cli.StringArg{Name: "PATH"},
+								},
+								Flags: []cli.Flag{
+									&cli.BoolFlag{Name: "force", Usage: "Write the state even if lineages don't match or the remote serial is higher."},
+									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+								},
+							},
+							{
+								Name:      "replace-provider",
+								Usage:     "Replace provider for resources in the Terraform state.",
+								ArgsUsage: "FROM_PROVIDER_FQDN TO_PROVIDER_FQDN",
+								Arguments: []cli.Argument{
+									&cli.StringArg{Name: "FROM_FQDN"},
+									&cli.StringArg{Name: "TO_FQDN"},
+								},
+								Flags: []cli.Flag{
+									&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
+									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+								},
+							},
+							{
+								Name:      "rm",
+								Usage:     "Remove instances from the state",
+								ArgsUsage: "ADDRESS...",
+								Arguments: []cli.Argument{
+									&cli.StringArg{Name: "ADDR"},
+								},
+								Flags: []cli.Flag{
+									&cli.BoolFlag{Name: "dry-run", Usage: "If set, prints out what would've been moved but doesn't actually move anything."},
+									&cli.StringFlag{Name: "backup", Usage: "Path where Terraform should write the backup state."},
+									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+									&cli.StringFlag{Name: "state", Usage: "Path to the state file to update. Defaults to the current workspace state."},
+									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+								},
+							},
+							{
+								Name:      "show",
+								Usage:     "Show a resource in the state",
+								ArgsUsage: "ADDRESS",
+								Arguments: []cli.Argument{
+									&cli.StringArg{Name: "ADDR"},
+								},
+								Flags: []cli.Flag{
+									&cli.StringFlag{Name: "state", Usage: "Path to the state file to update. Defaults to the current workspace state."},
+								},
+							},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -387,6 +615,17 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Mark a resource instance as not fully functional",
 						UsageText: "",
+						ArgsUsage: "ADDRESS",
+						Arguments: []cli.Argument{
+							&cli.StringArg{Name: "ADDR"},
+						},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "allow-missing", Usage: " If specified, the command will succeed (exit code 0) even if the resource is missing."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -396,6 +635,17 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Remove the 'tainted' state from a resource instance",
 						UsageText: "",
+						ArgsUsage: "ADDRESS",
+						Arguments: []cli.Argument{
+							&cli.StringArg{Name: "ADDR"},
+						},
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "allow-missing", Usage: " If specified, the command will succeed (exit code 0) even if the resource is missing."},
+							//Requires BOOLEAN value
+							&cli.BoolFlag{Name: "lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -405,6 +655,10 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Validate the configuration files",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+							&cli.BoolFlag{Name: "json", Usage: " Output the version information as a JSON object."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -414,6 +668,9 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Show the current Terraform version",
 						UsageText: "",
+						Flags: []cli.Flag{
+							&cli.StringFlag{Name: "json", Usage: "Output the version information as a JSON object."},
+						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
