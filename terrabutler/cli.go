@@ -3,24 +3,37 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 )
 
-func main() {
+//Function to Create offsets to the flags.
 
-	//Changing the default version flag
-	cli.VersionFlag = &cli.BoolFlag{
-		Name:    "version",
-		Aliases: []string{},
-		Usage:   "Show the version and exit",
+func offsetFlags(flag []cli.Flag, fixed int) int {
+	max := 0
+	for _, f := range flag {
+		s := strings.Join(f.Names(), "-, ")
+		if len(s) > max {
+			max = len(s)
+		}
 	}
-	//Custom Version Flag Text
-	cli.VersionPrinter = func(cmd *cli.Command) {
-		fmt.Fprintf(cmd.Root().Writer, "%s: %s\n", cmd.Root().Name, cmd.Root().Version)
+	return max + fixed
+}
+
+func addIndentFlag(names []string) []string {
+	for i, n := range names {
+		if n != "" {
+			names[i] = "-" + n
+		}
 	}
+	return names
+}
+
+func main() {
 
 	//Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
@@ -29,11 +42,98 @@ func main() {
 		Usage:   "Show this message and exit",
 	}
 
+	// New HelpPrinter function with support of:
+	//
+	// Defining max Length for the text be wrapped
+	// Calculating the offset need fr flags...
+	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
+		funcMap := map[string]interface{}{
+			"wrapAt": func() int {
+				return 80
+			},
+			"offsetFlags":   offsetFlags,
+			"addIndentFlag": addIndentFlag,
+		}
+
+		cli.HelpPrinterCustom(w, templ, data, funcMap)
+	}
+
+	//In the future allocate this templates to another file...
+	//This modifications to the template only affect "Visible" flags
+
+	//New template with the flags begin able to support Indentation and Wrapper
+	cli.RootCommandHelpTemplate = `NAME:
+   {{template "helpNameTemplate" .}}
+
+USAGE:
+   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}{{.FullName}} {{if .VisibleFlags}}[global options]{{end}}{{if .VisibleCommands}} [command [command options]]{{end}}{{if .ArgsUsage}} {{.ArgsUsage}}{{else}}{{if .Arguments}} [arguments...]{{end}}{{end}}{{end}}{{if .Version}}{{if not .HideVersion}}
+
+VERSION:
+   {{.Version}}{{end}}{{end}}{{if .Description}}
+
+DESCRIPTION:
+   {{template "descriptionTemplate" .}}{{end}}
+{{- if len .Authors}}
+
+AUTHOR{{template "authorsTemplate" .}}{{end}}{{if .VisibleCommands}}
+
+COMMANDS:{{template "visibleCommandCategoryTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
+
+GLOBAL OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
+
+GLOBAL OPTIONS:{{ $cv := offsetFlags .VisibleFlags 5}}{{range $i, $e := .VisibleFlags}}
+	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$s}}{{ $sp := subtract $cv (offset $s 3) }}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .Copyright}}
+
+COPYRIGHT:
+   {{template "copyrightTemplate" .}}{{end}}
+`
+	//New template for the Sub-SubCommands with the flags begin able to support Indentation and Wrapper
+	cli.CommandHelpTemplate = `NAME:
+   {{template "helpNameTemplate" .}}
+
+USAGE:
+   {{template "usageTemplate" .}}{{if .Category}}
+
+CATEGORY:
+   {{.Category}}{{end}}{{if .Description}}
+
+DESCRIPTION:
+   {{template "descriptionTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
+
+OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
+
+OPTIONS:
+	{{ $cv := offsetFlags .VisibleFlags 5}}{{range $i, $e := .VisibleFlags}}
+	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$s}}{{ $sp := subtract $cv (offset $s 3) }}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
+
+GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
+`
+	//New template for the SubCommands with the flags begin able to support Indentation and Wrapper
+	cli.SubcommandHelpTemplate = `NAME:
+   {{template "helpNameTemplate" .}}
+
+USAGE:
+   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}{{.FullName}}{{if .VisibleCommands}} [command [command options]]{{end}}{{if .ArgsUsage}} {{.ArgsUsage}}{{else}}{{if .Arguments}} [arguments...]{{end}}{{end}}{{end}}{{if .Category}}
+
+CATEGORY:
+   {{.Category}}{{end}}{{if .Description}}
+
+DESCRIPTION:
+   {{template "descriptionTemplate" .}}{{end}}{{if .VisibleCommands}}
+
+COMMANDS:{{template "visibleCommandTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
+
+OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
+
+OPTIONS:{{ $cv := offsetFlags .VisibleFlags 5}}{{range $i, $e := .VisibleFlags}}
+	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$s}}{{ $sp := subtract $cv (offset $s 3) }}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
+
+GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
+`
+
 	//CLI
 	//
 	// TODO:
-	// Make version flag not global
-	// Text Wrapper, for longer text msgs
 	// Error Handling with wrong flags
 	// Version with Semantic Versioning
 	// Logs (Using Prints for Debugging)
@@ -43,12 +143,20 @@ func main() {
 		Name:      "terrabutler",
 		Usage:     "The utility that helps keeping your IaC in one piece",
 		UsageText: "terrabutler [OPTIONS] COMMAND [ARGS]...",
-		Version:   "v1.1.2",
+		Version:   "v3.0.0",
 		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
 		HideVersion:           true,
 		EnableShellCompletion: true,
 		Commands: []*cli.Command{
+			{
+				Name:  "version",
+				Usage: "Show version and exit",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					fmt.Fprintf(c.Root().Writer, "%s: %s\n", c.Root().Name, c.Root().Version)
+					return nil
+				},
+			},
 			// env Command
 			//
 			// What is Done:
@@ -61,6 +169,7 @@ func main() {
 				Name:      "env",
 				Usage:     "Manage environments",
 				UsageText: "terrabutler env [OPTIONS] COMMAND [ARGS]...",
+				HideHelp:  true,
 				Commands: []*cli.Command{
 					//Subcommands of Env
 					{
@@ -69,6 +178,7 @@ func main() {
 						Usage:     "Delete an environment",
 						UsageText: "terrabutler env delete [OPTIONS] NAME",
 						ArgsUsage: "NAME",
+						HideHelp:  true,
 						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
@@ -96,9 +206,10 @@ func main() {
 						}},
 
 					{
-						Name:    "list",
-						Aliases: []string{""},
-						Usage:   "List environments",
+						Name:     "list",
+						Aliases:  []string{""},
+						Usage:    "List environments",
+						HideHelp: true,
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "s3",
@@ -157,14 +268,13 @@ func main() {
 							return nil
 						}},
 					{
-						Name:        "select",
-						Aliases:     []string{""},
-						Usage:       "Select a environment",
-						UsageText:   "terrabutler env select [OPTIONS] NAME",
-						HideHelp:    true,
-						HideVersion: true,
-						ArgsUsage:   "NAME",
-						Arguments:   []cli.Argument{&cli.StringArg{Name: "ENV"}},
+						Name:      "select",
+						Aliases:   []string{""},
+						Usage:     "Select a environment",
+						UsageText: "terrabutler env select [OPTIONS] NAME",
+						HideHelp:  true,
+						ArgsUsage: "NAME",
+						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "init",
@@ -217,17 +327,17 @@ func main() {
 			//
 			// What is done:
 			// The required flag -site
-			// All subcommands, flags and arguments
+			// All subcommands, flags and arguments..
 			//
 			//
 			// TODO:
 			// Finished for now...
 			//
 			{
-				Name:            "tf",
-				Usage:           "Manage terraform commands",
-				UsageText:       "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
-				HideHelpCommand: true,
+				Name:      "tf",
+				Usage:     "Manage terraform commands",
+				UsageText: "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
+				HideHelp:  true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "site", Required: true, Usage: "Site where to run terraform.  [required]"}},
 				Commands: []*cli.Command{
@@ -434,12 +544,6 @@ func main() {
 						HideHelp:  true,
 						Usage:     "Show the providers required for this configuration",
 						UsageText: "",
-						/*
-								lock    Write out dependency locks for the configured providers
-							  mirror  Save local copies of all required provider plugins
-							  schema  Show schemas for the providers used in the configuration
-
-						*/
 						Commands: []*cli.Command{
 							//Makeup Providers...
 							{
@@ -524,11 +628,14 @@ func main() {
 								Usage:     "List resources in the state",
 								ArgsUsage: "[ADDRESS]",
 								Arguments: []cli.Argument{
-									&cli.StringArgs{Name: "ADDR"},
+									&cli.StringArg{Name: "ADDR"},
 								},
 								Flags: []cli.Flag{
 									&cli.StringFlag{Name: "state", Usage: "Path to a Terraform state file to use to look up Terraform-managed resources. By default, Terraform will consult the state of the currently-selected workspace."},
 									&cli.StringFlag{Name: "id", Usage: "Filters the results to include only instances whose resource types have an attribute named 'id' whose value equals the given id string."},
+								},
+								Action: func(ctx context.Context, c *cli.Command) error {
+									return nil
 								},
 							},
 							{
