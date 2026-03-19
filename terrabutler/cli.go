@@ -11,12 +11,11 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-//Function to Create offsets to the flags.
-
+// Function to Create offsets to the flags.
 func offsetFlags(flag []cli.Flag, fixed int) int {
 	max := 0
 	for _, f := range flag {
-		s := strings.Join(f.Names(), "-, ")
+		s := strings.Join(f.Names(), "--,    ")
 		if len(s) > max {
 			max = len(s)
 		}
@@ -24,10 +23,35 @@ func offsetFlags(flag []cli.Flag, fixed int) int {
 	return max + fixed
 }
 
+// Function to get the type of Value a flag Requires
+func typeFlag(flag cli.Flag) string {
+	// Other Types aren't required in terraButler, so only Getting returning Strings Types
+	var typeFlag string
+	// String -> TEXT
+	typeFlag = fmt.Sprintf("%T", flag.Get())
+	if typeFlag == "string" {
+		typeFlag = " TEXT"
+		// Special Case for the flag -site of TerraButler
+		if strings.Compare(flag.Names()[0], "site") == 0 {
+			typeFlag = " SITE"
+		}
+		//Other types are ignored
+	} else {
+		typeFlag = ""
+	}
+
+	return typeFlag
+}
+
+// Function to add "-" to the names available to a flag
 func addIndentFlag(names []string) []string {
 	for i, n := range names {
 		if n != "" {
-			names[i] = "-" + n
+			if len(names) == 1 {
+				names[i] = "-" + n
+			} else {
+				names[i] = "--" + n
+			}
 		}
 	}
 	return names
@@ -53,6 +77,7 @@ func main() {
 			},
 			"offsetFlags":   offsetFlags,
 			"addIndentFlag": addIndentFlag,
+			"typeFlag":      typeFlag,
 		}
 
 		cli.HelpPrinterCustom(w, templ, data, funcMap)
@@ -81,8 +106,8 @@ COMMANDS:{{template "visibleCommandCategoryTemplate" .}}{{end}}{{if .VisibleFlag
 
 GLOBAL OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
 
-GLOBAL OPTIONS:{{ $cv := offsetFlags .VisibleFlags 5}}{{range $i, $e := .VisibleFlags}}
-	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$s}}{{ $sp := subtract $cv (offset $s 3) }}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .Copyright}}
+GLOBAL OPTIONS:{{ $cv := offsetFlags .VisibleFlags 0}}{{range $i, $e := .VisibleFlags}}
+	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$t := typeFlag $e}}{{$s}}{{$t}}{{ $sp := subtract $cv (offset $s 3) }}{{ $sp = subtract $sp (offset $t -4)}}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .Copyright}}
 
 COPYRIGHT:
    {{template "copyrightTemplate" .}}{{end}}
@@ -103,8 +128,8 @@ DESCRIPTION:
 OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
 
 OPTIONS:
-	{{ $cv := offsetFlags .VisibleFlags 5}}{{range $i, $e := .VisibleFlags}}
-	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$s}}{{ $sp := subtract $cv (offset $s 3) }}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
+	{{ $cv := offsetFlags .VisibleFlags 8}}{{range $i, $e := .VisibleFlags}}
+	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$t := typeFlag $e}}{{$s}}{{$t}}{{ $sp := subtract $cv (offset $s 3) }}{{ $sp = subtract $sp (offset $t -4)}}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
 
 GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 `
@@ -125,8 +150,8 @@ COMMANDS:{{template "visibleCommandTemplate" .}}{{end}}{{if .VisibleFlagCategori
 
 OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
 
-OPTIONS:{{ $cv := offsetFlags .VisibleFlags 5}}{{range $i, $e := .VisibleFlags}}
-	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$s}}{{ $sp := subtract $cv (offset $s 3) }}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
+OPTIONS:{{ $cv := offsetFlags .VisibleFlags 8}}{{range $i, $e := .VisibleFlags}}
+	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$t := typeFlag $e}}{{$s}}{{$t}}{{ $sp := subtract $cv (offset $s 3) }}{{ $sp = subtract $sp (offset $t -4)}}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
 
 GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 `
@@ -134,10 +159,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 	//CLI
 	//
 	// TODO:
-	// Error Handling with wrong flags
-	// Version with Semantic Versioning
-	// Logs (Using Prints for Debugging)
+	// Error Handling with wrong flags --> With Logger
+	// Version with Semantic Versioning --> Not Urgent
+	// Logs (Using Prints for Debugging) --> Next Step
 	//
+	// After CLI, start Configuration File (settings.py)
 
 	cmd := &cli.Command{
 		Name:      "terrabutler",
@@ -331,7 +357,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 			//
 			//
 			// TODO:
-			// Finished for now...
+			// Flag site Warnings
+			//
 			//
 			{
 				Name:      "tf",
@@ -349,15 +376,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this Terraform configuration instead of the usual behavior."},
-							// Requires BOOLEAN value
-							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
-							// Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: `Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace.`},
+							// Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
+							// Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: `Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace.`},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.BoolFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 						},
@@ -373,12 +400,9 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Usage:     "Try Terraform expressions at an interactive command...",
 						UsageText: "",
 						Flags: []cli.Flag{
-							//Way of formatting the text, but not the best
-							&cli.StringFlag{Name: "state", Usage: `Legacy option for the local backend only. See the local backend's documentation for more information.`},
-							&cli.BoolFlag{Name: "plan", Usage: `Create a new plan (as if running "terraform plan") and then evaluate expressions against its planned state, 
-		instead of evaluating against the current state. You can use this to inspect the effects of configuration 
-		changes that haven't been applied yet..`},
-							&cli.StringFlag{Name: "var", Usage: `Set a variable in the Terraform configuration. This flag can be set multiple times.`},
+							&cli.StringFlag{Name: "state", Usage: "Legacy option for the local backend only. See the local backend's documentation for more information."},
+							&cli.BoolFlag{Name: "plan", Usage: "Create a new plan (as if running \"terraform plan\") and then evaluate expressions against its planned state, instead of evaluating against the current state. You can use this to inspect the effects of configuration changes that haven't been applied yet.."},
+							&cli.StringFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
@@ -391,15 +415,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						UsageText: "",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
-							// Requires BOOLEAN value
-							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
-							// Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
+							// Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
+							// Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "refresh", Usage: " Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-refresh", Usage: " Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 						},
@@ -463,13 +487,13 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing-config", Usage: "Allow import when no resource configuration block exists."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
+							//Requires BOOLEAN value -- Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
-							&cli.StringFlag{Name: "ignore-remote-version", Usage: ""},
+							&cli.StringFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
@@ -481,15 +505,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Usage:     "Prepare your working directory for other commands",
 						UsageText: "",
 						Flags: []cli.Flag{
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "backend", Usage: "Disable backend or Terraform Cloud initialization for this configuration and use what what was previously initialized instead."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-backend", Usage: "Disable backend or Terraform Cloud initialization for this configuration and use what what was previously initialized instead."},
 							&cli.BoolFlag{Name: "force-copy", Usage: "Allow import when no resource configuration block exists."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "get", Usage: "Disable downloading modules for this configuration."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "input", Usage: "Disable interactive prompts. Note that some actions may require interactive prompts and will error if input is disabled."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: ""},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-get", Usage: "Disable downloading modules for this configuration."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-input", Usage: "Disable interactive prompts. Note that some actions may require interactive prompts and will error if input is disabled."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "reconfigure", Usage: "Reconfigure a backend, ignoring any saved configuration."},
 							&cli.BoolFlag{Name: "migrate-state", Usage: "Reconfigure a backend, and attempt to migrate any existing state."},
@@ -522,15 +546,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						UsageText: "",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this"},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
@@ -588,9 +612,9 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Usage:     "Update the state to match remote systems",
 						UsageText: "",
 						Flags: []cli.Flag{
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "input", Usage: "Ask for input for variables if not directly set."},
-							//Requires BOOLEAN value
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
+							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.StringFlag{Name: "target", Usage: "Resource to target. Operation will be limited to this resource and its dependencies. This flag can be used multiple times."},
@@ -728,8 +752,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing", Usage: " If specified, the command will succeed (exit code 0) even if the resource is missing."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
@@ -748,8 +772,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing", Usage: " If specified, the command will succeed (exit code 0) even if the resource is missing."},
-							//Requires BOOLEAN value
-							&cli.BoolFlag{Name: "lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							//Requires BOOLEAN value --> Reversing
+							&cli.BoolFlag{Name: "no-lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
