@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/urfave/cli/v3"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // Function to Create offsets to the flags.
@@ -57,6 +59,63 @@ func addIndentFlag(names []string) []string {
 	return names
 }
 
+// Configuring Logger
+var encoderConfig = zapcore.EncoderConfig{
+	TimeKey:        "timestamp",
+	LevelKey:       "level",
+	NameKey:        "logger",
+	CallerKey:      "caller",
+	MessageKey:     "message",
+	LineEnding:     zapcore.DefaultLineEnding,
+	EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+	EncodeTime:     zapcore.ISO8601TimeEncoder,
+	EncodeDuration: zapcore.StringDurationEncoder,
+}
+var config = zap.Config{
+	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
+	Development:      true,
+	Encoding:         "console",
+	EncoderConfig:    encoderConfig,
+	OutputPaths:      []string{"stdout"},
+	ErrorOutputPaths: []string{"stderr"},
+}
+var logger, _ = config.Build()
+
+// Default Functions for the Logger, of commands and flags not found.
+func CommandNotFound(ctx context.Context, c *cli.Command, s string) {
+	fmt.Println("Usage: " + c.UsageText)
+	fmt.Println("Try '" + c.FullName() + " -h' for help.")
+	logger.Error("No such command '" + s + "'.")
+}
+func OnUsageError(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
+	return nil
+}
+func InvalidFlagAccessHandler(ctx context.Context, c *cli.Command, s string) {
+	fmt.Println("Usage: " + c.UsageText)
+	fmt.Println("Try '" + c.FullName() + " -h' for help.")
+	logger.Error("No such option: '" + s + "'.")
+}
+
+// Function for the Subcommands of tf, to show the required use of the flag -site
+func OnUsageErrorSite(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
+	if err.Error() == "flag needs an argument: -site" {
+		fmt.Println("Usage: " + cmd.UsageText)
+		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
+		logger.Error("Option '-site' requires an argument.")
+		return nil
+	} else if err.Error() == "Required flag \"site\" not set" {
+		fmt.Println("Usage: " + cmd.UsageText)
+		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
+		logger.Error("Missing option '-site'.")
+		return nil
+		//This case is treated in the InvalidFlagAccessHandler, and there you can know the flag 'name'
+	} else if strings.Contains(err.Error(), "flag provided but not defined:") {
+		return nil
+	}
+	return err
+
+}
+
 func main() {
 
 	//Changing the default help flag
@@ -82,7 +141,6 @@ func main() {
 
 		cli.HelpPrinterCustom(w, templ, data, funcMap)
 	}
-
 	//In the future allocate this templates to another file...
 	//This modifications to the template only affect "Visible" flags
 
@@ -165,15 +223,21 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 	//
 	// After CLI, start Configuration File (settings.py)
 
+	defer logger.Sync()
+
 	cmd := &cli.Command{
 		Name:      "terrabutler",
 		Usage:     "The utility that helps keeping your IaC in one piece",
 		UsageText: "terrabutler [OPTIONS] COMMAND [ARGS]...",
 		Version:   "v3.0.0",
 		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
-		HideHelpCommand:       true,
-		HideVersion:           true,
-		EnableShellCompletion: true,
+		HideHelpCommand:          true,
+		HideVersion:              true,
+		EnableShellCompletion:    true,
+		Suggest:                  true,
+		CommandNotFound:          CommandNotFound,
+		OnUsageError:             OnUsageError,
+		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 		Commands: []*cli.Command{
 			{
 				Name:  "version",
@@ -182,6 +246,9 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 					fmt.Fprintf(c.Root().Writer, "%s: %s\n", c.Root().Name, c.Root().Version)
 					return nil
 				},
+				CommandNotFound:          CommandNotFound,
+				OnUsageError:             OnUsageError,
+				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 			},
 			// env Command
 			//
@@ -192,20 +259,27 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 			// TODO:
 			// Finished for now...
 			{
-				Name:      "env",
-				Usage:     "Manage environments",
-				UsageText: "terrabutler env [OPTIONS] COMMAND [ARGS]...",
-				HideHelp:  true,
+				Name:                     "env",
+				Usage:                    "Manage environments",
+				UsageText:                "terrabutler env [OPTIONS] COMMAND [ARGS]...",
+				HideHelp:                 true,
+				Suggest:                  true,
+				CommandNotFound:          CommandNotFound,
+				OnUsageError:             OnUsageError,
+				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Commands: []*cli.Command{
 					//Subcommands of Env
 					{
-						Name:      "delete",
-						Aliases:   []string{""},
-						Usage:     "Delete an environment",
-						UsageText: "terrabutler env delete [OPTIONS] NAME",
-						ArgsUsage: "NAME",
-						HideHelp:  true,
-						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
+						Name:                     "delete",
+						Aliases:                  []string{""},
+						Usage:                    "Delete an environment",
+						UsageText:                "terrabutler env delete [OPTIONS] NAME",
+						ArgsUsage:                "NAME",
+						HideHelp:                 true,
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageError,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+						Arguments:                []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								//Added destroy as alias to the -d flag
@@ -226,11 +300,10 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							//Test Ouput
+							//Test Output
 							fmt.Println("Deleted Environment", cmd.StringArg("ENV"), "\nActive Flags: \n-d", cmd.Bool("destroy"), "\n-y", cmd.Bool("y"), "\n-s3", cmd.Bool("s3"))
 							return nil
 						}},
-
 					{
 						Name:     "list",
 						Aliases:  []string{""},
@@ -242,8 +315,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Aliases: []string{"S3"},
 								Usage:   "Access S3 instead of parsing terraform output.",
 							}},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageError,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Ouput
+							//Test Output
 							fmt.Println("Listed Environments")
 							return nil
 						}},
@@ -277,19 +353,25 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:   "Access S3 instead of parsing terraform output.",
 							},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageError,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Ouput
+							//Test Output
 							fmt.Println("Created Environment")
 							return nil
 						}},
 					{
-						Name:      "reload",
-						Aliases:   []string{""},
-						HideHelp:  true,
-						Usage:     "Reload the current environment",
-						UsageText: "terrabutler env reload [OPTIONS]",
+						Name:                     "reload",
+						Aliases:                  []string{""},
+						HideHelp:                 true,
+						Usage:                    "Reload the current environment",
+						UsageText:                "terrabutler env reload [OPTIONS]",
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageError,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Ouput
+							//Test Output
 							fmt.Println("Reloaded Environment")
 							return nil
 						}},
@@ -313,25 +395,28 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:   "Access S3 instead of parsing terraform output.",
 							},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageError,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Ouput
+							//Test Output
 							fmt.Println("Selected Environment")
 							return nil
 						}},
 					{
-						Name:      "show",
-						Aliases:   []string{""},
-						HideHelp:  true,
-						Usage:     "Show the name of the current environment",
-						UsageText: "terrabutler env show [OPTIONS]",
+						Name:                     "show",
+						Aliases:                  []string{""},
+						HideHelp:                 true,
+						Usage:                    "Show the name of the current environment",
+						UsageText:                "terrabutler env show [OPTIONS]",
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageError,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Ouput
+							//Test Output
 							fmt.Println("Current Environment is ...")
 							return nil
 						}},
-				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					return nil
 				},
 			},
 			// init Command
@@ -339,13 +424,16 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 			// TODO:
 			// Concluded for now
 			{
-				Name:      "init",
-				Usage:     "Initialize the manager",
-				UsageText: "terrabutler init [OPTIONS]",
-				HideHelp:  true,
+				Name:                     "init",
+				Usage:                    "Initialize the manager",
+				UsageText:                "terrabutler init [OPTIONS]",
+				HideHelp:                 true,
+				CommandNotFound:          CommandNotFound,
+				OnUsageError:             OnUsageError,
+				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					//Test Ouput
-					fmt.Println("The initialization was successfull!")
+					//Test Output
+					fmt.Println("The initialization was successful!")
 					return nil
 				},
 			},
@@ -372,14 +460,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "apply",
 						HideHelp:  true,
 						Usage:     "Create or update infrastructure.",
-						UsageText: "",
+						UsageText: "terrabutler tf apply [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this Terraform configuration instead of the usual behavior."},
 							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
 							// Requires BOOLEAN value --> Reversing
-							&cli.BoolFlag{Name: "no-lock", Usage: `Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace.`},
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
@@ -388,6 +476,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.BoolFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							// To verify if its possible multiple "Targets" and if i get its values.
 							fmt.Println(c.StringSlice("target"))
@@ -404,6 +494,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{Name: "plan", Usage: "Create a new plan (as if running \"terraform plan\") and then evaluate expressions against its planned state, instead of evaluating against the current state. You can use this to inspect the effects of configuration changes that haven't been applied yet.."},
 							&cli.StringFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -423,10 +515,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
 							//Requires BOOLEAN value --> Reversing
-							&cli.BoolFlag{Name: "no-refresh", Usage: " Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
+							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -441,6 +535,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "recursive", Usage: "Also process files in subdirectories. By default, only the given directory (or current directory) is processed."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -451,14 +547,20 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Usage:     "Release a stuck lock on the current workspace",
 						UsageText: "",
 						ArgsUsage: "LOCK-ID",
-						Arguments: []cli.Argument{&cli.Int16Arg{Name: "LOCK-ID"}},
+						Arguments: []cli.Argument{&cli.StringArg{Name: "LOCK-ID", Value: ""}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:  "force",
 								Usage: "Don't ask for input for unlock confirmation.",
 							},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("LOCK-ID") == "" {
+								logger.Error("Missing Argument 'LOCK_ID'.")
+								return nil
+							}
 							return nil
 						},
 					},
@@ -471,7 +573,13 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "Choice"},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("Choice") == "" {
+								logger.Error("Missing Argument '{init|plan|apply}' Choose one of the choices: init, plan or apply.")
+								return nil
+							}
 							return nil
 						},
 					},
@@ -482,8 +590,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						UsageText: "",
 						ArgsUsage: "ADDR ID",
 						Arguments: []cli.Argument{
-							&cli.StringArgs{Min: 1, Max: 1, Name: "ADDR"},
-							&cli.Int16Args{Min: 1, Max: 1, Name: "ID"},
+							&cli.StringArg{Name: "ADDR"},
+							&cli.StringArg{Name: "ID"},
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing-config", Usage: "Allow import when no resource configuration block exists."},
@@ -495,7 +603,17 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
 							&cli.StringFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("ADDR") == "" {
+								logger.Error("Missing argument 'ADDR'.")
+								return nil
+							}
+							if c.StringArg("ID") == "" {
+								logger.Error("Missing argument 'ID'.")
+								return nil
+							}
 							return nil
 						},
 					},
@@ -521,6 +639,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringFlag{Name: "lockfile", Usage: "Set a dependency lockfile mode. Currently only 'readonly' is valid."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for Terraform Cloud and the remote backend only. Set this to ignore checking that the local and remote Terraform versions use compatible state representations, making an operation proceed even when there is a potential mismatch. See the documentation on configuring Terraform with Terraform Cloud for more information."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -535,6 +655,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{Name: "json", Usage: "If specified, machine readable output will be printed in JSON format."},
 							&cli.BoolFlag{Name: "raw", Usage: "For value types that can be automatically converted to a string, will print the raw string directly, rather than a human-oriented representation of the value."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -559,6 +681,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
 						},
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -575,26 +699,42 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:     "Write out dependency locks for the configured providers",
 								ArgsUsage: "PROVIDERS...",
 								Arguments: []cli.Argument{
-									&cli.StringArgs{Name: "Providers"},
+									&cli.StringArgs{Max: -1, Name: "Providers"},
 								},
 								Flags: []cli.Flag{
 									&cli.StringFlag{Name: "fs-mirror", Usage: "Consult the given filesystem mirror directory instead of the origin registry for each of the given providers."},
 									&cli.StringFlag{Name: "net-mirror", Usage: "Consult the given network mirror (given as a base URL) instead of the origin registry for each of the given providers."},
 									&cli.StringFlag{Name: "platform", Usage: "Choose a target platform to request package checksums for."},
 								},
-								HideHelp: true,
+								HideHelp:                 true,
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if len(c.StringArgs("Providers")) == 0 {
+										return errors.New("Missing arguments 'PROVIDERS...'.")
+									}
+									return nil
+								},
 							}, //Makeup DIRS..
 							{
 								Name:      "mirror",
 								Usage:     "Save local copies of all required provider plugins",
 								ArgsUsage: "TARGET_DIR",
 								Arguments: []cli.Argument{
-									&cli.StringArgs{Name: "DIR"},
+									&cli.StringArg{Name: "DIR"},
 								},
 								Flags: []cli.Flag{
 									&cli.StringFlag{Name: "platform", Usage: "Choose a target platform to request package checksums for."},
 								},
-								HideHelp: true,
+								HideHelp:                 true,
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("DIR") == "" {
+										return errors.New("Missing argument 'TARGET_DIR'.")
+									}
+									return nil
+								},
 							},
 							{
 								Name:  "schema",
@@ -602,9 +742,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "json", Required: true, Usage: "Prints out a json representation of the schemas for all providers used in the current configuration.  [required]"},
 								},
-								HideHelp: true,
+								HideHelp:                 true,
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 							},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 					},
 					{
 						Name:      "refresh",
@@ -620,6 +765,9 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringFlag{Name: "target", Usage: "Resource to target. Operation will be limited to this resource and its dependencies. This flag can be used multiple times."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -635,8 +783,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
-							&cli.BoolFlag{Name: "json", Usage: " Output the version information as a JSON object."},
+							&cli.BoolFlag{Name: "json", Usage: "Output the version information as a JSON object."},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -658,7 +809,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 									&cli.StringFlag{Name: "state", Usage: "Path to a Terraform state file to use to look up Terraform-managed resources. By default, Terraform will consult the state of the currently-selected workspace."},
 									&cli.StringFlag{Name: "id", Usage: "Filters the results to include only instances whose resource types have an attribute named 'id' whose value equals the given id string."},
 								},
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("ADDR") == "" {
+										return errors.New("Missing argument '[ADDRESS]'.")
+									}
 									return nil
 								},
 							},
@@ -667,14 +823,25 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:     "Move an item in the state",
 								ArgsUsage: "SOURCE DESTINATION",
 								Arguments: []cli.Argument{
-									&cli.StringArgs{Name: "SOURCE"},
+									&cli.StringArg{Name: "SOURCE"},
 									&cli.StringArg{Name: "DESTINATION"},
 								},
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "dry-run", Usage: "If set, prints out what would've been moved but doesn't actually move anything."},
-									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+								},
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("SOURCE") == "" {
+										return errors.New("Missing argument 'SOURCE'.")
+									}
+									if c.StringArg("DESTINATION") == "" {
+										return errors.New("Missing argument 'DESTINATION'.")
+									}
+									return nil
 								},
 							},
 							{
@@ -690,8 +857,16 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								},
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "force", Usage: "Write the state even if lineages don't match or the remote serial is higher."},
-									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
+								},
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("PATH") == "" {
+										return errors.New("Missing argument 'PATH'.")
+									}
+									return nil
 								},
 							},
 							{
@@ -704,9 +879,20 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								},
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
-									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+								},
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("FROM_FQDN") == "" {
+										return errors.New("Missing argument 'FROM_PROVIDER_FQDN'.")
+									}
+									if c.StringArg("TO_FQDN") == "" {
+										return errors.New("Missing argument 'TO_PROVIDER_FQDN'.")
+									}
+									return nil
 								},
 							},
 							{
@@ -719,10 +905,18 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "dry-run", Usage: "If set, prints out what would've been moved but doesn't actually move anything."},
 									&cli.StringFlag{Name: "backup", Usage: "Path where Terraform should write the backup state."},
-									&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.StringFlag{Name: "state", Usage: "Path to the state file to update. Defaults to the current workspace state."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+								},
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("ADDR") == "" {
+										return errors.New("Missing argument 'ADDR'.")
+									}
+									return nil
 								},
 							},
 							{
@@ -735,8 +929,19 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Flags: []cli.Flag{
 									&cli.StringFlag{Name: "state", Usage: "Path to the state file to update. Defaults to the current workspace state."},
 								},
+								OnUsageError:             OnUsageErrorSite,
+								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									if c.StringArg("ADDR") == "" {
+										return errors.New("Missing argument 'ADDR'.")
+									}
+									return nil
+								},
 							},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
@@ -751,13 +956,19 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringArg{Name: "ADDR"},
 						},
 						Flags: []cli.Flag{
-							&cli.BoolFlag{Name: "allow-missing", Usage: " If specified, the command will succeed (exit code 0) even if the resource is missing."},
+							&cli.BoolFlag{Name: "allow-missing", Usage: "If specified, the command will succeed (exit code 0) even if the resource is missing."},
 							//Requires BOOLEAN value --> Reversing
-							&cli.BoolFlag{Name: "no-lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("ADDR") == "" {
+								return errors.New("Missing argument 'ADDR'.")
+							}
 							return nil
 						},
 					},
@@ -771,13 +982,19 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.StringArg{Name: "ADDR"},
 						},
 						Flags: []cli.Flag{
-							&cli.BoolFlag{Name: "allow-missing", Usage: " If specified, the command will succeed (exit code 0) even if the resource is missing."},
+							&cli.BoolFlag{Name: "allow-missing", Usage: "If specified, the command will succeed (exit code 0) even if the resource is missing."},
 							//Requires BOOLEAN value --> Reversing
-							&cli.BoolFlag{Name: "no-lock", Usage: " Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("ADDR") == "" {
+								return errors.New("Missing argument 'ADDR'.")
+							}
 							return nil
 						},
 					},
@@ -788,10 +1005,13 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						UsageText: "",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
-							&cli.BoolFlag{Name: "json", Usage: " Output the version information as a JSON object."},
+							&cli.BoolFlag{Name: "json", Usage: "Output the version information as a JSON object."},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
-							return nil
+							return cli.Exit("Ginger croutons are not in the soup", 86)
 						},
 					},
 					{
@@ -802,19 +1022,21 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Flags: []cli.Flag{
 							&cli.StringFlag{Name: "json", Usage: "Output the version information as a JSON object."},
 						},
+						CommandNotFound:          CommandNotFound,
+						OnUsageError:             OnUsageErrorSite,
+						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							return nil
 						},
 					},
 				},
-				Action: func(ctx context.Context, c *cli.Command) error {
-					fmt.Println("Missing Command.")
-					return nil
-				},
+				CommandNotFound:          CommandNotFound,
+				OnUsageError:             OnUsageErrorSite,
+				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 			}},
 	}
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		log.Fatal(err)
+		logger.Error(fmt.Sprintf("%v", err))
 	}
 }
