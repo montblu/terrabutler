@@ -305,10 +305,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							return nil
 						}},
 					{
-						Name:     "list",
-						Aliases:  []string{""},
-						Usage:    "List environments",
-						HideHelp: true,
+						Name:      "list",
+						Aliases:   []string{""},
+						Usage:     "List environments",
+						UsageText: "terrabutler env list [OPTIONS]",
+						HideHelp:  true,
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "s3",
@@ -488,7 +489,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "console",
 						HideHelp:  true,
 						Usage:     "Try Terraform expressions at an interactive command...",
-						UsageText: "",
+						UsageText: "terrabutler tf console [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.StringFlag{Name: "state", Usage: "Legacy option for the local backend only. See the local backend's documentation for more information."},
 							&cli.BoolFlag{Name: "plan", Usage: "Create a new plan (as if running \"terraform plan\") and then evaluate expressions against its planned state, instead of evaluating against the current state. You can use this to inspect the effects of configuration changes that haven't been applied yet.."},
@@ -504,7 +505,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "destroy",
 						HideHelp:  true,
 						Usage:     "Prepare your working directory for other commands",
-						UsageText: "",
+						UsageText: "terrabutler tf destroy [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
 							// Requires BOOLEAN value --> Reversing
@@ -529,7 +530,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "fmt",
 						HideHelp:  true,
 						Usage:     "Reformat your configuration in the standardstyle",
-						UsageText: "",
+						UsageText: "terrabuter tf fmt [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "diff", Usage: "Display diffs of formatting changes."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
@@ -545,8 +546,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "force-unlock",
 						HideHelp:  true,
 						Usage:     "Release a stuck lock on the current workspace",
-						UsageText: "",
-						ArgsUsage: "LOCK-ID",
+						UsageText: "terrabuter tf force-unlock [OPTIONS] LOCK_ID",
+						ArgsUsage: "LOCK_ID",
 						Arguments: []cli.Argument{&cli.StringArg{Name: "LOCK-ID", Value: ""}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
@@ -568,7 +569,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "generate-options",
 						HideHelp:  true,
 						Usage:     "Generate terraform options",
-						UsageText: "",
+						UsageText: "terrabutler tf generate-options [OPTIONS] {init|plan|apply}",
 						ArgsUsage: "{init|plan|apply}",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "Choice"},
@@ -587,7 +588,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "import",
 						HideHelp:  true,
 						Usage:     "Associate existing infrastructure with a Terraform...",
-						UsageText: "",
+						UsageText: "terrabutler tf import [OPTIONS] ADDR ID",
 						ArgsUsage: "ADDR ID",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "ADDR"},
@@ -621,7 +622,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "init",
 						HideHelp:  true,
 						Usage:     "Prepare your working directory for other commands",
-						UsageText: "",
+						UsageText: "terrabutler tf init [OPTIONS]",
 						Flags: []cli.Flag{
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-backend", Usage: "Disable backend or Terraform Cloud initialization for this configuration and use what what was previously initialized instead."},
@@ -649,7 +650,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "output",
 						HideHelp:  true,
 						Usage:     "Show output values from your root module",
-						UsageText: "",
+						UsageText: "terrabutler tf output [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "json", Usage: "If specified, machine readable output will be printed in JSON format."},
@@ -665,7 +666,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "plan",
 						HideHelp:  true,
 						Usage:     "Show changes required by the current configuration",
-						UsageText: "",
+						UsageText: "terrabutler tf plan [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this"},
 							//Requires BOOLEAN value --> Reversing
@@ -691,13 +692,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "providers",
 						HideHelp:  true,
 						Usage:     "Show the providers required for this configuration",
-						UsageText: "",
+						UsageText: "terrabutler tf providers [OPTIONS] COMMAND [ARGS]...",
 						Commands: []*cli.Command{
 							//Makeup Providers...
 							{
 								Name:      "lock",
 								Usage:     "Write out dependency locks for the configured providers",
 								ArgsUsage: "PROVIDERS...",
+								UsageText: "terrabutler tf providers lock [OPTIONS] PROVIDERS...",
 								Arguments: []cli.Argument{
 									&cli.StringArgs{Max: -1, Name: "Providers"},
 								},
@@ -720,6 +722,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Name:      "mirror",
 								Usage:     "Save local copies of all required provider plugins",
 								ArgsUsage: "TARGET_DIR",
+								UsageText: "terrabutler tf providers mirror [OPTIONS] TARGET_DIR",
 								Arguments: []cli.Argument{
 									&cli.StringArg{Name: "DIR"},
 								},
@@ -737,8 +740,9 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								},
 							},
 							{
-								Name:  "schema",
-								Usage: "Show schemas for the providers used in the configuration",
+								Name:      "schema",
+								Usage:     "Show schemas for the providers used in the configuration",
+								UsageText: "terrabutler tf providers schema [OPTIONS]",
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "json", Required: true, Usage: "Prints out a json representation of the schemas for all providers used in the current configuration.  [required]"},
 								},
@@ -755,7 +759,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "refresh",
 						HideHelp:  true,
 						Usage:     "Update the state to match remote systems",
-						UsageText: "",
+						UsageText: "terrabutler tf refresh [OPTIONS]",
 						Flags: []cli.Flag{
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
@@ -776,7 +780,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "show",
 						HideHelp:  true,
 						Usage:     "Show the current state or a saved plan",
-						UsageText: "",
+						UsageText: "terrabutler tf show [OPTIONS] [PATH]",
 						ArgsUsage: "[PATH]",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "PATH"},
@@ -796,7 +800,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "state",
 						HideHelp:  true,
 						Usage:     "Advanced state management",
-						UsageText: "",
+						UsageText: "terrabutler tf state [OPTIONS] COMMAND [ARGS]...",
 						Commands: []*cli.Command{
 							{
 								Name:      "list",
@@ -950,7 +954,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "taint",
 						HideHelp:  true,
 						Usage:     "Mark a resource instance as not fully functional",
-						UsageText: "",
+						UsageText: "terrabutler tf taint [OPTIONS] ADDRESS",
 						ArgsUsage: "ADDRESS",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "ADDR"},
@@ -976,7 +980,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "untaint",
 						HideHelp:  true,
 						Usage:     "Remove the 'tainted' state from a resource instance",
-						UsageText: "",
+						UsageText: "terrabutler tf untaint [OPTIONS] ADDRESS",
 						ArgsUsage: "ADDRESS",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "ADDR"},
@@ -1002,7 +1006,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "validate",
 						HideHelp:  true,
 						Usage:     "Validate the configuration files",
-						UsageText: "",
+						UsageText: "terrabutler tf validate [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "json", Usage: "Output the version information as a JSON object."},
@@ -1018,7 +1022,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Name:      "version",
 						HideHelp:  true,
 						Usage:     "Show the current Terraform version",
-						UsageText: "",
+						UsageText: "terrabutler tf version [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.StringFlag{Name: "json", Usage: "Output the version information as a JSON object."},
 						},
