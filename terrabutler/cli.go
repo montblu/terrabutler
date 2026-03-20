@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v3"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 // Function to Create offsets to the flags.
@@ -58,28 +56,6 @@ func addIndentFlag(names []string) []string {
 	}
 	return names
 }
-
-// Configuring Logger
-var encoderConfig = zapcore.EncoderConfig{
-	TimeKey:        "timestamp",
-	LevelKey:       "level",
-	NameKey:        "logger",
-	CallerKey:      "caller",
-	MessageKey:     "message",
-	LineEnding:     zapcore.DefaultLineEnding,
-	EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-	EncodeTime:     zapcore.ISO8601TimeEncoder,
-	EncodeDuration: zapcore.StringDurationEncoder,
-}
-var config = zap.Config{
-	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
-	Development:      true,
-	Encoding:         "console",
-	EncoderConfig:    encoderConfig,
-	OutputPaths:      []string{"stdout"},
-	ErrorOutputPaths: []string{"stderr"},
-}
-var logger, _ = config.Build()
 
 // Default Functions for the Logger, of commands and flags not found.
 func CommandNotFound(ctx context.Context, c *cli.Command, s string) {
@@ -214,6 +190,11 @@ OPTIONS:{{ $cv := offsetFlags .VisibleFlags 8}}{{range $i, $e := .VisibleFlags}}
 GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 `
 
+	// Testing the new Functions
+	check_requirement()
+	validate_settings()
+	//To test the new writer settings
+	write_settings(settings)
 	//CLI
 	//
 	// TODO:
