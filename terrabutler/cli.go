@@ -194,7 +194,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 	check_requirement()
 	validate_settings()
 	//To test the new writer settings
-	write_settings(settings)
+	//write_settings(settings)
+
 	//CLI
 	//
 	// TODO:
@@ -415,7 +416,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					//Test Output
-					fmt.Println("The initialization was successful!")
+					inception_init()
 					return nil
 				},
 			},

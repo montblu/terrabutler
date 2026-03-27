@@ -9,7 +9,6 @@ import (
 )
 
 // Checks the requirements before running the application.
-// The requirements all disabled/are the inverse for now
 func check_requirement() {
 
 	// Sync logger
@@ -26,7 +25,7 @@ func check_requirement() {
 
 	logger.Info("Environment Variables:", zap.String("TERRAFORM_ROOT", root), zap.Bool("TERRAFORM_ENABLED", isEnabled), zap.String("Settings Location", settingsFile))
 
-	if isEnabled {
+	if !isEnabled {
 		logger.Error("Terrabutler is not currently enabled on this folder. Please set 'TERRABUTLER_ENABLE' in your environment to true to enable it.")
 		os.Exit(1)
 	}
