@@ -237,9 +237,10 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 			// What is Done:
 			// Added all SubCommands
 			// All Flags and Arguments of the SubCommands
+			// Show subcommand is now implemented
 			//
 			// TODO:
-			// Finished for now...
+			// All the other commands
 			{
 				Name:                     "env",
 				Usage:                    "Manage environments",
@@ -396,8 +397,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Output
-							fmt.Println("Current Environment is ...")
+							get_current_env()
 							return nil
 						}},
 				},
@@ -415,7 +415,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					//Test Output
 					inception_init()
 					return nil
 				},
@@ -429,7 +428,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 			//
 			// TODO:
 			// Flag site Warnings
-			//
+			// Created all the subcommands
 			//
 			{
 				Name:      "tf",
@@ -559,7 +558,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
-							if c.StringArg("Choice") == "" {
+							if c.StringArg("Choice") != "init" && c.StringArg("Choice") != "plan" && c.StringArg("Choice") != "apply" {
 								logger.Error("Missing Argument '{init|plan|apply}' Choose one of the choices: init, plan or apply.")
 								return nil
 							}
@@ -1006,12 +1005,13 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Usage:     "Show the current Terraform version",
 						UsageText: "terrabutler tf version [OPTIONS]",
 						Flags: []cli.Flag{
-							&cli.StringFlag{Name: "json", Usage: "Output the version information as a JSON object."},
+							&cli.BoolFlag{Name: "json", Usage: "Output the version information as a JSON object."},
 						},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							tf_version(c.Bool("json"))
 							return nil
 						},
 					},
