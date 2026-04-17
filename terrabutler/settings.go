@@ -49,7 +49,7 @@ func get_settings() {
 		os.Exit(1)
 	}
 
-	logger.Info("Settings File Loaded", zap.String("Settings", fmt.Sprint(settings.All())))
+	logger.Debug("Settings File Loaded", zap.String("Settings", fmt.Sprint(settings.All())))
 }
 
 // Validates the settings files

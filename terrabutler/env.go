@@ -13,8 +13,9 @@ func get_current_env() string {
 	env, err := os.ReadFile(paths["environment"])
 	if err != nil {
 		logger.Error("An error has occurred:", zap.Error(err))
+		os.Exit(1)
 	}
-	logger.Info("Current environment is " + string(env))
+	logger.Debug("Current environment is " + string(env))
 	return string(env)
 }
 

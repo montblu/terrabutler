@@ -1,10 +1,9 @@
 package main
 
 import (
-	"context"
 	"os"
+	"os/exec"
 
-	"github.com/hashicorp/terraform-exec/tfexec"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +34,18 @@ func inception_init() {
 	if !inception_init_check() {
 
 		//run Terraform init -backend-config LOCATION
-		err := tf.Init(context.Background(), tfexec.BackendConfig(backend_dir+"/"+org+"-"+default_env_name+"-inception.tfvars"))
+		os.Chdir(inception_dir)
+
+		//Verifies that terraform exist in the current dir
+		_, err := exec.LookPath("terraform")
+		if err != nil {
+			logger.Error("No Terraform executable found, please run mise script first.")
+			os.Exit(1)
+		}
+
+		//Runs the inception init command
+		cmd := exec.Command("terraform", "init", "-backend-config", backend_dir+"/"+org+"-"+default_env_name+"-inception.tfvars")
+		cmd.Run()
 		//Show error message
 		if err != nil {
 			logger.Error("There was an error while doing the initialization", zap.Error(err))

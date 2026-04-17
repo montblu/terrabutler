@@ -23,7 +23,7 @@ func check_requirement() {
 	isEnabled := k.Bool("TERRABUTLER_ENABLE")
 	settingsFile := root + "/configs/settings.yml"
 
-	logger.Info("Environment Variables:", zap.String("TERRAFORM_ROOT", root), zap.Bool("TERRAFORM_ENABLED", isEnabled), zap.String("Settings Location", settingsFile))
+	logger.Debug("Environment Variables:", zap.String("TERRAFORM_ROOT", root), zap.Bool("TERRAFORM_ENABLED", isEnabled), zap.String("Settings Location", settingsFile))
 
 	if !isEnabled {
 		logger.Error("Terrabutler is not currently enabled on this folder. Please set 'TERRABUTLER_ENABLE' in your environment to true to enable it.")

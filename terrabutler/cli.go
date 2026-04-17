@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/urfave/cli/v3"
@@ -191,7 +192,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 `
 
 	// Testing the new Functions
-	check_requirement()
 	validate_settings()
 	//To test the new writer settings
 	//write_settings(settings)
@@ -400,6 +400,10 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							get_current_env()
 							return nil
 						}},
+				},
+				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+					inception_init_needed()
+					return ctx, nil
 				},
 			},
 			// init Command
@@ -830,8 +834,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								},
 							},
 							{
-								Name:  "pull",
-								Usage: "Pull current state and output to stdouts",
+								Name:         "pull",
+								Usage:        "Pull current state and output to stdouts",
+								OnUsageError: OnUsageErrorSite,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									return nil
+								},
 							},
 							{
 								Name:      "push",
@@ -927,9 +935,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-						Action: func(ctx context.Context, c *cli.Command) error {
-							return nil
-						},
 					},
 					{
 						Name:      "taint",
@@ -951,9 +956,26 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
 							if c.StringArg("ADDR") == "" {
 								return errors.New("Missing argument 'ADDR'.")
 							}
+							args := append([]string{}, c.StringArg("ADDR"))
+							if c.Bool("allow-missing") {
+								options = append(options, "-allow-missing")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.String("lock-timeout") != "" {
+								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+							}
+							if c.Bool("ignore-remote-version") {
+
+							}
+
+							terraform_command_runner("taint", c.String("site"), args, options, "")
+
 							return nil
 						},
 					},
@@ -977,9 +999,25 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
 							if c.StringArg("ADDR") == "" {
 								return errors.New("Missing argument 'ADDR'.")
 							}
+							args := append([]string{}, c.StringArg("ADDR"))
+							if c.Bool("allow-missing") {
+								options = append(options, "-allow-missing")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.String("lock-timeout") != "" {
+								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+							}
+							if c.Bool("ignore-remote-version") {
+
+							}
+
+							terraform_command_runner("untaint", c.String("site"), args, options, "")
 							return nil
 						},
 					},
@@ -996,7 +1034,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
-							return cli.Exit("Ginger croutons are not in the soup", 86)
+							options := []string{}
+							if c.Bool("json") {
+								options = append(options, "-json")
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							terraform_command_runner("validate", c.String("site"), options, []string{}, "")
+							return nil
 						},
 					},
 					{
@@ -1011,7 +1057,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
-							tf_version(c.Bool("json"))
+							options := []string{}
+							if c.Bool("json") {
+								options = append(options, "-json")
+							}
+							terraform_command_runner("version", c.String("site"), options, []string{}, "")
 							return nil
 						},
 					},
@@ -1019,6 +1069,27 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageErrorSite,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+
+					sites := settings.Strings("sites.ordered")
+					site := c.String("site")
+					if strings.Contains(site, "site_") {
+						logger.Warn("There is no need to pass the 'site_' prefix.")
+						c.Set("site", strings.TrimPrefix(site, "site_"))
+					}
+					//Changing site again fo correct display of the errors
+					site = c.String("site")
+
+					if _, err := os.Stat("site_" + site); os.IsNotExist(err) && slices.Contains(sites, c.String("site")) {
+						logger.Error("The site " + site + " exists but is missing inside the config file.")
+						os.Exit(1)
+					} else if !slices.Contains(sites, c.String("site")) {
+						logger.Error("The site " + site + " does not exist.")
+						os.Exit(1)
+					}
+
+					return ctx, nil
+				},
 			}},
 	}
 

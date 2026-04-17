@@ -1,131 +1,106 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
+	"os"
+	"os/exec"
+	"strings"
+	"syscall"
 
-	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/hc-install/product"
-	"github.com/hashicorp/hc-install/releases"
-	"github.com/hashicorp/terraform-exec/tfexec"
 	"go.uber.org/zap"
 )
 
-// Initializes Terraform Globally
-var tf = init_terraform()
+var org = settings.String("general.organization")
 
-// Initializes Terraform
-func init_terraform() *tfexec.Terraform {
-	//This downloads the terraform locally to be used
-	installer := &releases.ExactVersion{
-		Product: product.Terraform,
-		Version: version.Must(version.NewVersion("1.10.5")),
+// Used for generate-options, prints arguments
+func terraform_args_print(command string, site string) string {
+	var needed_options string
+	if command == "init" {
+		needed_options = "backend"
+	} else if command == "plan" || command == "apply" {
+		needed_options = "var"
+	} else {
+		needed_options = ""
 	}
 
-	execPath, err := installer.Install(context.Background())
+	options := terraform_needed_options_builder(needed_options, site)
+	return strings.Join(options, " ")
+}
+
+// Create array of needed options for backend or var files
+func terraform_needed_options_builder(needed_options string, site string) []string {
+	env := get_current_env()
+	default_env := settings.String("environments.default.name")
+
+	if needed_options == "backend" {
+		backend_dir := paths["backends"]
+
+		if site == "inception" { //Init inception with default ENV
+			return []string{"-backend-config", backend_dir + "/" + org + "-" + default_env + "-inception.tfvars"}
+		} else {
+			return []string{"-backend-config", backend_dir + "/" + org + "-" + env + "-" + site + ".tfvars"}
+		}
+	} else if needed_options == "var" {
+		variables_dir := paths["variables"]
+
+		return []string{"-var-file", variables_dir + "/global.tfvars",
+			"-var-file", variables_dir + "/" + org + "-" + env + ".tfvars",
+			"-var-file", variables_dir + "/" + org + "-" + env + "-" + site + ".tfvars"}
+
+	} else { // If needed_options is empty, return empty slice
+		return []string{}
+	}
+}
+
+// Command builder
+func terraform_command_builder(command string, site string, args []string, options []string, needed_options string) []string {
+
+	base_command := []string{"terraform", command}
+
+	if needed_options == "backend" || needed_options == "var" {
+		aux := terraform_needed_options_builder(needed_options, site)
+		base_command = append(base_command, aux...)
+	}
+
+	base_command = append(base_command, options...)
+	base_command = append(base_command, args...)
+
+	return base_command
+}
+
+// Main runner function
+func terraform_command_runner(command string, site string, args []string, options []string, needed_options string) {
+
+	env := get_current_env()
+
+	tf_binary, err := exec.LookPath("terraform")
 	if err != nil {
-		log.Fatalf("error installing Terraform: %s", err)
+		logger.Error("No Terraform executable found, please run mise script first.")
+		os.Exit(1)
 	}
 
-	fmt.Println(execPath)
-
-	//For better performance, and not always downloading the terraform when using terrabutler, using the locally installed terraform installed by mise.
-	//It's needed to make a var env of this for the final stage
-	workingDir := paths["inception"]
-	tf, err := tfexec.NewTerraform(workingDir, execPath)
+	//Changes the current working dir to the site chosen
+	err = os.Chdir(paths["root"] + "/site_" + site)
+	//In theory this error shouldn't occur, since is begin parsed before the execution of this command
 	if err != nil {
-		log.Fatalf("error running NewTerraform: %s", err)
+		logger.Error("Error in finding the path for the site " + site)
+		os.Exit(1)
 	}
 
-	return tf
-}
+	runner_command := terraform_command_builder(command, site, args, options, needed_options)
 
-//Commands that required special options
+	runner_env := os.Environ()
 
-func tf_init(site string, args []string, options []string, needed_options string) {
+	logger.Debug("Tf Binary loc: " + tf_binary)
 
-}
-
-func tf_plan(site string, args []string, options []string, needed_options string) {
-
-}
-
-func tf_apply(site string, args []string, options []string, needed_options string) {
-
-}
-
-//All the other tf commands used
-
-func tf_console(site string, options []string) {}
-
-func tf_destroy(site string, options []string) {}
-
-func tf_fmt(site string, options []string) {}
-
-func tf_force_unlock(site string, options []string, lock_id string) {}
-
-func tf_generate_options(site string, options []string, choice string) {}
-
-func tf_import(site string, options []string, address string, id string) {}
-
-func tf_output(site string, options []string) {}
-
-func tf_providers_lock(site string, options []string, providers []string) {}
-
-func tf_providers_mirror(site string, options []string, target_dir string) {}
-
-func tf_providers_schema(site string, options []string) {}
-
-func tf_refresh(site string, options []string) {}
-
-func tf_show(site string, options []string, path string) {}
-
-// Not included in the tfexec
-func tf_state_list() {}
-
-func tf_state_mv() {}
-
-func tf_state_pull() {}
-
-func tf_state_push() {}
-
-// Not included in the tfexec
-func tf_state_replace_provider() {}
-
-func tf_state_rm() {}
-
-// Not included in the tfexec
-func tf_state_show() {}
-
-func tf_taint(site string, options []string, address string) {}
-
-func tf_untaint(site string, options []string, address string) {}
-
-func tf_validate(site string, options []string) {
-
-	/*json, err := tf.Validate(context.Background())*/
-	/*if err != nil {
-		logger.Error("An error has occurred", zap.Error(err))
-	}*/
-
-}
-
-func tf_version(json_option bool) {
-
-	version, _, err := tf.Version(context.Background(), false)
-	if err != nil {
-		logger.Error("An error has occurred", zap.Error(err))
-	}
-	//There exists a version plain text and Json Format, but its private for some reason?
-	if json_option == true {
+	execErr := syscall.Exec(tf_binary, runner_command, runner_env)
+	if execErr != nil {
+		logger.Error("There was an error during execution of terraform "+command+"in the site "+site+" in the environment "+env, zap.Error(execErr))
+		os.Exit(1)
 	}
 
-	logger.Info("TerraForm Version : " + version.String())
 }
 
 // New commands to be used in all sites
-
 func tf_destroy_all_sites() {}
 
 func tf_apply_all_sites() {}
