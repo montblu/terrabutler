@@ -9,8 +9,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var org = settings.String("general.organization")
-
 // Used for generate-options, prints arguments
 func terraform_args_print(command string, site string) string {
 	var needed_options string
@@ -29,6 +27,7 @@ func terraform_args_print(command string, site string) string {
 // Create array of needed options for backend or var files
 func terraform_needed_options_builder(needed_options string, site string) []string {
 	env := get_current_env()
+	org := settings.String("general.organization")
 	default_env := settings.String("environments.default.name")
 
 	if needed_options == "backend" {

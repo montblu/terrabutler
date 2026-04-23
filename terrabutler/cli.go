@@ -460,13 +460,43 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
-							&cli.BoolFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
-							// To verify if its possible multiple "Targets" and if i get its values.
-							fmt.Println(c.StringSlice("target"))
+							options := []string{}
+							if c.Bool("auto-approve") {
+								options = append(options, "-auto-approve")
+							}
+							if c.Bool("destroy") {
+								options = append(options, "-destroy")
+							}
+							if c.Bool("no-input") {
+								options = append(options, "-input=false")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.String("lock-timeout") != "" {
+								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							if c.Bool("refresh-only") {
+								options = append(options, "-refresh-only")
+							}
+							if c.Bool("no-refresh") {
+								options = append(options, "-refresh=false")
+							}
+							for _, target := range c.StringSlice("target") {
+								options = append(options, "-target="+target)
+							}
+							for _, v := range c.StringSlice("var") {
+								options = append(options, "-var="+v)
+							}
+							terraform_command_runner("apply", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -478,11 +508,22 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Flags: []cli.Flag{
 							&cli.StringFlag{Name: "state", Usage: "Legacy option for the local backend only. See the local backend's documentation for more information."},
 							&cli.BoolFlag{Name: "plan", Usage: "Create a new plan (as if running \"terraform plan\") and then evaluate expressions against its planned state, instead of evaluating against the current state. You can use this to inspect the effects of configuration changes that haven't been applied yet.."},
-							&cli.StringFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
+							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.String("state") != "" {
+								options = append(options, "-state="+c.String("state"))
+							}
+							if c.Bool("plan") {
+								options = append(options, "-plan")
+							}
+							for _, v := range c.StringSlice("var") {
+								options = append(options, "-var="+v)
+							}
+							terraform_command_runner("console", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -502,12 +543,38 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
-							&cli.StringFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
-							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
+							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.Bool("auto-approve") {
+								options = append(options, "-auto-approve")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.String("lock-timeout") != "" {
+								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							if c.Bool("refresh-only") {
+								options = append(options, "-refresh-only")
+							}
+							if c.Bool("no-refresh") {
+								options = append(options, "-refresh=false")
+							}
+							for _, target := range c.StringSlice("target") {
+								options = append(options, "-target="+target)
+							}
+							for _, v := range c.StringSlice("var") {
+								options = append(options, "-var="+v)
+							}
+							terraform_command_runner("destroy", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -524,6 +591,17 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.Bool("diff") {
+								options = append(options, "-diff")
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							if c.Bool("recursive") {
+								options = append(options, "-recursive")
+							}
+							terraform_command_runner("fmt", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -543,10 +621,16 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
 							if c.StringArg("LOCK-ID") == "" {
 								logger.Error("Missing Argument 'LOCK_ID'.")
 								return nil
 							}
+							args := append([]string{}, c.StringArg("LOCK-ID"))
+							if c.Bool("force") {
+								options = append(options, "-force")
+							}
+							terraform_command_runner("force-unlock", c.String("site"), args, options, "")
 							return nil
 						},
 					},
@@ -566,6 +650,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								logger.Error("Missing Argument '{init|plan|apply}' Choose one of the choices: init, plan or apply.")
 								return nil
 							}
+							logger.Info("Options:\n" + terraform_args_print(c.StringArg("Choice"), c.String("site")))
 							return nil
 						},
 					},
@@ -587,11 +672,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
-							&cli.StringFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
 							if c.StringArg("ADDR") == "" {
 								logger.Error("Missing argument 'ADDR'.")
 								return nil
@@ -600,6 +686,26 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								logger.Error("Missing argument 'ID'.")
 								return nil
 							}
+							args := append([]string{}, c.StringArg("ADDR"), c.StringArg("ID"))
+							if c.Bool("allow-missing-config") {
+								options = append(options, "-allow-missing-config")
+							}
+							if c.Bool("no-input") {
+								options = append(options, "-input=false")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							for _, v := range c.StringSlice("var") {
+								options = append(options, "-var="+v)
+							}
+							if c.Bool("ignore-remote-version") {
+								options = append(options, "-ignore-remote-version")
+							}
+							terraform_command_runner("import", c.String("site"), args, options, "")
 							return nil
 						},
 					},
@@ -628,6 +734,41 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.Bool("no-backend") {
+								options = append(options, "-backend=false")
+							}
+							if c.Bool("force-copy") {
+								options = append(options, "-force-copy")
+							}
+							if c.Bool("no-get") {
+								options = append(options, "-get=false")
+							}
+							if c.Bool("no-input") {
+								options = append(options, "-input=false")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							if c.Bool("reconfigure") {
+								options = append(options, "-reconfigure")
+							}
+							if c.Bool("migrate-state") {
+								options = append(options, "-migrate-state")
+							}
+							if c.Bool("upgrade") {
+								options = append(options, "-upgrade")
+							}
+							if c.String("lockfile") != "" {
+								options = append(options, "-lockfile="+c.String("lockfile"))
+							}
+							if c.Bool("ignore-remote-version") {
+								options = append(options, "-ignore-remote-version")
+							}
+							terraform_command_runner("init", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -644,6 +785,17 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							if c.Bool("json") {
+								options = append(options, "-json")
+							}
+							if c.Bool("raw") {
+								options = append(options, "-raw")
+							}
+							terraform_command_runner("output", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -664,12 +816,45 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
-							&cli.StringFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.Bool("destroy") {
+								options = append(options, "-destroy")
+							}
+							if c.Bool("no-input") {
+								options = append(options, "-input=false")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.String("lock-timeout") != "" {
+								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							if c.Bool("refresh-only") {
+								options = append(options, "-refresh-only")
+							}
+							if c.Bool("no-refresh") {
+								options = append(options, "-refresh=false")
+							}
+							for _, target := range c.StringSlice("target") {
+								options = append(options, "-target="+target)
+							}
+							for _, v := range c.StringSlice("var") {
+								options = append(options, "-var="+v)
+							}
+							if c.String("out") != "" {
+								options = append(options, "-out="+c.String("out"))
+							}
+
+							terraform_command_runner("plan", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -697,9 +882,21 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if len(c.StringArgs("Providers")) == 0 {
 										return errors.New("Missing arguments 'PROVIDERS...'.")
 									}
+									args := append([]string{}, c.StringArgs("Providers")...)
+									if c.String("fs-mirror") != "" {
+										options = append(options, "-fs-mirror="+c.String("fs-mirror"))
+									}
+									if c.String("net-mirror") != "" {
+										options = append(options, "-net-mirror="+c.String("net-mirror"))
+									}
+									if c.String("platform") != "" {
+										options = append(options, "-platform="+c.String("platform"))
+									}
+									terraform_command_runner("providers lock", c.String("site"), args, options, "")
 									return nil
 								},
 							}, //Makeup DIRS..
@@ -718,9 +915,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("DIR") == "" {
 										return errors.New("Missing argument 'TARGET_DIR'.")
 									}
+									args := append([]string{}, c.StringArg("DIR"))
+									if c.String("platform") != "" {
+										options = append(options, "-platform="+c.String("platform"))
+									}
+									terraform_command_runner("providers mirror", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -734,6 +937,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								HideHelp:                 true,
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
+									if c.Bool("json") {
+										options = append(options, "-json")
+									}
+									terraform_command_runner("providers schema", c.String("site"), []string{}, options, "")
+									return nil
+								},
 							},
 						},
 						CommandNotFound:          CommandNotFound,
@@ -749,15 +960,32 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
 							//Requires BOOLEAN value --> Reversing
-							&cli.BoolFlag{Name: "lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
+							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
-							&cli.StringFlag{Name: "target", Usage: "Resource to target. Operation will be limited to this resource and its dependencies. This flag can be used multiple times."},
+							&cli.StringSliceFlag{Name: "target", Usage: "Resource to target. Operation will be limited to this resource and its dependencies. This flag can be used multiple times."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
 						},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.Bool("no-input") {
+								options = append(options, "-input=false")
+							}
+							if c.Bool("no-lock") {
+								options = append(options, "-lock=false")
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							for _, target := range c.StringSlice("target") {
+								options = append(options, "-target="+target)
+							}
+							for _, v := range c.StringSlice("var") {
+								options = append(options, "-var="+v)
+							}
+							terraform_command_runner("refresh", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -778,6 +1006,18 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
+							options := []string{}
+							if c.StringArg("PATH") == "" {
+								return errors.New("Missing argument '[PATH]'.")
+							}
+							args := append([]string{}, c.StringArg("PATH"))
+							if c.Bool("json") {
+								options = append(options, "-json")
+							}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							terraform_command_runner("show", c.String("site"), args, options, "")
 							return nil
 						},
 					},
@@ -801,9 +1041,18 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("ADDR") == "" {
 										return errors.New("Missing argument '[ADDRESS]'.")
 									}
+									args := append([]string{}, c.StringArg("ADDR"))
+									if c.String("state") != "" {
+										options = append(options, "-state "+c.String("state"))
+									}
+									if c.String("id") != "" {
+										options = append(options, "-id "+c.String("id"))
+									}
+									terraform_command_runner("state list", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -824,12 +1073,27 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("SOURCE") == "" {
 										return errors.New("Missing argument 'SOURCE'.")
 									}
 									if c.StringArg("DESTINATION") == "" {
 										return errors.New("Missing argument 'DESTINATION'.")
 									}
+									args := append([]string{}, c.String("SOURCE"), c.String("DESTINATION"))
+									if c.Bool("dry-run") {
+										options = append(options, "-dry-run")
+									}
+									if c.Bool("no-lock") {
+										options = append(options, "-lock=false")
+									}
+									if c.String("lock-timeout") != "" {
+										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+									}
+									if c.Bool("ignore-remote-version") {
+										options = append(options, "-ignore-remote-version")
+									}
+									terraform_command_runner("state mv", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -838,6 +1102,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:        "Pull current state and output to stdouts",
 								OnUsageError: OnUsageErrorSite,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									terraform_command_runner("state pull", c.String("site"), []string{}, []string{}, "")
 									return nil
 								},
 							},
@@ -856,9 +1121,21 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("PATH") == "" {
 										return errors.New("Missing argument 'PATH'.")
 									}
+									args := append([]string{}, c.StringArg("PATH"))
+									if c.Bool("force") {
+										options = append(options, "-force")
+									}
+									if c.Bool("no-lock") {
+										options = append(options, "-lock=false")
+									}
+									if c.String("lock-timeout") != "" {
+										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+									}
+									terraform_command_runner("state push", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -879,12 +1156,27 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("FROM_FQDN") == "" {
 										return errors.New("Missing argument 'FROM_PROVIDER_FQDN'.")
 									}
 									if c.StringArg("TO_FQDN") == "" {
 										return errors.New("Missing argument 'TO_PROVIDER_FQDN'.")
 									}
+									args := append([]string{}, c.StringArg("FROM_FQDN"), c.StringArg("TO_FQDN"))
+									if c.Bool("auto-approve") {
+										options = append(options, "-auto-approve")
+									}
+									if c.Bool("no-lock") {
+										options = append(options, "-lock=false")
+									}
+									if c.String("lock-timeout") != "" {
+										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+									}
+									if c.Bool("ignore-remote-version") {
+										options = append(options, "-ignore-remote-version")
+									}
+									terraform_command_runner("state replace-provider", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -906,9 +1198,30 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("ADDR") == "" {
 										return errors.New("Missing argument 'ADDR'.")
 									}
+									args := append([]string{}, c.StringArg("ADDR"))
+									if c.Bool("dry-run") {
+										options = append(options, "-dry-run")
+									}
+									if c.String("backup") != "" {
+										options = append(options, "-backup")
+									}
+									if c.Bool("no-lock") {
+										options = append(options, "-lock=false")
+									}
+									if c.String("lock-timeout") != "" {
+										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
+									}
+									if c.String("state") != "" {
+										options = append(options, "-state "+c.String("state"))
+									}
+									if c.Bool("ignore-remote-version") {
+										options = append(options, "-ignore-remote-version")
+									}
+									terraform_command_runner("state rm", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -925,9 +1238,15 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
+									options := []string{}
 									if c.StringArg("ADDR") == "" {
 										return errors.New("Missing argument 'ADDR'.")
 									}
+									args := append([]string{}, c.StringArg("ADDR"))
+									if c.String("state") != "" {
+										options = append(options, "-state "+c.StringArg("state"))
+									}
+									terraform_command_runner("state show", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -971,7 +1290,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
 							}
 							if c.Bool("ignore-remote-version") {
-
+								options = append(options, "-ignore-remote-version")
 							}
 
 							terraform_command_runner("taint", c.String("site"), args, options, "")
@@ -1014,7 +1333,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								options = append(options, "-lock-timeout="+c.String("lock-timeout"))
 							}
 							if c.Bool("ignore-remote-version") {
-
+								options = append(options, "-ignore-remote-version")
 							}
 
 							terraform_command_runner("untaint", c.String("site"), args, options, "")
@@ -1041,7 +1360,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							if c.Bool("no-color") {
 								options = append(options, "-no-color")
 							}
-							terraform_command_runner("validate", c.String("site"), options, []string{}, "")
+							terraform_command_runner("validate", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
@@ -1061,7 +1380,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							if c.Bool("json") {
 								options = append(options, "-json")
 							}
-							terraform_command_runner("version", c.String("site"), options, []string{}, "")
+							terraform_command_runner("version", c.String("site"), []string{}, options, "")
 							return nil
 						},
 					},
