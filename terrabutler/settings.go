@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/knadh/koanf/parsers/json"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/providers/file"
@@ -49,7 +48,7 @@ func get_settings() {
 		os.Exit(1)
 	}
 
-	logger.Debug("Settings File Loaded", zap.String("Settings", fmt.Sprint(settings.All())))
+	//logger.Debug("Settings File Loaded", zap.String("Settings", fmt.Sprint(settings.All())))
 }
 
 // Validates the settings files
@@ -75,7 +74,7 @@ func validate_settings() {
 func write_settings(newSettings *koanf.Koanf) {
 
 	//Marshal the new Settings file, to the specific type
-	b, _ := newSettings.Marshal(json.Parser())
+	b, _ := newSettings.Marshal(yaml.Parser())
 
 	f, err := os.Create(settingsPath)
 	if err != nil {

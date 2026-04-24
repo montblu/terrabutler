@@ -496,7 +496,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							terraform_command_runner("apply", c.String("site"), []string{}, options, "")
+							terraform_command_runner("apply", c.String("site"), []string{}, options, "var")
 							return nil
 						},
 					},
@@ -523,7 +523,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							terraform_command_runner("console", c.String("site"), []string{}, options, "")
+							terraform_command_runner("console", c.String("site"), []string{}, options, "var")
 							return nil
 						},
 					},
@@ -574,7 +574,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							terraform_command_runner("destroy", c.String("site"), []string{}, options, "")
+							terraform_command_runner("destroy", c.String("site"), []string{}, options, "var")
 							return nil
 						},
 					},
@@ -705,7 +705,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							if c.Bool("ignore-remote-version") {
 								options = append(options, "-ignore-remote-version")
 							}
-							terraform_command_runner("import", c.String("site"), args, options, "")
+							terraform_command_runner("import", c.String("site"), args, options, "var")
 							return nil
 						},
 					},
@@ -768,7 +768,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							if c.Bool("ignore-remote-version") {
 								options = append(options, "-ignore-remote-version")
 							}
-							terraform_command_runner("init", c.String("site"), []string{}, options, "")
+							terraform_command_runner("init", c.String("site"), []string{}, options, "backend")
 							return nil
 						},
 					},
@@ -854,7 +854,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								options = append(options, "-out="+c.String("out"))
 							}
 
-							terraform_command_runner("plan", c.String("site"), []string{}, options, "")
+							terraform_command_runner("plan", c.String("site"), []string{}, options, "var")
 							return nil
 						},
 					},
@@ -883,10 +883,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{}
 									if len(c.StringArgs("Providers")) == 0 {
 										return errors.New("Missing arguments 'PROVIDERS...'.")
 									}
-									args := append([]string{}, c.StringArgs("Providers")...)
+									args = append(args, c.StringArgs("Providers")...)
 									if c.String("fs-mirror") != "" {
 										options = append(options, "-fs-mirror="+c.String("fs-mirror"))
 									}
@@ -916,10 +917,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{}
 									if c.StringArg("DIR") == "" {
 										return errors.New("Missing argument 'TARGET_DIR'.")
 									}
-									args := append([]string{}, c.StringArg("DIR"))
+									args = append(args, c.StringArg("DIR"))
 									if c.String("platform") != "" {
 										options = append(options, "-platform="+c.String("platform"))
 									}
@@ -985,7 +987,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							terraform_command_runner("refresh", c.String("site"), []string{}, options, "")
+							terraform_command_runner("refresh", c.String("site"), []string{}, options, "var")
 							return nil
 						},
 					},
@@ -1007,10 +1009,10 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
-							if c.StringArg("PATH") == "" {
-								return errors.New("Missing argument '[PATH]'.")
+							args := []string{}
+							if c.StringArg("PATH") != "" {
+								args = append(args, c.StringArg("PATH"))
 							}
-							args := append([]string{}, c.StringArg("PATH"))
 							if c.Bool("json") {
 								options = append(options, "-json")
 							}
@@ -1042,17 +1044,17 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
-									if c.StringArg("ADDR") == "" {
-										return errors.New("Missing argument '[ADDRESS]'.")
+									args := []string{"list"}
+									if c.StringArg("ADDR") != "" {
+										args = append(args, c.StringArg("ADDR"))
 									}
-									args := append([]string{}, c.StringArg("ADDR"))
 									if c.String("state") != "" {
 										options = append(options, "-state "+c.String("state"))
 									}
 									if c.String("id") != "" {
 										options = append(options, "-id "+c.String("id"))
 									}
-									terraform_command_runner("state list", c.String("site"), args, options, "")
+									terraform_command_runner("state", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -1074,13 +1076,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{"mv"}
 									if c.StringArg("SOURCE") == "" {
 										return errors.New("Missing argument 'SOURCE'.")
 									}
 									if c.StringArg("DESTINATION") == "" {
 										return errors.New("Missing argument 'DESTINATION'.")
 									}
-									args := append([]string{}, c.String("SOURCE"), c.String("DESTINATION"))
+									args = append(args, c.String("SOURCE"), c.String("DESTINATION"))
 									if c.Bool("dry-run") {
 										options = append(options, "-dry-run")
 									}
@@ -1093,7 +1096,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									terraform_command_runner("state mv", c.String("site"), args, options, "")
+									terraform_command_runner("state", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -1102,7 +1105,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:        "Pull current state and output to stdouts",
 								OnUsageError: OnUsageErrorSite,
 								Action: func(ctx context.Context, c *cli.Command) error {
-									terraform_command_runner("state pull", c.String("site"), []string{}, []string{}, "")
+									terraform_command_runner("state", c.String("site"), []string{"pull"}, []string{}, "")
 									return nil
 								},
 							},
@@ -1122,10 +1125,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{"push"}
 									if c.StringArg("PATH") == "" {
 										return errors.New("Missing argument 'PATH'.")
 									}
-									args := append([]string{}, c.StringArg("PATH"))
+									args = append(args, c.StringArg("PATH"))
 									if c.Bool("force") {
 										options = append(options, "-force")
 									}
@@ -1135,7 +1139,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 									if c.String("lock-timeout") != "" {
 										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
 									}
-									terraform_command_runner("state push", c.String("site"), args, options, "")
+									terraform_command_runner("state", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -1157,13 +1161,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{"replace-provider"}
 									if c.StringArg("FROM_FQDN") == "" {
 										return errors.New("Missing argument 'FROM_PROVIDER_FQDN'.")
 									}
 									if c.StringArg("TO_FQDN") == "" {
 										return errors.New("Missing argument 'TO_PROVIDER_FQDN'.")
 									}
-									args := append([]string{}, c.StringArg("FROM_FQDN"), c.StringArg("TO_FQDN"))
+									args = append(args, c.StringArg("FROM_FQDN"), c.StringArg("TO_FQDN"))
 									if c.Bool("auto-approve") {
 										options = append(options, "-auto-approve")
 									}
@@ -1176,7 +1181,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									terraform_command_runner("state replace-provider", c.String("site"), args, options, "")
+									terraform_command_runner("state", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -1199,10 +1204,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{"rm"}
 									if c.StringArg("ADDR") == "" {
 										return errors.New("Missing argument 'ADDR'.")
 									}
-									args := append([]string{}, c.StringArg("ADDR"))
+									args = append(args, c.StringArg("ADDR"))
 									if c.Bool("dry-run") {
 										options = append(options, "-dry-run")
 									}
@@ -1221,7 +1227,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									terraform_command_runner("state rm", c.String("site"), args, options, "")
+									terraform_command_runner("state", c.String("site"), args, options, "")
 									return nil
 								},
 							},
@@ -1239,10 +1245,11 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
+									args := []string{}
 									if c.StringArg("ADDR") == "" {
 										return errors.New("Missing argument 'ADDR'.")
 									}
-									args := append([]string{}, c.StringArg("ADDR"))
+									args = append(args, c.StringArg("ADDR"))
 									if c.String("state") != "" {
 										options = append(options, "-state "+c.StringArg("state"))
 									}
@@ -1389,6 +1396,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 				OnUsageError:             OnUsageErrorSite,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+
+					inception_init_needed()
 
 					sites := settings.Strings("sites.ordered")
 					site := c.String("site")

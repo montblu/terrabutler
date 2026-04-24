@@ -53,7 +53,8 @@ func terraform_needed_options_builder(needed_options string, site string) []stri
 // Command builder
 func terraform_command_builder(command string, site string, args []string, options []string, needed_options string) []string {
 
-	base_command := []string{"terraform", command}
+	base_command := []string{"terraform"}
+	base_command = append(base_command, strings.Split(command, " ")...)
 
 	if needed_options == "backend" || needed_options == "var" {
 		aux := terraform_needed_options_builder(needed_options, site)
