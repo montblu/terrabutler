@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"syscall"
 
@@ -101,8 +102,80 @@ func terraform_command_runner(command string, site string, args []string, option
 }
 
 // New commands to be used in all sites
-func tf_destroy_all_sites() {}
+func tf_destroy_all_sites() {
+	sites := settings.Strings("sites.ordered")
+	slices.Reverse(sites)
+	for _, site := range sites {
+		command := terraform_command_builder("destroy", site, []string{}, []string{"-auto-approve"}, "var")
 
-func tf_apply_all_sites() {}
+		//Changes the current working dir to the site chosen
+		err := os.Chdir(paths["root"] + "/site_" + site)
+		if err != nil {
+			logger.Error("Error in finding the path for the site " + site)
+			os.Exit(1)
+		}
+		cmd := exec.Command(command[0], command[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			logger.Error("There was an error during execution of terraform "+command[0]+"in the site "+site+" in the environment "+get_current_env(), zap.Error(err))
+			os.Exit(1)
+		}
+	}
 
-func tf_init_all_sites() {}
+}
+
+func tf_apply_all_sites() {
+	sites := settings.Strings("sites.ordered")
+	for _, site := range sites {
+		if site != "inception" {
+			command := terraform_command_builder("init", site, []string{}, []string{"-reconfigure"}, "backend")
+			cmd := exec.Command(command[0], command[1:]...)
+			cmd.Run()
+		}
+		command := terraform_command_builder("apply", site, []string{}, []string{"-auto-approve"}, "var")
+
+		//Changes the current working dir to the site chosen
+		err := os.Chdir(paths["root"] + "/site_" + site)
+		if err != nil {
+			logger.Error("Error in finding the path for the site " + site)
+			os.Exit(1)
+		}
+		cmd := exec.Command(command[0], command[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			logger.Error("There was an error during execution of terraform "+command[0]+"in the site "+site+" in the environment "+get_current_env(), zap.Error(err))
+			os.Exit(1)
+		}
+	}
+}
+
+func tf_init_all_sites() {
+	sites := settings.Strings("sites.ordered")
+	if index := slices.Index(sites, "inception"); index != -1 {
+		sites = sites[index+1:]
+	}
+	for _, site := range sites {
+
+		logger.Warn("Initializing " + site + " site")
+		command := terraform_command_builder("init", site, []string{}, []string{"-reconfigure"}, "backend")
+
+		//Changes the current working dir to the site chosen
+		err := os.Chdir(paths["root"] + "/site_" + site)
+		if err != nil {
+			logger.Error("Error in finding the path for the site " + site)
+			os.Exit(1)
+		}
+		cmd := exec.Command(command[0], command[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
+		if err != nil {
+			logger.Error("There was an error during execution of terraform "+command[0]+"in the site "+site+" in the environment "+get_current_env(), zap.Error(err))
+			os.Exit(1)
+		}
+	}
+}

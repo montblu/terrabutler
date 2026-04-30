@@ -3,8 +3,6 @@ module terrabutler
 go 1.26.0
 
 require (
-	//Koanf
-	github.com/knadh/koanf/parsers/json v1.0.0
 	github.com/knadh/koanf/parsers/yaml v1.1.0
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0

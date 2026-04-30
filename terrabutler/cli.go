@@ -282,9 +282,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								Usage:   "Access S3 instead of parsing terraform output.",
 							},
 						},
-						Action: func(ctx context.Context, cmd *cli.Command) error {
-							//Test Output
-							fmt.Println("Deleted Environment", cmd.StringArg("ENV"), "\nActive Flags: \n-d", cmd.Bool("destroy"), "\n-y", cmd.Bool("y"), "\n-s3", cmd.Bool("s3"))
+						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("ENV") == "" {
+								logger.Error("Missing argument 'NAME'.")
+								os.Exit(1)
+							}
+							delete_env(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"))
 							return nil
 						}},
 					{
@@ -303,8 +306,14 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Output
-							fmt.Println("Listed Environments")
+							current_env := get_current_env()
+							for _, env := range get_available_envs() {
+								if env == current_env {
+									fmt.Println("\u2192", env)
+								} else {
+									fmt.Println(env)
+								}
+							}
 							return nil
 						}},
 					{
@@ -340,9 +349,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-						Action: func(context.Context, *cli.Command) error {
-							//Test Output
-							fmt.Println("Created Environment")
+						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("ENV") == "" {
+								logger.Error("Missing argument 'NAME'.")
+								os.Exit(1)
+							}
+							create_env(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"))
 							return nil
 						}},
 					{
@@ -355,8 +367,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							//Test Output
-							fmt.Println("Reloaded Environment")
+							tf_init_all_sites()
 							return nil
 						}},
 					{
@@ -382,9 +393,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-						Action: func(context.Context, *cli.Command) error {
-							//Test Output
-							fmt.Println("Selected Environment")
+						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.StringArg("ENV") == "" {
+								logger.Error("Missing argument 'NAME'.")
+								os.Exit(1)
+							}
+							set_current_env(c.StringArg("ENV"), c.Bool("init"))
 							return nil
 						}},
 					{

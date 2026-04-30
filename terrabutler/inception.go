@@ -45,7 +45,7 @@ func inception_init() {
 
 		//Runs the inception init command
 		cmd := exec.Command("terraform", "init", "-backend-config", backend_dir+"/"+org+"-"+default_env_name+"-inception.tfvars")
-		cmd.Run()
+		err = cmd.Run()
 		//Show error message
 		if err != nil {
 			logger.Error("There was an error while doing the initialization", zap.Error(err))
@@ -62,6 +62,7 @@ func inception_init() {
 			logger.Error("Writing on the file that manages the environments wasn't possible.")
 			os.Exit(1)
 		}
+		f.Close()
 
 		//If all is ok, display successfully inception
 		logger.Info("The initialization was successful!")
