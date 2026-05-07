@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"slices"
@@ -75,7 +76,7 @@ func terraform_command_runner(command string, site string, args []string, option
 
 	tf_binary, err := exec.LookPath("terraform")
 	if err != nil {
-		logger.Error("No Terraform executable found, please run mise script first.")
+		logger.Error("No Terraform executable found.")
 		os.Exit(1)
 	}
 
@@ -89,13 +90,15 @@ func terraform_command_runner(command string, site string, args []string, option
 
 	runner_command := terraform_command_builder(command, site, args, options, needed_options)
 
+	logger.Debug(fmt.Sprintf("Executing command: %v", runner_command))
+
 	runner_env := os.Environ()
 
 	logger.Debug("Tf Binary loc: " + tf_binary)
 
 	execErr := syscall.Exec(tf_binary, runner_command, runner_env)
 	if execErr != nil {
-		logger.Error("There was an error during execution of terraform "+command+"in the site "+site+" in the environment "+env, zap.Error(execErr))
+		logger.Error("There was an error during execution of terraform "+command+" in the site "+site+" in the environment "+env, zap.Error(execErr))
 		os.Exit(1)
 	}
 

@@ -1425,7 +1425,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 					if _, err := os.Stat("site_" + site); os.IsNotExist(err) && slices.Contains(sites, c.String("site")) {
 						logger.Error("The site " + site + " exists but is missing inside the config file.")
 						os.Exit(1)
-					} else if !slices.Contains(sites, c.String("site")) {
+					} else if site != "" && !slices.Contains(sites, c.String("site")) {
 						logger.Error("The site " + site + " does not exist.")
 						os.Exit(1)
 					}

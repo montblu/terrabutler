@@ -55,7 +55,13 @@ func get_available_envs() []string {
 
 	os.Chdir(directory)
 
-	cmd := exec.Command("terraform", "init", "-backend-config", paths["backend"]+"/"+org+"-"+default_env_name+"-inception.tfvars")
+	command := []string{"terraform", "init", "-backend-config", paths["backends"] + "/" + org + "-" + default_env_name + "-inception.tfvars"}
+
+	logger.Debug(fmt.Sprintf("Executing Command: %s %v", command[0], command[1:]))
+
+	cmd := exec.Command(command[0], command[1:]...)
+	cmd.Stderr = os.Stderr
+
 	err := cmd.Run()
 	if err != nil {
 		logger.Error("There was an error from terraform init for "+org+"-"+default_env_name+" environment.", zap.Error(err))

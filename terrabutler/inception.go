@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -39,13 +40,18 @@ func inception_init() {
 		//Verifies that terraform exist in the current dir
 		_, err := exec.LookPath("terraform")
 		if err != nil {
-			logger.Error("No Terraform executable found, please run mise script first.")
+			logger.Error("No Terraform executable found.")
 			os.Exit(1)
 		}
 
+		command := []string{"terraform", "init", "-backend-config", backend_dir + "/" + org + "-" + default_env_name + "-inception.tfvars"}
+
+		logger.Debug(fmt.Sprintf("Executing %s command with args: %v", command[0], command[1:]))
+
 		//Runs the inception init command
-		cmd := exec.Command("terraform", "init", "-backend-config", backend_dir+"/"+org+"-"+default_env_name+"-inception.tfvars")
+		cmd := exec.Command(command[0], command[1:]...)
 		err = cmd.Run()
+		cmd.Stderr = os.Stderr
 		//Show error message
 		if err != nil {
 			logger.Error("There was an error while doing the initialization", zap.Error(err))
