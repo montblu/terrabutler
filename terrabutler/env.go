@@ -261,7 +261,7 @@ func create_env(env string, confirmation bool, temporary bool, apply bool) {
 
 		//If temporary is true, generate the var files for the env
 		if temporary {
-			//generate_var_files(env)
+			generate_var_files(env)
 		} else {
 			//Else is a permanent environment for the list
 			// Get the config file, append the new env to the config file and write the new config file

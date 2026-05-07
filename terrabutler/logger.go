@@ -17,7 +17,7 @@ var encoderConfig = zapcore.EncoderConfig{
 	EncodeTime:     zapcore.ISO8601TimeEncoder,
 	EncodeDuration: zapcore.StringDurationEncoder,
 }
-var config = zap.Config{
+var configZap = zap.Config{
 	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
 	Development:      true,
 	Encoding:         "console",
@@ -25,4 +25,4 @@ var config = zap.Config{
 	OutputPaths:      []string{"stdout"},
 	ErrorOutputPaths: []string{"stderr"},
 }
-var logger, _ = config.Build()
+var logger, _ = configZap.Build()
