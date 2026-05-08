@@ -1,14 +1,14 @@
 package settings
 
 import (
+	"errors"
 	"fmt"
-	"os"
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"go.uber.org/zap"
+	"github.com/spf13/afero"
 
 	"terrabutler/internal/logger"
 	"terrabutler/internal/utils"
@@ -26,7 +26,7 @@ var Path = utils.Settings_path()
 var Conf = koanf.New(".")
 
 // Loads the settings from the settings.yaml
-func get_settings() {
+func get_settings() error {
 
 	// Load default values using the confmap provider.
 	Conf.Load(confmap.Provider(map[string]any{
@@ -47,50 +47,54 @@ func get_settings() {
 
 	// Load YAML config on top of the default values.
 	if err := Conf.Load(file.Provider(Path), yaml.Parser()); err != nil {
-		logger.Zap.Error("Error occurred loading the settings: ", zap.Error(err))
-		os.Exit(1)
+		return errors.New("Error occurred loading the settings: " + err.Error())
 	}
+	return nil
 }
 
 // Validates the settings files
-func Validate_settings() {
+func Validate_settings() error {
 
 	//Gets the settings
-	get_settings()
+	err := get_settings()
+	if err != nil {
+		return err
+	}
 
 	//Verify if all the required camps are filled
 	for key, value := range Conf.All() {
 
 		value = fmt.Sprint(value)
 		if key != "hooks.post_env_select" && key != "hooks.pre_env_select" && (value == "<nil>" || value == "[]") {
-			logger.Zap.Error(fmt.Sprintf("Invalid settings file. Invalid value for %s", key))
-			os.Exit(1)
+			return errors.New("Invalid settings file. Invalid value for " + key)
 		}
 
 	}
 
+	return nil
+
 }
 
 // Writes settings file
-func Write_settings(newSettings *koanf.Koanf) {
+func Write_settings(fs afero.Fs, newSettings *koanf.Koanf) error {
 
 	//Marshal the new Settings file as a yaml file
 	b, _ := newSettings.Marshal(yaml.Parser())
 
-	f, err := os.Create(Path)
+	f, err := fs.Create(Path)
 	if err != nil {
-		logger.Zap.Error(fmt.Sprint("An error has occurred opening the settings file: ", err))
-		os.Exit(1)
+		f.Close()
+		return errors.New("An error has occurred opening the settings file: " + err.Error())
 	}
 	l, err := f.Write(b)
 	if l == 0 && err != nil {
-		logger.Zap.Error(fmt.Sprint("An error has occurred writing to the settings file: ", err))
 		f.Close()
-		os.Exit(1)
+		return errors.New("An error has occurred writing to the settings file: " + err.Error())
 	}
 	err = f.Close()
 
 	// Writes out to the location of the old settings
 	logger.Zap.Info("Settings written successfully.")
+	return nil
 
 }

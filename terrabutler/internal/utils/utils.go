@@ -1,38 +1,38 @@
 package utils
 
 import (
-	"os"
+	"errors"
 
 	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/v2"
-	"go.uber.org/zap"
+	"github.com/spf13/afero"
 	"golang.org/x/mod/semver"
 
 	"terrabutler/internal/logger"
-	"terrabutler/internal/requirements"
 )
 
-// - Uses requirements.go to validate the requirements
+// - Gets the Current Environment
 // - Get Root Env
 // - Define Paths
 // - Add semantic Versioning
 
-var Paths = utils()
+var Paths, _ = init_paths()
 
-var CurrentEnv = getCurrentEnv()
+var CurrentEnv, _ = getCurrentEnv(afero.NewOsFs())
 
 // Function that initializes the Path Map
-func utils() map[string]string {
+func init_paths() (map[string]string, error) {
 
 	var paths = make(map[string]string)
-
-	requirements.Check_requirement()
 
 	// Loading koanf instance
 	var k = koanf.New(".")
 
 	//Getting the environment variables
-	k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
+	err := k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
+	if err != nil {
+		return paths, errors.New("An error occured while loading the environment variables: " + error.Error(err))
+	}
 	root := k.String("TERRABUTLER_ROOT")
 
 	paths["backends"] = root + "/configs/backends"
@@ -43,7 +43,7 @@ func utils() map[string]string {
 	paths["templates"] = root + "/configs/templates"
 	paths["variables"] = root + "/configs/variables"
 
-	return paths
+	return paths, nil
 }
 
 // Returns the settings path
@@ -52,23 +52,22 @@ func Settings_path() string {
 }
 
 // Check if the version corresponds to the semantic versioning.
-func Is_semantic_version(version string) {
+func Is_semantic_version(version string) error {
 	if !semver.IsValid(version) {
-		logger.Zap.Error("The version of terrabutler is not valid.")
-		os.Exit(1)
+		return errors.New("The version of terrabutler is not valid.")
 	}
+	return nil
 }
 
 // Get current_environment
-func getCurrentEnv() string {
+func getCurrentEnv(fs afero.Fs) (string, error) {
 
 	//Open site environment file
-	env, err := os.ReadFile(Paths["environment"])
+	env, err := afero.ReadFile(fs, Paths["environment"])
 	logger.Zap.Debug("Path of Environment is: " + Paths["environment"])
 	if err != nil {
-		logger.Zap.Error("An error has occurred while reading the current environment: ", zap.Error(err))
-		os.Exit(1)
+		return "", errors.New("An error has occurred while reading the current environment: " + err.Error())
 	}
 
-	return string(env)
+	return string(env), nil
 }

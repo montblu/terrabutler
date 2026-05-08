@@ -1,15 +1,17 @@
 package requirements
 
 import (
+	"errors"
 	"os"
 	"terrabutler/internal/logger"
 
 	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/v2"
+	"github.com/spf13/afero"
 )
 
 // Checks the requirements before running the application.
-func Check_requirement() {
+func Check_requirement(fs afero.Fs) error {
 
 	// Sync logger
 	defer logger.Zap.Sync()
@@ -18,23 +20,23 @@ func Check_requirement() {
 	var k = koanf.New(".")
 
 	//Getting the environment variables
-	k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
+	err := k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
+	if err != nil {
+		return errors.New("An error occured while loading the environment variables: " + error.Error(err))
+	}
 	root := k.String("TERRABUTLER_ROOT")
 	isEnabled := k.Bool("TERRABUTLER_ENABLE")
 	settingsFile := root + "/configs/settings.yml"
 
-	//logger.Debug("Environment Variables:", zap.String("TERRAFORM_ROOT", root), zap.Bool("TERRABUTLER_ENABLED", isEnabled), zap.String("Settings Location", settingsFile))
-
 	if !isEnabled {
-		logger.Zap.Error("Terrabutler is not currently enabled on this folder. Please set 'TERRABUTLER_ENABLE' in your environment to true to enable it.")
-		os.Exit(1)
+		return errors.New("Terrabutler is not currently enabled on this folder. Please set 'TERRABUTLER_ENABLE' in your environment to true to enable it.")
 	}
 	if root == "" {
-		logger.Zap.Error("Terrabutler can't determine the root folder of your project or it doesn't exist. Please set 'TERRABUTLER_ROOT' in your environment pointing to the root folder of your project.")
-		os.Exit(1)
+		return errors.New("Terrabutler can't determine the root folder of your project or it doesn't exist. Please set 'TERRABUTLER_ROOT' in your environment pointing to the root folder of your project.")
 	}
-	if _, err := os.Stat(settingsFile); os.IsNotExist(err) {
-		logger.Zap.Error("Terrabutler can't find you settings file. Please create a 'settings.yml' file inside the 'configs' folder.")
-		os.Exit(1)
+	if _, err := fs.Stat(settingsFile); os.IsNotExist(err) {
+		return errors.New("Terrabutler can't find you settings file. Please create a 'settings.yml' file inside the 'configs' folder.")
 	}
+
+	return nil
 }

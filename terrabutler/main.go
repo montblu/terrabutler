@@ -4,16 +4,19 @@ import (
 	"terrabutler/internal/cli"
 	"terrabutler/internal/logger"
 
-	"go.uber.org/zap"
+	"github.com/spf13/afero"
 )
 
 func main() {
 
+	// Using Real FileSystem
+	fs := afero.NewOsFs()
+
 	version := "v3.0.1"
 
-	err := cli.Run(version)
+	err := cli.Run(version, fs)
 
 	if err != nil {
-		logger.Zap.Error("An error has Occured: ", zap.Error(err))
+		logger.Zap.Error(err.Error())
 	}
 }

@@ -8,23 +8,31 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/spf13/afero"
 	"github.com/urfave/cli/v3"
 
 	"terrabutler/internal/env"
 	"terrabutler/internal/inception"
 	"terrabutler/internal/logger"
+	"terrabutler/internal/requirements"
 	"terrabutler/internal/settings"
 	"terrabutler/internal/tf"
 	"terrabutler/internal/utils"
 )
 
-func Run(version string) error {
+func Run(version string, fs afero.Fs) error {
 
 	//Verify the semantic version
 	utils.Is_semantic_version(version)
 
-	//Starts with validating the settings
+	//Validating the settings
 	settings.Validate_settings()
+
+	//Validating the requirements
+	err := requirements.Check_requirement(fs)
+	if err != nil {
+		return err
+	}
 
 	//Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
@@ -178,11 +186,9 @@ func Run(version string) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
-								logger.Zap.Error("Missing argument 'NAME'.")
-								os.Exit(1)
+								return errors.New("Missing argument 'NAME'.")
 							}
-							env.Create_env(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"))
-							return nil
+							return env.Create_env(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"), fs)
 						}},
 					{
 						Name:                     "reload",
@@ -1233,7 +1239,7 @@ func Run(version string) error {
 					//Changing site again fo correct display of the errors
 					site = c.String("site")
 
-					if _, err := os.Stat("site_" + site); os.IsNotExist(err) && slices.Contains(sites, c.String("site")) {
+					if _, err := fs.Stat("site_" + site); os.IsNotExist(err) && slices.Contains(sites, c.String("site")) {
 						logger.Zap.Error("The site " + site + " exists but is missing inside the config file.")
 						os.Exit(1)
 					} else if site != "" && !slices.Contains(sites, c.String("site")) {
@@ -1246,11 +1252,7 @@ func Run(version string) error {
 			}},
 	}
 
-	err := cmd.Run(context.Background(), os.Args)
-
-	if err != nil {
-		logger.Zap.Error(fmt.Sprintf("%v", err))
-	}
+	err = cmd.Run(context.Background(), os.Args)
 
 	return err
 }
