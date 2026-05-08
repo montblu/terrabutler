@@ -21,31 +21,36 @@ func generate_var_files(env string) {
 	//Get file templates
 	templates, _ := os.ReadDir(paths["templates"])
 
-	// file loader get templates / jinja2?
+	//Initializing file_loader
 	file_loader, _ := loaders.NewFileSystemLoader(paths["templates"])
-	// environment using file loader??? jinja2
-	environment := &exec.Environment{
-		Context: exec.NewContext(map[string]any{
-			"example": "default context in the environment",
-		}),
-		Tests:             builtins.Tests,
-		ControlStructures: builtins.ControlStructures,
-		// For example this disables all methods and filters
-		// Methods:           builtins.Methods,
-		// Filters:           builtins.Filters,
-	}
 
 	cfg := config.New()
 	cfg.StrictUndefined = true
 
-	// site basic getter
+	//Get all the required fields
 	sites := settings.Strings("sites.ordered")
 	firebase_credentials := settings.String("environments.temporary.secrets.firebase_credentials")
 	mail_password := settings.String("environments.temporary.secrets.mail_password")
 
-	//Remove inception
+	//Remove inception from sites
 	if index := slices.Index(sites, "inception"); index != -1 {
 		sites = append(sites[:index], sites[index+1:]...)
+	}
+
+	// In the Environment you can add the context
+	environment := &exec.Environment{
+		Context: exec.NewContext(map[string]any{
+			"env":                         env,
+			"generate_encrypted_password": generate_encrypted_password,
+			"sites":                       sites,
+			"mail_password":               mail_password,
+			"firebase_credentials":        firebase_credentials}),
+		//Its Required to us a ControlStructure or the render fails
+		//Tests:             builtins.Tests,
+		ControlStructures: builtins.ControlStructures,
+		// The other fields or optional
+		// Methods:           builtins.Methods,
+		// Filters:           builtins.Filters,
 	}
 
 	logger.Debug(fmt.Sprintf("Sites: %v", sites))
@@ -64,21 +69,15 @@ func generate_var_files(env string) {
 				logger.Error("Error Opening the template " + template.Name())
 			}
 
-			ctx := exec.NewContext(map[string]any{
-				"env":                         env,
-				"generate_encrypted_password": generate_encrypted_password,
-				"sites":                       sites,
-				"mail_password":               mail_password,
-				"firebase_credentials":        firebase_credentials})
-
-			output, err := temp.ExecuteToBytes(ctx)
+			output, err := temp.ExecuteToBytes(environment.Context)
 			if err != nil {
 				logger.Error("Error rendering template " + template.Name())
 			}
 
 			name := strings.ReplaceAll(template.Name(), ".j2", "")
 
-			if name == env {
+			//If the name is env
+			if name == "env" {
 				//Create new file and write the template output there
 				f, _ := os.Create(paths["variables"] + "/" + org + "-" + env + ".tfvars")
 

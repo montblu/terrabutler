@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var current_env = get_current_env()
+
 func confirmation_menu(question string) bool {
 	fmt.Printf("%s [y/N]: ", question)
 	var input string
@@ -28,11 +30,13 @@ func get_current_env() string {
 
 	//Open site environment file
 	env, err := os.ReadFile(paths["environment"])
+	logger.Debug("Path of Environment is: " + paths["environment"])
 	if err != nil {
-		logger.Error("An error has occurred:", zap.Error(err))
+		logger.Error("An error has occurred while reading the current environment: ", zap.Error(err))
 		os.Exit(1)
 	}
 	logger.Debug("Current environment is " + string(env))
+
 	return string(env)
 }
 
@@ -94,7 +98,6 @@ func get_available_envs() []string {
 
 func set_current_env(env string, init bool) {
 
-	current_env := get_current_env()
 	available_envs := get_available_envs()
 
 	//Check if env is the current in use
@@ -114,12 +117,13 @@ func set_current_env(env string, init bool) {
 	if pre_hook != "" {
 		command := strings.Split(pre_hook, " ")
 		cmd := exec.Command(command[0], command[1:len(command)]...)
+		cmd.Stderr = os.Stderr
 		cmd.Env = []string{
 			"TERRABUTLER_OLD_ENV=" + current_env,
 			"TERRABUTLER_NEW_ENV=" + env}
 		err := cmd.Run()
 		if err != nil {
-			logger.Error("pre_env_select hook failed:", zap.Error(err))
+			logger.Error("The pre_env_select hook has failed:", zap.Error(err))
 			os.Exit(1)
 		}
 
@@ -132,12 +136,12 @@ func set_current_env(env string, init bool) {
 	//Show error if it fails
 	f, err := os.Create(paths["environment"])
 	if err != nil {
-		logger.Error(fmt.Sprint("An error has occurred opening the file: ", err))
+		logger.Error(fmt.Sprint("An error has occurred opening the environment file to update it: ", err))
 		os.Exit(1)
 	}
 	l, err := f.Write([]byte(env))
 	if l == 0 && err != nil {
-		logger.Error(fmt.Sprint("An error has occurred writing to the file: ", err))
+		logger.Error(fmt.Sprint("An error has occurred writing to the environment file to update it: ", err))
 		f.Close()
 		os.Exit(1)
 	}
@@ -156,12 +160,13 @@ func set_current_env(env string, init bool) {
 	if post_hook != "" {
 		command := strings.Split(post_hook, " ")
 		cmd := exec.Command(command[0], command[1:len(command)]...)
+		cmd.Stderr = os.Stderr
 		cmd.Env = []string{
 			"TERRABUTLER_OLD_ENV=" + current_env,
 			"TERRABUTLER_NEW_ENV=" + env}
 		err := cmd.Run()
 		if err != nil {
-			logger.Error("post_env_select hook failed:", zap.Error(err))
+			logger.Error("The post_env_select hook has failed:", zap.Error(err))
 			os.Exit(1)
 		}
 
@@ -183,7 +188,7 @@ func delete_env(env string, confirmation bool, destroy bool) {
 		os.Exit(1)
 	}
 	//Check if the env is the current in use
-	if env == get_current_env() {
+	if env == current_env {
 		logger.Error("The environment you are trying to delete is your active environment.")
 		logger.Error("Please switch to another workspace and try again.")
 		os.Exit(1)
@@ -206,8 +211,8 @@ func delete_env(env string, confirmation bool, destroy bool) {
 		files, _ := os.ReadDir(paths["variables"])
 		for _, file := range files {
 			if !file.IsDir() {
-				fmt.Println(file.Name())
 				if strings.Contains(file.Name(), org+"-"+env) {
+					logger.Debug("Deleted File: " + file.Name())
 					os.Remove(paths["variables"] + "/" + file.Name())
 				}
 			}
@@ -222,7 +227,7 @@ func delete_env(env string, confirmation bool, destroy bool) {
 
 		//Show a error message if process not executed correctly
 		if err != nil {
-			logger.Error("here was an error while deleting the new environment:", zap.Error(err))
+			logger.Error("here was an error while deleting the "+env+" environment:", zap.Error(err))
 			os.Exit(1)
 		}
 

@@ -13,10 +13,12 @@ import (
 // - Define Paths
 // - Add semantic Versioning
 
-var paths = make(map[string]string)
+var paths = utils()
 
 // Function that initializes the Path Map
-func utils() {
+func utils() map[string]string {
+
+	var paths = make(map[string]string)
 
 	check_requirement()
 
@@ -35,11 +37,11 @@ func utils() {
 	paths["templates"] = root + "/configs/templates"
 	paths["variables"] = root + "/configs/variables"
 
+	return paths
 }
 
-// Initializes utils function and returns the settings
-func init_utils() string {
-	utils()
+// Returns the settings path
+func settings_path() string {
 	return paths["settings"]
 }
 

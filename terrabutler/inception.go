@@ -50,8 +50,8 @@ func inception_init() {
 
 		//Runs the inception init command
 		cmd := exec.Command(command[0], command[1:]...)
-		err = cmd.Run()
 		cmd.Stderr = os.Stderr
+		err = cmd.Run()
 		//Show error message
 		if err != nil {
 			logger.Error("There was an error while doing the initialization", zap.Error(err))

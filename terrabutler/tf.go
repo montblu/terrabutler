@@ -28,7 +28,6 @@ func terraform_args_print(command string, site string) string {
 
 // Create array of needed options for backend or var files
 func terraform_needed_options_builder(needed_options string, site string) []string {
-	env := get_current_env()
 	org := settings.String("general.organization")
 	default_env := settings.String("environments.default.name")
 
@@ -38,14 +37,14 @@ func terraform_needed_options_builder(needed_options string, site string) []stri
 		if site == "inception" { //Init inception with default ENV
 			return []string{"-backend-config", backend_dir + "/" + org + "-" + default_env + "-inception.tfvars"}
 		} else {
-			return []string{"-backend-config", backend_dir + "/" + org + "-" + env + "-" + site + ".tfvars"}
+			return []string{"-backend-config", backend_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"}
 		}
 	} else if needed_options == "var" {
 		variables_dir := paths["variables"]
 
 		return []string{"-var-file", variables_dir + "/global.tfvars",
-			"-var-file", variables_dir + "/" + org + "-" + env + ".tfvars",
-			"-var-file", variables_dir + "/" + org + "-" + env + "-" + site + ".tfvars"}
+			"-var-file", variables_dir + "/" + org + "-" + current_env + ".tfvars",
+			"-var-file", variables_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"}
 
 	} else { // If needed_options is empty, return empty slice
 		return []string{}
@@ -72,8 +71,6 @@ func terraform_command_builder(command string, site string, args []string, optio
 // Main runner function
 func terraform_command_runner(command string, site string, args []string, options []string, needed_options string) {
 
-	env := get_current_env()
-
 	tf_binary, err := exec.LookPath("terraform")
 	if err != nil {
 		logger.Error("No Terraform executable found.")
@@ -98,7 +95,27 @@ func terraform_command_runner(command string, site string, args []string, option
 
 	execErr := syscall.Exec(tf_binary, runner_command, runner_env)
 	if execErr != nil {
-		logger.Error("There was an error during execution of terraform "+command+" in the site "+site+" in the environment "+env, zap.Error(execErr))
+		logger.Error("There was an error during execution of terraform "+command+" in the site "+site+" in the environment "+current_env, zap.Error(execErr))
+		os.Exit(1)
+	}
+
+}
+
+func tf_runner(command []string, site string) {
+
+	//Changes the current working dir to the site chosen
+	err := os.Chdir(paths["root"] + "/site_" + site)
+	if err != nil {
+		logger.Error("Error in finding the path for the site " + site)
+		os.Exit(1)
+	}
+	//Runs the terraform command
+	cmd := exec.Command(command[0], command[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		logger.Error("There was an error during execution of terraform "+command[0]+" in the site "+site+" in the environment "+current_env, zap.Error(err))
 		os.Exit(1)
 	}
 
@@ -110,21 +127,8 @@ func tf_destroy_all_sites() {
 	slices.Reverse(sites)
 	for _, site := range sites {
 		command := terraform_command_builder("destroy", site, []string{}, []string{"-auto-approve"}, "var")
+		tf_runner(command, site)
 
-		//Changes the current working dir to the site chosen
-		err := os.Chdir(paths["root"] + "/site_" + site)
-		if err != nil {
-			logger.Error("Error in finding the path for the site " + site)
-			os.Exit(1)
-		}
-		cmd := exec.Command(command[0], command[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			logger.Error("There was an error during execution of terraform "+command[0]+"in the site "+site+" in the environment "+get_current_env(), zap.Error(err))
-			os.Exit(1)
-		}
 	}
 
 }
@@ -138,21 +142,7 @@ func tf_apply_all_sites() {
 			cmd.Run()
 		}
 		command := terraform_command_builder("apply", site, []string{}, []string{"-auto-approve"}, "var")
-
-		//Changes the current working dir to the site chosen
-		err := os.Chdir(paths["root"] + "/site_" + site)
-		if err != nil {
-			logger.Error("Error in finding the path for the site " + site)
-			os.Exit(1)
-		}
-		cmd := exec.Command(command[0], command[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			logger.Error("There was an error during execution of terraform "+command[0]+"in the site "+site+" in the environment "+get_current_env(), zap.Error(err))
-			os.Exit(1)
-		}
+		tf_runner(command, site)
 	}
 }
 
@@ -165,20 +155,6 @@ func tf_init_all_sites() {
 
 		logger.Warn("Initializing " + site + " site")
 		command := terraform_command_builder("init", site, []string{}, []string{"-reconfigure"}, "backend")
-
-		//Changes the current working dir to the site chosen
-		err := os.Chdir(paths["root"] + "/site_" + site)
-		if err != nil {
-			logger.Error("Error in finding the path for the site " + site)
-			os.Exit(1)
-		}
-		cmd := exec.Command(command[0], command[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Run()
-		if err != nil {
-			logger.Error("There was an error during execution of terraform "+command[0]+"in the site "+site+" in the environment "+get_current_env(), zap.Error(err))
-			os.Exit(1)
-		}
+		tf_runner(command, site)
 	}
 }

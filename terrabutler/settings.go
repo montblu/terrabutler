@@ -17,7 +17,7 @@ import (
 // - Validates the settings
 // - Writes the settings
 
-var settingsPath = init_utils()
+var settingsPath = settings_path()
 
 // Global koanf instance, it has the Settings Configuration
 var settings = koanf.New(".")
@@ -47,8 +47,6 @@ func get_settings() {
 		logger.Error("Error occurred loading the settings: ", zap.Error(err))
 		os.Exit(1)
 	}
-
-	//logger.Debug("Settings File Loaded", zap.String("Settings", fmt.Sprint(settings.All())))
 }
 
 // Validates the settings files
@@ -73,17 +71,17 @@ func validate_settings() {
 // Writes settings file
 func write_settings(newSettings *koanf.Koanf) {
 
-	//Marshal the new Settings file, to the specific type
+	//Marshal the new Settings file as a yaml file
 	b, _ := newSettings.Marshal(yaml.Parser())
 
 	f, err := os.Create(settingsPath)
 	if err != nil {
-		logger.Error(fmt.Sprint("An error has occurred opening the file: ", err))
+		logger.Error(fmt.Sprint("An error has occurred opening the settings file: ", err))
 		os.Exit(1)
 	}
 	l, err := f.Write(b)
 	if l == 0 && err != nil {
-		logger.Error(fmt.Sprint("An error has occurred writing to the file: ", err))
+		logger.Error(fmt.Sprint("An error has occurred writing to the settings file: ", err))
 		f.Close()
 		os.Exit(1)
 	}

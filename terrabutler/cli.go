@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"slices"
 	"strings"
@@ -12,88 +11,15 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// Function to Create offsets to the flags.
-func offsetFlags(flag []cli.Flag, fixed int) int {
-	max := 0
-	for _, f := range flag {
-		s := strings.Join(f.Names(), "--,    ")
-		if len(s) > max {
-			max = len(s)
-		}
-	}
-	return max + fixed
-}
-
-// Function to get the type of Value a flag Requires
-func typeFlag(flag cli.Flag) string {
-	// Other Types aren't required in terraButler, so only Getting returning Strings Types
-	var typeFlag string
-	// String -> TEXT
-	typeFlag = fmt.Sprintf("%T", flag.Get())
-	if typeFlag == "string" {
-		typeFlag = " TEXT"
-		// Special Case for the flag -site of TerraButler
-		if strings.Compare(flag.Names()[0], "site") == 0 {
-			typeFlag = " SITE"
-		}
-		//Other types are ignored
-	} else {
-		typeFlag = ""
-	}
-
-	return typeFlag
-}
-
-// Function to add "-" to the names available to a flag
-func addIndentFlag(names []string) []string {
-	for i, n := range names {
-		if n != "" {
-			if len(names) == 1 {
-				names[i] = "-" + n
-			} else {
-				names[i] = "--" + n
-			}
-		}
-	}
-	return names
-}
-
-// Default Functions for the Logger, of commands and flags not found.
-func CommandNotFound(ctx context.Context, c *cli.Command, s string) {
-	fmt.Println("Usage: " + c.UsageText)
-	fmt.Println("Try '" + c.FullName() + " -h' for help.")
-	logger.Error("No such command '" + s + "'.")
-}
-func OnUsageError(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
-	return nil
-}
-func InvalidFlagAccessHandler(ctx context.Context, c *cli.Command, s string) {
-	fmt.Println("Usage: " + c.UsageText)
-	fmt.Println("Try '" + c.FullName() + " -h' for help.")
-	logger.Error("No such option: '" + s + "'.")
-}
-
-// Function for the Subcommands of tf, to show the required use of the flag -site
-func OnUsageErrorSite(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
-	if err.Error() == "flag needs an argument: -site" {
-		fmt.Println("Usage: " + cmd.UsageText)
-		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
-		logger.Error("Option '-site' requires an argument.")
-		return nil
-	} else if err.Error() == "Required flag \"site\" not set" {
-		fmt.Println("Usage: " + cmd.UsageText)
-		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
-		logger.Error("Missing option '-site'.")
-		return nil
-		//This case is treated in the InvalidFlagAccessHandler, and there you can know the flag 'name'
-	} else if strings.Contains(err.Error(), "flag provided but not defined:") {
-		return nil
-	}
-	return err
-
-}
+var version = "v3.0.0"
 
 func main() {
+
+	//Verify the semantic version
+	is_semantic_version(version)
+
+	//Starts with validating the settings
+	validate_settings()
 
 	//Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
@@ -102,108 +28,13 @@ func main() {
 		Usage:   "Show this message and exit",
 	}
 
-	// New HelpPrinter function with support of:
-	//
-	// Defining max Length for the text be wrapped
-	// Calculating the offset need fr flags...
-	cli.HelpPrinter = func(w io.Writer, templ string, data interface{}) {
-		funcMap := map[string]interface{}{
-			"wrapAt": func() int {
-				return 80
-			},
-			"offsetFlags":   offsetFlags,
-			"addIndentFlag": addIndentFlag,
-			"typeFlag":      typeFlag,
-		}
+	//Using the new HelpPrinter
+	cli.HelpPrinter = HelpPrinterNewFunctions
 
-		cli.HelpPrinterCustom(w, templ, data, funcMap)
-	}
-	//In the future allocate this templates to another file...
-	//This modifications to the template only affect "Visible" flags
-
-	//New template with the flags begin able to support Indentation and Wrapper
-	cli.RootCommandHelpTemplate = `NAME:
-   {{template "helpNameTemplate" .}}
-
-USAGE:
-   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}{{.FullName}} {{if .VisibleFlags}}[global options]{{end}}{{if .VisibleCommands}} [command [command options]]{{end}}{{if .ArgsUsage}} {{.ArgsUsage}}{{else}}{{if .Arguments}} [arguments...]{{end}}{{end}}{{end}}{{if .Version}}{{if not .HideVersion}}
-
-VERSION:
-   {{.Version}}{{end}}{{end}}{{if .Description}}
-
-DESCRIPTION:
-   {{template "descriptionTemplate" .}}{{end}}
-{{- if len .Authors}}
-
-AUTHOR{{template "authorsTemplate" .}}{{end}}{{if .VisibleCommands}}
-
-COMMANDS:{{template "visibleCommandCategoryTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
-
-GLOBAL OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
-
-GLOBAL OPTIONS:{{ $cv := offsetFlags .VisibleFlags 0}}{{range $i, $e := .VisibleFlags}}
-	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$t := typeFlag $e}}{{$s}}{{$t}}{{ $sp := subtract $cv (offset $s 3) }}{{ $sp = subtract $sp (offset $t -4)}}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .Copyright}}
-
-COPYRIGHT:
-   {{template "copyrightTemplate" .}}{{end}}
-`
-	//New template for the Sub-SubCommands with the flags begin able to support Indentation and Wrapper
-	cli.CommandHelpTemplate = `NAME:
-   {{template "helpNameTemplate" .}}
-
-USAGE:
-   {{template "usageTemplate" .}}{{if .Category}}
-
-CATEGORY:
-   {{.Category}}{{end}}{{if .Description}}
-
-DESCRIPTION:
-   {{template "descriptionTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
-
-OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
-
-OPTIONS:
-	{{ $cv := offsetFlags .VisibleFlags 8}}{{range $i, $e := .VisibleFlags}}
-	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$t := typeFlag $e}}{{$s}}{{$t}}{{ $sp := subtract $cv (offset $s 3) }}{{ $sp = subtract $sp (offset $t -4)}}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
-
-GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
-`
-	//New template for the SubCommands with the flags begin able to support Indentation and Wrapper
-	cli.SubcommandHelpTemplate = `NAME:
-   {{template "helpNameTemplate" .}}
-
-USAGE:
-   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}{{.FullName}}{{if .VisibleCommands}} [command [command options]]{{end}}{{if .ArgsUsage}} {{.ArgsUsage}}{{else}}{{if .Arguments}} [arguments...]{{end}}{{end}}{{end}}{{if .Category}}
-
-CATEGORY:
-   {{.Category}}{{end}}{{if .Description}}
-
-DESCRIPTION:
-   {{template "descriptionTemplate" .}}{{end}}{{if .VisibleCommands}}
-
-COMMANDS:{{template "visibleCommandTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
-
-OPTIONS:{{template "visibleFlagCategoryTemplate" .}}{{else if .VisibleFlags}}
-
-OPTIONS:{{ $cv := offsetFlags .VisibleFlags 8}}{{range $i, $e := .VisibleFlags}}
-	{{$f := addIndentFlag $e.Names}}{{$s := join $f ", "}}{{$t := typeFlag $e}}{{$s}}{{$t}}{{ $sp := subtract $cv (offset $s 3) }}{{ $sp = subtract $sp (offset $t -4)}}{{ indent $sp ""}}{{wrap $e.Usage 6}}{{end}}{{end}}{{if .VisiblePersistentFlags}}
-
-GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
-`
-
-	// Testing the new Functions
-	validate_settings()
-	//To test the new writer settings
-	//write_settings(settings)
-
-	//CLI
-	//
-	// TODO:
-	// Error Handling with wrong flags --> With Logger
-	// Version with Semantic Versioning --> Not Urgent
-	// Logs (Using Prints for Debugging) --> Next Step
-	//
-	// After CLI, start Configuration File (settings.py)
+	//Applying the new templates for the helper
+	cli.RootCommandHelpTemplate = RootCommandHelpTemplate
+	cli.CommandHelpTemplate = CommandHelpTemplate
+	cli.SubcommandHelpTemplate = SubcommandHelpTemplate
 
 	defer logger.Sync()
 
@@ -211,7 +42,8 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 		Name:      "terrabutler",
 		Usage:     "The utility that helps keeping your IaC in one piece",
 		UsageText: "terrabutler [OPTIONS] COMMAND [ARGS]...",
-		Version:   "v3.0.0",
+		//Here is where the terrabutler version is
+		Version: version,
 		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:          true,
 		HideVersion:              true,
@@ -232,15 +64,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 			},
-			// env Command
-			//
-			// What is Done:
-			// Added all SubCommands
-			// All Flags and Arguments of the SubCommands
-			// Show subcommand is now implemented
-			//
-			// TODO:
-			// All the other commands
 			{
 				Name:                     "env",
 				Usage:                    "Manage environments",
@@ -279,7 +102,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 								//Flags with more than 1 letter are shown with double dash, but it is still accepted with -
 								Name:    "s3",
 								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output.",
+								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
 							},
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
@@ -300,13 +123,12 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{
 								Name:    "s3",
 								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output.",
+								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
 							}},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							current_env := get_current_env()
 							for _, env := range get_available_envs() {
 								if env == current_env {
 									fmt.Println("\u2192", env)
@@ -343,7 +165,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{
 								Name:    "s3",
 								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output.",
+								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
 							},
 						},
 						CommandNotFound:          CommandNotFound,
@@ -387,7 +209,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 							&cli.BoolFlag{
 								Name:    "s3",
 								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output.",
+								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
 							},
 						},
 						CommandNotFound:          CommandNotFound,
@@ -411,7 +233,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							get_current_env()
+							logger.Info("Current Environment is " + current_env)
 							return nil
 						}},
 				},
@@ -420,10 +242,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 					return ctx, nil
 				},
 			},
-			// init Command
-			//
-			// TODO:
-			// Concluded for now
 			{
 				Name:                     "init",
 				Usage:                    "Initialize the manager",
@@ -437,17 +255,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 					return nil
 				},
 			},
-			// tf Command
-			//
-			// What is done:
-			// The required flag -site
-			// All subcommands, flags and arguments..
-			//
-			//
-			// TODO:
-			// Flag site Warnings
-			// Created all the subcommands
-			//
 			{
 				Name:      "tf",
 				Usage:     "Manage terraform commands",
@@ -878,7 +685,6 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 						Usage:     "Show the providers required for this configuration",
 						UsageText: "terrabutler tf providers [OPTIONS] COMMAND [ARGS]...",
 						Commands: []*cli.Command{
-							//Makeup Providers...
 							{
 								Name:      "lock",
 								Usage:     "Write out dependency locks for the configured providers",
@@ -914,7 +720,7 @@ GLOBAL OPTIONS:{{template "visiblePersistentFlagTemplate" .}}{{end}}
 									terraform_command_runner("providers lock", c.String("site"), args, options, "")
 									return nil
 								},
-							}, //Makeup DIRS..
+							},
 							{
 								Name:      "mirror",
 								Usage:     "Save local copies of all required provider plugins",

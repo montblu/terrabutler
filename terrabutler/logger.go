@@ -18,7 +18,7 @@ var encoderConfig = zapcore.EncoderConfig{
 	EncodeDuration: zapcore.StringDurationEncoder,
 }
 var configZap = zap.Config{
-	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
+	Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
 	Development:      true,
 	Encoding:         "console",
 	EncoderConfig:    encoderConfig,
