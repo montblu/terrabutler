@@ -2,9 +2,9 @@ package variables
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math/rand"
-	"os"
 	"slices"
 	"strings"
 
@@ -16,17 +16,34 @@ import (
 	"github.com/nikolalohinski/gonja/v2/config"
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"github.com/nikolalohinski/gonja/v2/loaders"
+	"github.com/spf13/afero"
 )
 
-func Generate_var_files(env string) {
+func Generate_var_files(env string, fs afero.Fs) error {
 
 	org := settings.Conf.String("general.organization")
 
 	//Get file templates
-	templates, _ := os.ReadDir(utils.Paths["templates"])
+	templates, err := afero.ReadDir(fs, utils.Paths["templates"])
+	if err != nil {
+		return errors.New("Error reading templates directory.")
+	}
+
+	// Initializing the data of the templates into a memory map, so it is compatible with tests
+	templatesFilesData := make(map[string]string)
+	for _, template := range templates {
+		if !template.IsDir() {
+			data, _ := afero.ReadFile(fs, utils.Paths["templates"]+"/"+template.Name())
+			logger.Zap.Info("New templated loaded: " + template.Name() + " Data: " + string(data))
+			templatesFilesData["/"+template.Name()] = string(data)
+		}
+	}
 
 	//Initializing file_loader
-	file_loader, _ := loaders.NewFileSystemLoader(utils.Paths["templates"])
+	file_loader, err := loaders.NewMemoryLoader(templatesFilesData)
+	if err != nil {
+		return errors.New("Error initializing file_loader in templates dir, error: " + err.Error())
+	}
 
 	cfg := config.New()
 	cfg.StrictUndefined = true
@@ -57,9 +74,7 @@ func Generate_var_files(env string) {
 		// Filters:           builtins.Filters,
 	}
 
-	logger.Zap.Debug(fmt.Sprintf("Sites: %v", sites))
-
-	os.Chdir(utils.Paths["templates"])
+	//os.Chdir(utils.Paths["templates"])
 
 	//For each template
 	for _, template := range templates {
@@ -70,12 +85,12 @@ func Generate_var_files(env string) {
 
 			temp, err := exec.NewTemplate(template.Name(), cfg, file_loader, environment)
 			if err != nil {
-				logger.Zap.Error("Error Opening the template " + template.Name())
+				return errors.New("Error opening the template " + template.Name() + ", Error: " + err.Error())
 			}
 
 			output, err := temp.ExecuteToBytes(environment.Context)
 			if err != nil {
-				logger.Zap.Error("Error rendering template " + template.Name())
+				return errors.New("Error rendering template " + template.Name() + ", Error: " + err.Error())
 			}
 
 			name := strings.ReplaceAll(template.Name(), ".j2", "")
@@ -83,29 +98,29 @@ func Generate_var_files(env string) {
 			//If the name is env
 			if name == "env" {
 				//Create new file and write the template output there
-				f, _ := os.Create(utils.Paths["variables"] + "/" + org + "-" + env + ".tfvars")
+				f, _ := fs.Create(utils.Paths["variables"] + "/" + org + "-" + env + ".tfvars")
 
 				l, err := f.Write(output)
 				if l == 0 && err != nil {
-					logger.Zap.Error(fmt.Sprint("An error has occurred writing to the file: ", err))
 					f.Close()
-					os.Exit(1)
+					return errors.New("An error has occurred writing to the file: " + err.Error())
 				}
 				err = f.Close()
 			} else {
 				//Create new file and write the template output there
-				f, _ := os.Create(utils.Paths["variables"] + "/" + org + "-" + env + "-" + name + ".tfvars")
+				f, _ := fs.Create(utils.Paths["variables"] + "/" + org + "-" + env + "-" + name + ".tfvars")
 
 				l, err := f.Write(output)
 				if l == 0 && err != nil {
-					logger.Zap.Error(fmt.Sprint("An error has occurred writing to the file: ", err))
 					f.Close()
-					os.Exit(1)
+					return errors.New("An error has occurred writing to the file: " + err.Error())
 				}
-				err = f.Close()
+				f.Close()
 			}
 		}
 	}
+
+	return nil
 
 }
 

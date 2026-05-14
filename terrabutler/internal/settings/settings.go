@@ -6,7 +6,7 @@ import (
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/confmap"
-	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/knadh/koanf/v2"
 	"github.com/spf13/afero"
 
@@ -26,7 +26,7 @@ var Path = utils.Settings_path()
 var Conf = koanf.New(".")
 
 // Loads the settings from the settings.yaml
-func get_settings() error {
+func get_settings(fs afero.Fs) error {
 
 	// Load default values using the confmap provider.
 	Conf.Load(confmap.Provider(map[string]any{
@@ -45,18 +45,23 @@ func get_settings() error {
 		"hooks.post_env_select": nil,
 	}, "."), nil)
 
+	b, err := afero.ReadFile(fs, Path)
+	if err != nil {
+		return errors.New("Error occurred while trying to read the settings: " + err.Error())
+	}
+
 	// Load YAML config on top of the default values.
-	if err := Conf.Load(file.Provider(Path), yaml.Parser()); err != nil {
+	if err := Conf.Load(rawbytes.Provider(b), yaml.Parser()); err != nil {
 		return errors.New("Error occurred loading the settings: " + err.Error())
 	}
 	return nil
 }
 
 // Validates the settings files
-func Validate_settings() error {
+func Validate_settings(fs afero.Fs) error {
 
 	//Gets the settings
-	err := get_settings()
+	err := get_settings(fs)
 	if err != nil {
 		return err
 	}

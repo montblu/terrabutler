@@ -4,6 +4,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -64,9 +65,11 @@ func CommandNotFound(ctx context.Context, c *cli.Command, s string) {
 	fmt.Println("Try '" + c.FullName() + " -h' for help.")
 	logger.Zap.Error("No such command '" + s + "'.")
 }
+
 func OnUsageError(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
 	return nil
 }
+
 func InvalidFlagAccessHandler(ctx context.Context, c *cli.Command, s string) {
 	fmt.Println("Usage: " + c.UsageText)
 	fmt.Println("Try '" + c.FullName() + " -h' for help.")
@@ -75,16 +78,16 @@ func InvalidFlagAccessHandler(ctx context.Context, c *cli.Command, s string) {
 
 // Function for the Subcommands of tf, to show the required use of the flag -site
 func OnUsageErrorSite(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
+
 	if err.Error() == "flag needs an argument: -site" {
 		fmt.Println("Usage: " + cmd.UsageText)
 		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
-		logger.Zap.Error("Option '-site' requires an argument.")
-		return nil
+		return errors.New("Option '-site' requires an argument.")
 	} else if err.Error() == "Required flag \"site\" not set" {
 		fmt.Println("Usage: " + cmd.UsageText)
 		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
-		logger.Zap.Error("Missing option '-site'.")
-		return nil
+		return errors.New("Missing option '-site'.")
+
 		//This case is treated in the InvalidFlagAccessHandler, and there you can know the flag 'name'
 	} else if strings.Contains(err.Error(), "flag provided but not defined:") {
 		return nil

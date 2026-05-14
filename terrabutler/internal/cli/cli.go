@@ -26,7 +26,7 @@ func Run(version string, fs afero.Fs) error {
 	utils.Is_semantic_version(version)
 
 	//Validating the settings
-	settings.Validate_settings()
+	settings.Validate_settings(fs)
 
 	//Validating the requirements
 	err := requirements.Check_requirement(fs)
@@ -120,10 +120,9 @@ func Run(version string, fs afero.Fs) error {
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
-								logger.Zap.Error("Missing argument 'NAME'.")
-								os.Exit(1)
+								return errors.New("Missing argument 'NAME'.")
 							}
-							env.Delete_env(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"))
+							env.DeleteEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"), fs)
 							return nil
 						}},
 					{
@@ -142,7 +141,11 @@ func Run(version string, fs afero.Fs) error {
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							for _, env := range env.Get_available_envs() {
+							envs, err := env.GetAvailableEnvs(fs)
+							if err != nil {
+								return err
+							}
+							for _, env := range envs {
 								if env == utils.CurrentEnv {
 									fmt.Println("\u2192", env)
 								} else {
@@ -188,7 +191,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.StringArg("ENV") == "" {
 								return errors.New("Missing argument 'NAME'.")
 							}
-							return env.Create_env(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"), fs)
+							return env.CreateEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"), fs)
 						}},
 					{
 						Name:                     "reload",
@@ -200,8 +203,7 @@ func Run(version string, fs afero.Fs) error {
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							tf.Init_all_sites()
-							return nil
+							return tf.InitAllSites()
 						}},
 					{
 						Name:      "select",
@@ -228,10 +230,9 @@ func Run(version string, fs afero.Fs) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
-								logger.Zap.Error("Missing argument 'NAME'.")
-								os.Exit(1)
+								return errors.New("Missing argument 'NAME'.")
 							}
-							env.Set_current_env(c.StringArg("ENV"), c.Bool("init"))
+							env.SetCurrentEnv(c.StringArg("ENV"), c.Bool("init"), fs)
 							return nil
 						}},
 					{
@@ -249,8 +250,7 @@ func Run(version string, fs afero.Fs) error {
 						}},
 				},
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-					inception.Init_needed()
-					return ctx, nil
+					return ctx, inception.Init_needed(fs)
 				},
 			},
 			{
@@ -262,8 +262,7 @@ func Run(version string, fs afero.Fs) error {
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					inception.Init()
-					return nil
+					return inception.Init(fs)
 				},
 			},
 			{
@@ -328,8 +327,7 @@ func Run(version string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							tf.Command_runner("apply", c.String("site"), []string{}, options, "var")
-							return nil
+							return tf.CommandRunner("apply", c.String("site"), []string{}, options, "var")
 						},
 					},
 					{
@@ -355,8 +353,7 @@ func Run(version string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							tf.Command_runner("console", c.String("site"), []string{}, options, "var")
-							return nil
+							return tf.CommandRunner("console", c.String("site"), []string{}, options, "var")
 						},
 					},
 					{
@@ -406,8 +403,7 @@ func Run(version string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							tf.Command_runner("destroy", c.String("site"), []string{}, options, "var")
-							return nil
+							return tf.CommandRunner("destroy", c.String("site"), []string{}, options, "var")
 						},
 					},
 					{
@@ -433,8 +429,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("recursive") {
 								options = append(options, "-recursive")
 							}
-							tf.Command_runner("fmt", c.String("site"), []string{}, options, "")
-							return nil
+							return tf.CommandRunner("fmt", c.String("site"), []string{}, options, "")
 						},
 					},
 					{
@@ -455,15 +450,14 @@ func Run(version string, fs afero.Fs) error {
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
 							if c.StringArg("LOCK-ID") == "" {
-								logger.Zap.Error("Missing Argument 'LOCK_ID'.")
-								return nil
+								return errors.New("Missing Argument 'LOCK_ID'.")
+
 							}
 							args := append([]string{}, c.StringArg("LOCK-ID"))
 							if c.Bool("force") {
 								options = append(options, "-force")
 							}
-							tf.Command_runner("force-unlock", c.String("site"), args, options, "")
-							return nil
+							return tf.CommandRunner("force-unlock", c.String("site"), args, options, "")
 						},
 					},
 					{
@@ -479,10 +473,9 @@ func Run(version string, fs afero.Fs) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("Choice") != "init" && c.StringArg("Choice") != "plan" && c.StringArg("Choice") != "apply" {
-								logger.Zap.Error("Missing Argument '{init|plan|apply}' Choose one of the choices: init, plan or apply.")
-								return nil
+								return errors.New("Missing Argument '{init|plan|apply}' Choose one of the choices: init, plan or apply.")
 							}
-							logger.Zap.Info("Options:\n" + tf.Args_print(c.StringArg("Choice"), c.String("site")))
+							logger.Zap.Info("Options:\n" + tf.ArgsPrint(c.StringArg("Choice"), c.String("site")))
 							return nil
 						},
 					},
@@ -511,12 +504,10 @@ func Run(version string, fs afero.Fs) error {
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
 							if c.StringArg("ADDR") == "" {
-								logger.Zap.Error("Missing argument 'ADDR'.")
-								return nil
+								return errors.New("Missing argument 'ADDR'.")
 							}
 							if c.StringArg("ID") == "" {
-								logger.Zap.Error("Missing argument 'ID'.")
-								return nil
+								return errors.New("Missing argument 'ID'.")
 							}
 							args := append([]string{}, c.StringArg("ADDR"), c.StringArg("ID"))
 							if c.Bool("allow-missing-config") {
@@ -537,8 +528,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("ignore-remote-version") {
 								options = append(options, "-ignore-remote-version")
 							}
-							tf.Command_runner("import", c.String("site"), args, options, "var")
-							return nil
+							return tf.CommandRunner("import", c.String("site"), args, options, "var")
 						},
 					},
 					{
@@ -600,8 +590,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("ignore-remote-version") {
 								options = append(options, "-ignore-remote-version")
 							}
-							tf.Command_runner("init", c.String("site"), []string{}, options, "backend")
-							return nil
+							return tf.CommandRunner("init", c.String("site"), []string{}, options, "backend")
 						},
 					},
 					{
@@ -627,8 +616,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("raw") {
 								options = append(options, "-raw")
 							}
-							tf.Command_runner("output", c.String("site"), []string{}, options, "")
-							return nil
+							return tf.CommandRunner("output", c.String("site"), []string{}, options, "")
 						},
 					},
 					{
@@ -686,8 +674,7 @@ func Run(version string, fs afero.Fs) error {
 								options = append(options, "-out="+c.String("out"))
 							}
 
-							tf.Command_runner("plan", c.String("site"), []string{}, options, "var")
-							return nil
+							return tf.CommandRunner("plan", c.String("site"), []string{}, options, "var")
 						},
 					},
 					{
@@ -728,8 +715,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.String("platform") != "" {
 										options = append(options, "-platform="+c.String("platform"))
 									}
-									tf.Command_runner("providers lock", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("providers lock", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -756,8 +742,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.String("platform") != "" {
 										options = append(options, "-platform="+c.String("platform"))
 									}
-									tf.Command_runner("providers mirror", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("providers mirror", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -775,8 +760,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.Bool("json") {
 										options = append(options, "-json")
 									}
-									tf.Command_runner("providers schema", c.String("site"), []string{}, options, "")
-									return nil
+									return tf.CommandRunner("providers schema", c.String("site"), []string{}, options, "")
 								},
 							},
 						},
@@ -818,8 +802,7 @@ func Run(version string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							tf.Command_runner("refresh", c.String("site"), []string{}, options, "var")
-							return nil
+							return tf.CommandRunner("refresh", c.String("site"), []string{}, options, "var")
 						},
 					},
 					{
@@ -850,8 +833,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("no-color") {
 								options = append(options, "-no-color")
 							}
-							tf.Command_runner("show", c.String("site"), args, options, "")
-							return nil
+							return tf.CommandRunner("show", c.String("site"), args, options, "")
 						},
 					},
 					{
@@ -875,7 +857,7 @@ func Run(version string, fs afero.Fs) error {
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
-									args := []string{"list"}
+									args := []string{}
 									if c.StringArg("ADDR") != "" {
 										args = append(args, c.StringArg("ADDR"))
 									}
@@ -885,8 +867,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.String("id") != "" {
 										options = append(options, "-id "+c.String("id"))
 									}
-									tf.Command_runner("state", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("state list", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -907,7 +888,7 @@ func Run(version string, fs afero.Fs) error {
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
-									args := []string{"mv"}
+									args := []string{}
 									if c.StringArg("SOURCE") == "" {
 										return errors.New("Missing argument 'SOURCE'.")
 									}
@@ -927,8 +908,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									tf.Command_runner("state", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("state mv", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -936,8 +916,7 @@ func Run(version string, fs afero.Fs) error {
 								Usage:        "Pull current state and output to stdouts",
 								OnUsageError: OnUsageErrorSite,
 								Action: func(ctx context.Context, c *cli.Command) error {
-									tf.Command_runner("state", c.String("site"), []string{"pull"}, []string{}, "")
-									return nil
+									return tf.CommandRunner("state", c.String("site"), []string{"pull"}, []string{}, "")
 								},
 							},
 							{
@@ -956,7 +935,7 @@ func Run(version string, fs afero.Fs) error {
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
-									args := []string{"push"}
+									args := []string{}
 									if c.StringArg("PATH") == "" {
 										return errors.New("Missing argument 'PATH'.")
 									}
@@ -970,8 +949,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.String("lock-timeout") != "" {
 										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
 									}
-									tf.Command_runner("state", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("state push", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -992,7 +970,7 @@ func Run(version string, fs afero.Fs) error {
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
-									args := []string{"replace-provider"}
+									args := []string{}
 									if c.StringArg("FROM_FQDN") == "" {
 										return errors.New("Missing argument 'FROM_PROVIDER_FQDN'.")
 									}
@@ -1012,8 +990,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									tf.Command_runner("state", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("state replace-provider", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -1035,7 +1012,7 @@ func Run(version string, fs afero.Fs) error {
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 								Action: func(ctx context.Context, c *cli.Command) error {
 									options := []string{}
-									args := []string{"rm"}
+									args := []string{}
 									if c.StringArg("ADDR") == "" {
 										return errors.New("Missing argument 'ADDR'.")
 									}
@@ -1058,8 +1035,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									tf.Command_runner("state", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("state rm", c.String("site"), args, options, "")
 								},
 							},
 							{
@@ -1084,8 +1060,7 @@ func Run(version string, fs afero.Fs) error {
 									if c.String("state") != "" {
 										options = append(options, "-state "+c.StringArg("state"))
 									}
-									tf.Command_runner("state show", c.String("site"), args, options, "")
-									return nil
+									return tf.CommandRunner("state show", c.String("site"), args, options, "")
 								},
 							},
 						},
@@ -1131,9 +1106,7 @@ func Run(version string, fs afero.Fs) error {
 								options = append(options, "-ignore-remote-version")
 							}
 
-							tf.Command_runner("taint", c.String("site"), args, options, "")
-
-							return nil
+							return tf.CommandRunner("taint", c.String("site"), args, options, "")
 						},
 					},
 					{
@@ -1174,8 +1147,7 @@ func Run(version string, fs afero.Fs) error {
 								options = append(options, "-ignore-remote-version")
 							}
 
-							tf.Command_runner("untaint", c.String("site"), args, options, "")
-							return nil
+							return tf.CommandRunner("untaint", c.String("site"), args, options, "")
 						},
 					},
 					{
@@ -1198,8 +1170,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("no-color") {
 								options = append(options, "-no-color")
 							}
-							tf.Command_runner("validate", c.String("site"), []string{}, options, "")
-							return nil
+							return tf.CommandRunner("validate", c.String("site"), []string{}, options, "")
 						},
 					},
 					{
@@ -1218,8 +1189,7 @@ func Run(version string, fs afero.Fs) error {
 							if c.Bool("json") {
 								options = append(options, "-json")
 							}
-							tf.Command_runner("version", c.String("site"), []string{}, options, "")
-							return nil
+							return tf.CommandRunner("version", c.String("site"), []string{}, options, "")
 						},
 					},
 				},
@@ -1228,7 +1198,10 @@ func Run(version string, fs afero.Fs) error {
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 
-					inception.Init_needed()
+					err := inception.Init_needed(fs)
+					if err != nil {
+						return ctx, err
+					}
 
 					sites := settings.Conf.Strings("sites.ordered")
 					site := c.String("site")
@@ -1240,11 +1213,9 @@ func Run(version string, fs afero.Fs) error {
 					site = c.String("site")
 
 					if _, err := fs.Stat("site_" + site); os.IsNotExist(err) && slices.Contains(sites, c.String("site")) {
-						logger.Zap.Error("The site " + site + " exists but is missing inside the config file.")
-						os.Exit(1)
+						return ctx, errors.New("The site " + site + " exists but is missing inside the config file.")
 					} else if site != "" && !slices.Contains(sites, c.String("site")) {
-						logger.Zap.Error("The site " + site + " does not exist.")
-						os.Exit(1)
+						return ctx, errors.New("The site " + site + " does not exist.")
 					}
 
 					return ctx, nil

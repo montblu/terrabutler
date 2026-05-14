@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidPaths(t *testing.T) {
+func TestInitPaths(t *testing.T) {
 
 	rootDir := "ROOT"
 
