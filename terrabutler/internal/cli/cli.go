@@ -83,6 +83,7 @@ func Run(version string, fs afero.Fs) error {
 				UsageText:                "terrabutler env [OPTIONS] COMMAND [ARGS]...",
 				HideHelp:                 true,
 				Suggest:                  true,
+				EnableShellCompletion:    true,
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -95,6 +96,8 @@ func Run(version string, fs afero.Fs) error {
 						UsageText:                "terrabutler env delete [OPTIONS] NAME",
 						ArgsUsage:                "NAME",
 						HideHelp:                 true,
+						Suggest:                  true,
+						EnableShellCompletion:    true,
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -108,7 +111,7 @@ func Run(version string, fs afero.Fs) error {
 							},
 							&cli.BoolFlag{
 								Name:    "y",
-								Aliases: []string{""},
+								Aliases: []string{"Y"},
 								Usage:   "Delete without asking for confirmation.",
 							},
 							&cli.BoolFlag{
@@ -131,6 +134,7 @@ func Run(version string, fs afero.Fs) error {
 						Usage:     "List environments",
 						UsageText: "terrabutler env list [OPTIONS]",
 						HideHelp:  true,
+						Suggest:   true,
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "s3",
@@ -165,7 +169,7 @@ func Run(version string, fs afero.Fs) error {
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "y",
-								Aliases: []string{""},
+								Aliases: []string{"Y"},
 								Usage:   "Delete without asking for confirmation.",
 							},
 							&cli.BoolFlag{
@@ -266,10 +270,12 @@ func Run(version string, fs afero.Fs) error {
 				},
 			},
 			{
-				Name:      "tf",
-				Usage:     "Manage terraform commands",
-				UsageText: "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
-				HideHelp:  true,
+				Name:                  "tf",
+				Usage:                 "Manage terraform commands",
+				UsageText:             "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
+				HideHelp:              true,
+				EnableShellCompletion: true,
+				Suggest:               true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "site", Required: true, Usage: "Site where to run terraform.  [required]"}},
 				Commands: []*cli.Command{

@@ -95,6 +95,8 @@ func Runner(command []string, site string) error {
 	cmd := exec.Command(command[0], command[1:]...)
 	//Changes the current directory
 	cmd.Dir = utils.Paths["root"] + "/site_" + site
+	//Uses the console input
+	cmd.Stdin = os.Stdin
 	//Prints the output to the console
 	cmd.Stdout = os.Stdout
 	//Prints the errors to the console

@@ -49,7 +49,7 @@ func typeFlag(flag cli.Flag) string {
 func addIndentFlag(names []string) []string {
 	for i, n := range names {
 		if n != "" {
-			if len(names) == 1 {
+			if len(n) == 1 {
 				names[i] = "-" + n
 			} else {
 				names[i] = "--" + n
