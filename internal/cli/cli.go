@@ -25,15 +25,6 @@ func Run(version string, fs afero.Fs) error {
 	//Verify the semantic version
 	utils.Is_semantic_version(version)
 
-	//Validating the settings
-	settings.Validate_settings(fs)
-
-	//Validating the requirements
-	err := requirements.Check_requirement(fs)
-	if err != nil {
-		return err
-	}
-
 	//Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
 		Name:    "help",
@@ -58,12 +49,26 @@ func Run(version string, fs afero.Fs) error {
 		//Here is where the terrabutler version is
 		Version: version,
 		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
-		HideHelpCommand:          true,
-		HideVersion:              true,
-		EnableShellCompletion:    true,
-		Suggest:                  true,
-		CommandNotFound:          CommandNotFound,
-		OnUsageError:             OnUsageError,
+		HideHelpCommand:       true,
+		HideVersion:           true,
+		EnableShellCompletion: true,
+		Suggest:               true,
+		CommandNotFound:       CommandNotFound,
+		OnUsageError:          OnUsageError,
+		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+			//Validating the settings
+			err := settings.Validate_settings(fs)
+			if err != nil {
+				return ctx, err
+			}
+
+			//Validating the requirements
+			err = requirements.Check_requirement(fs)
+			if err != nil {
+				return ctx, err
+			}
+			return ctx, nil
+		},
 		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 		Commands: []*cli.Command{
 			{
@@ -1229,7 +1234,7 @@ func Run(version string, fs afero.Fs) error {
 			}},
 	}
 
-	err = cmd.Run(context.Background(), os.Args)
+	err := cmd.Run(context.Background(), os.Args)
 
 	return err
 }
