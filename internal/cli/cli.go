@@ -11,13 +11,13 @@ import (
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v3"
 
-	"terrabutler/internal/env"
-	"terrabutler/internal/inception"
-	"terrabutler/internal/logger"
-	"terrabutler/internal/requirements"
-	"terrabutler/internal/settings"
-	"terrabutler/internal/tf"
-	"terrabutler/internal/utils"
+	"github.com/l58193/terrabutler/internal/env"
+	"github.com/l58193/terrabutler/internal/inception"
+	"github.com/l58193/terrabutler/internal/logger"
+	"github.com/l58193/terrabutler/internal/requirements"
+	"github.com/l58193/terrabutler/internal/tf"
+	"github.com/l58193/terrabutler/internal/utils"
+	"github.com/l58193/terrabutler/terrabutler/internal/settings"
 )
 
 func Run(version string, fs afero.Fs) error {

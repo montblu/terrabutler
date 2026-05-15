@@ -1,4 +1,4 @@
-module github.com/l58193/terrabutler/tree/Rewrite-Go/terrabutler
+module github.com/l58193/terrabutler
 
 go 1.26.0
 
