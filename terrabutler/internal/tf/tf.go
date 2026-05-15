@@ -135,10 +135,12 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	cmd.Dir = utils.Paths["root"] + "/site_" + site
 	//Defining Environment Variables
 	cmd.Env = envVars
+	// Enabling error output
+	cmd.Stderr = os.Stderr
 	//Runs the command
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + current_env + ", Error: " + err.Error())
+		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + current_env + ", Error: " + err.Error())
 	}
 	return output, nil
 }

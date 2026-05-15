@@ -35,7 +35,7 @@ func TestValidSemanticVersion(t *testing.T) {
 func TestValidCurrentEnv(t *testing.T) {
 
 	//Defining Paths
-	Paths["environments"] = "ROOT/site_inception/.terraform/environment"
+	Paths["environment"] = "ROOT/site_inception/.terraform/environment"
 	envName := "env"
 
 	// Use the in-memory filesystem
