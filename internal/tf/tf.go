@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"terrabutler/internal/logger"
-	"terrabutler/internal/settings"
-	"terrabutler/internal/utils"
+	"github.com/l58193/terrabutler/internal/logger"
+	"github.com/l58193/terrabutler/internal/settings"
+	"github.com/l58193/terrabutler/internal/utils"
 )
 
 var current_env = utils.CurrentEnv

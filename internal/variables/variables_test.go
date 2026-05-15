@@ -3,8 +3,8 @@ package variables
 import (
 	"testing"
 
-	"github.com/l58193/terrabutler/tree/Rewrite-Go/terrabutler/internal/settings"
-	"github.com/l58193/terrabutler/tree/Rewrite-Go/terrabutler/internal/utils"
+	"github.com/l58193/terrabutler/internal/settings"
+	"github.com/l58193/terrabutler/internal/utils"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"terrabutler/internal/logger"
+
+	"github.com/l58193/terrabutler/internal/logger"
 
 	"github.com/urfave/cli/v3"
 )

@@ -1,9 +1,10 @@
 package inception
 
 import (
-	"terrabutler/internal/settings"
-	"terrabutler/internal/utils"
 	"testing"
+
+	"github.com/l58193/terrabutler/internal/settings"
+	"github.com/l58193/terrabutler/internal/utils"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"

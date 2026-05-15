@@ -3,7 +3,8 @@ package requirements
 import (
 	"errors"
 	"os"
-	"terrabutler/internal/logger"
+
+	"github.com/l58193/terrabutler/internal/logger"
 
 	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/v2"

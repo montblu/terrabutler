@@ -1,9 +1,10 @@
 package tf
 
 import (
-	"terrabutler/internal/settings"
-	"terrabutler/internal/utils"
 	"testing"
+
+	"github.com/l58193/terrabutler/internal/settings"
+	"github.com/l58193/terrabutler/internal/utils"
 
 	"github.com/stretchr/testify/assert"
 )

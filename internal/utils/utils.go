@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/mod/semver"
 
-	"terrabutler/internal/logger"
+	"github.com/l58193/terrabutler/internal/logger"
 )
 
 // - Gets the Current Environment
