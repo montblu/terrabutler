@@ -11,9 +11,9 @@ require (
 	github.com/knadh/koanf/v2 v2.3.3
 	//Gonja
 	github.com/nikolalohinski/gonja/v2 v2.8.0
-	// FS
+	//FS
 	github.com/spf13/afero v1.15.0
-	// Error
+	//Error
 	github.com/stretchr/testify v1.11.1
 	//Cli
 	github.com/urfave/cli/v3 v3.7.0
