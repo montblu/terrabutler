@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/logo.png" align="center"/>
+<img src="assets/logo.png" align="center"/>
 
 # Terrabutler
 

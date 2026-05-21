@@ -13,8 +13,11 @@ terrabutler tf -site inception apply --help
 The command above shows all the arguments and options that can be used when
 running that command.
 
+> [!INFO]
 The help menu will show the one letter options with a single hyphen and longer options with double hyphens.
 But all options can be used with the a single hyphen as `-help` or with double hyphens `--help`.
+
+> [!WARNING]
 It's not possible to use two single options together like `-t -y` as `-ty`.
 
 ## Usage 
@@ -59,7 +62,7 @@ The command above change the current environment to `staging`.
 
 ### Command `tf`
 
-???+ tip
+> [!TIP]
     The `tf` subcommands are the Terraform commands
 
 Subcommands:
@@ -92,6 +95,7 @@ terrabutler tf -site inception apply
 The command above run a `terraform apply` command inside the `site inception` in
 the current environment.
 
+> [!WARNING]
 While using `terrabutler tf` is always required use the flag `-site` to specify the site where terraform will run.
 
 ### Command `init`
