@@ -11,7 +11,6 @@ All the binaries versions are available inside the [releases pages](https://gith
 To download the latest binaries run the following command:
 
 ``` shell
-https://github.com/l58193/terrabutler/releases/download/v1.0.0/terrabutler_Darwin_arm64.tar.gz
 wget -qO- https://github.com/l58193/terrabutler/releases/download/<VERSION>/terrabutler_<OS>_<ARCH>_<VERSION>.tar.gz | tar -zxvf - terrabutler
 ```
 
