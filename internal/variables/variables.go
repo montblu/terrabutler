@@ -34,7 +34,6 @@ func Generate_var_files(env string, fs afero.Fs) error {
 	for _, template := range templates {
 		if !template.IsDir() {
 			data, _ := afero.ReadFile(fs, utils.Paths["templates"]+"/"+template.Name())
-			logger.Zap.Info("New templated loaded: " + template.Name() + " Data: " + string(data))
 			templatesFilesData["/"+template.Name()] = string(data)
 		}
 	}

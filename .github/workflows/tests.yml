@@ -1,4 +1,4 @@
-name: tests.yml
+name: Run Go Tests
 on: [push, pull_request]
 
 jobs:
