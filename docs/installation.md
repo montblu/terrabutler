@@ -46,16 +46,16 @@ All the binaries will be placed inside the `/usr/local/share/terrabutler` folder
     If you wanna set the location where terrabutler will be installed you can define it by passing arguments when running the install script.
     This arguments can be seen by running:
     
-    ``` shell
-    terrabutler/install -h
-    ```
+ ``` shell
+ terrabutler/install -h
+ ```
     
 > [!TIP]
     Example of installing for local user only **(no need to run the install script as sudo)**:
     
-    ``` shell
-    terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
-    ```
+ ``` shell
+ terrabutler/install -i ~/.local/share/terrabutler -b ~/.local/bin
+ ```
 
 ## Building from source
 
