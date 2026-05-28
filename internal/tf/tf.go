@@ -178,8 +178,9 @@ func ApplyAllSites() error {
 
 func InitAllSites() error {
 	sites := settings.Conf.Strings("sites.ordered")
+	// Remove "inception" from the list of sites to be initialized.
 	if index := slices.Index(sites, "inception"); index != -1 {
-		sites = sites[index+1:]
+		sites = slices.Delete(sites, index, index+1)
 	}
 	for _, site := range sites {
 
