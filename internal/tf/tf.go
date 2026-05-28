@@ -163,7 +163,10 @@ func ApplyAllSites() error {
 	sites := settings.Conf.Strings("sites.ordered")
 	for _, site := range sites {
 		if site != "inception" {
-			return CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend")
+			err := CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend")
+			if err != nil {
+				return errors.New("Error initializing site during apply-all, site " + site + ", Error: " + err.Error())
+			}
 		}
 		err := CommandRunner("apply", site, []string{}, []string{"-auto-approve"}, "var")
 		if err != nil {
