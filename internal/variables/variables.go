@@ -57,6 +57,9 @@ func Generate_var_files(env string, fs afero.Fs) error {
 		sites = append(sites[:index], sites[index+1:]...)
 	}
 
+	// Sort sites alphabetically
+	slices.Sort(sites)
+
 	// In the Environment you can add the context
 	environment := &exec.Environment{
 		Context: exec.NewContext(map[string]any{
