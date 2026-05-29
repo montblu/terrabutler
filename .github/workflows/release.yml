@@ -1,63 +1,42 @@
-name: Release Terrabutler
+name: GoReleaser
 
-on:  
+on:
+  pull_request:
   push:
+    # run only against version tags
     tags:
-      - '*'
+      - "v*"
+
+permissions:
+  contents: write
+  # packages: write
+  # issues: write
+  # id-token: write
 
 jobs:
-  release-terrabutler:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-24.04
-          - macos-15-intel # MacOS on x64
-          - macos-15 # MacOS on ARM64
-
+  goreleaser:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Get Current Tag
-        uses: WyriHaximus/github-action-get-previous-tag@v1
-        id: tag
-      - name: Setup Python
-        uses: actions/setup-python@v6
+      -
+        name: Checkout
+        uses: actions/checkout@v6
         with:
-          python-version: "3.14"
-      - name: Set version based on tag
-        run: |
-          sed -i='' 's/dev/${{ steps.tag.outputs.tag }}/g' terrabutler/__init__.py
-      - name: Build Python Module
-        run: |
-          pip install -r requirements.txt pyinstaller
-          pyinstaller --clean -y --dist ./dist/terrabutler --workpath /tmp terrabutler/terrabutler.spec
-          mv dist/terrabutler/terrabutler dist/terrabutler/dist
-      - name: Copy needed files to build directory
-        run: |
-          cp README.md dist/terrabutler
-          cp LICENSE dist/terrabutler
-          cp scripts/install dist/terrabutler
-      - name: OS of the runner 
-        uses: ASzc/change-string-case-action@v6
-        id: os
+          fetch-depth: 0
+      -
+        name: Set up Go
+        uses: actions/setup-go@v6
         with:
-          string: ${{ runner.os }}
-      - name: Arch of the runner
-        uses: ASzc/change-string-case-action@v6
-        id: arch
+          go-version: '1.26.x'
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v7
         with:
-          string: ${{ runner.arch }}
-      - name: Create archive of build (.tar.gz)
-        uses: sibiraj-s/action-archiver@v1
-        with:
-          working-directory: "./"
-          path: "dist"
-          format: tar
-          gzip: true
-          output: terrabutler-${{ steps.os.outputs.lowercase }}-${{ steps.arch.outputs.lowercase }}-${{ steps.tag.outputs.tag }}.tar.gz
-      - name: Add artifact to Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: terrabutler-${{ steps.os.outputs.lowercase }}-${{ steps.arch.outputs.lowercase }}-${{ steps.tag.outputs.tag }}.tar.gz
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
+          # 'latest', 'nightly', or a semver
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
+          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}

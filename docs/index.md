@@ -1,7 +1,6 @@
-<!-- <img src="assets/logo.png" align="center"/> -->
-<figure markdown>
-  ![Image title](assets/logo.png)
-</figure>
+<div align="center">
+
+<img src="assets/logo.png" align="center"/>
 
 # Terrabutler
 
@@ -18,3 +17,9 @@
 
 Terrabutler is a **wrapper** written in [Python](https://www.python.org/) that helps maintaining IaC (Infrastructure as code) projects
 using [Terraform](https://www.terraform.io/) by managing the **environments**.
+
+## What is this?
+
+This a rewrite of Terrabutler written in [GO](https://go.dev/), where it aims to implement all it's functionalities, support tests unit, and with better performance and scalability.
+
+In this current version it supports all the principal functionalities except the connection to the Amazon S3 used in some parts of the old Terrabutler.
