@@ -7,10 +7,15 @@ import (
 	"github.com/spf13/afero"
 )
 
+var (
+	appName = "terrabutler"
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
 	fs := afero.NewOsFs()
-
-	version := "v3.0.0"
 
 	err := cli.Run(version, fs)
 	if err != nil {
