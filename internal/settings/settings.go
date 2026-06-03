@@ -10,8 +10,8 @@ import (
 	"github.com/knadh/koanf/v2"
 	"github.com/spf13/afero"
 
-	"github.com/l58193/terrabutler/internal/logger"
-	"github.com/l58193/terrabutler/internal/utils"
+	"github.com/montblu/terrabutler/internal/logger"
+	"github.com/montblu/terrabutler/internal/utils"
 )
 
 // - Uses utils.go for the paths

@@ -6,12 +6,12 @@ Before proceeding make sure that you have the [requirements](requirements.md).
 
 ### Downloading the binaries
 
-All the binaries versions are available inside the [releases pages](https://github.com/l58193/terrabutler/releases/)
+All the binaries versions are available inside the [releases pages](https://github.com/montblu/terrabutler/releases/)
 
 To download the latest binaries run the following command:
 
 ``` shell
-wget -qO- https://github.com/l58193/terrabutler/releases/download/<VERSION>/terrabutler_<OS>_<ARCH>_<VERSION>.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/<VERSION>/terrabutler_<OS>_<ARCH>_<VERSION>.tar.gz | tar -zxvf - terrabutler
 ```
 
 Where `<VERSION>` is the version of the release.
@@ -19,13 +19,13 @@ Where `<VERSION>` is the version of the release.
 For example, to download **Terrabutler v1.0.0** for Linux x64, just run:
 
 ``` shell
-wget -qO- https://github.com/l58193/terrabutler/releases/download/v1.0.0/terrabutler_Linux_x86_64.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v1.0.0/terrabutler_Linux_x86_64.tar.gz | tar -zxvf - terrabutler
 ```
 
 To download **Terrabutler v1.0.0** for MacOS arm64, just run:
 
 ``` shell
-wget -qO- https://github.com/l58193/terrabutler/releases/download/v1.0.0/terrabutler_Darwin_arm64.tar.gz | tar -zxvf - terrabutler
+wget -qO- https://github.com/montblu/terrabutler/releases/download/v1.0.0/terrabutler_Darwin_arm64.tar.gz | tar -zxvf - terrabutler
 ```
 
 > [!WARNING]
@@ -85,7 +85,7 @@ If the environment variable PATH is setup correctly during the installation of [
 
 You can do:
 ``` shell 
-go install github.com/l58193/terrabutler@Rewrite-Go
+go install github.com/montblu/terrabutler@Rewrite-Go
 ```
 
 And now ```terrabutler``` is now installed in your system.
