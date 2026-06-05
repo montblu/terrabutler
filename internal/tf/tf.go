@@ -163,7 +163,10 @@ func ApplyAllSites() error {
 	sites := settings.Conf.Strings("sites.ordered")
 	for _, site := range sites {
 		if site != "inception" {
-			return CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend")
+			err := CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend")
+			if err != nil {
+				return errors.New("Error initializing site during apply-all, site " + site + ", Error: " + err.Error())
+			}
 		}
 		err := CommandRunner("apply", site, []string{}, []string{"-auto-approve"}, "var")
 		if err != nil {
@@ -175,8 +178,9 @@ func ApplyAllSites() error {
 
 func InitAllSites() error {
 	sites := settings.Conf.Strings("sites.ordered")
+	// Remove "inception" from the list of sites to be initialized.
 	if index := slices.Index(sites, "inception"); index != -1 {
-		sites = sites[index+1:]
+		sites = slices.Delete(sites, index, index+1)
 	}
 	for _, site := range sites {
 

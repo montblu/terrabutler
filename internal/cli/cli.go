@@ -253,10 +253,10 @@ func Run(version string, fs afero.Fs) error {
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-						Action: func(context.Context, *cli.Command) error {
-							logger.Zap.Info("Current Environment is " + utils.CurrentEnv)
-							return nil
-						}},
+					Action: func(ctx context.Context, c *cli.Command) error {
+						fmt.Fprintf(c.Root().Writer, "%s\n", utils.CurrentEnv)
+						return nil
+					}},
 				},
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 					return ctx, inception.Init_needed(fs)
