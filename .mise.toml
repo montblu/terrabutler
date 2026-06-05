@@ -1,0 +1,40 @@
+[tools]
+go = "1.26.3"
+golangci-lint = "2.12.2"
+goreleaser = "2.16.0"
+
+[tasks.build]
+description = "Build the terrabutler binary"
+run = "go build -o terrabutler ./cmd/terrabutler"
+
+[tasks.test]
+description = "Run all tests"
+run = "go test ./..."
+
+[tasks.test-cover]
+description = "Run tests with coverage"
+run = "go test -cover ./..."
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = "golangci-lint run"
+
+[tasks.lint-fix]
+description = "Run golangci-lint with auto-fix"
+run = "golangci-lint run --fix"
+
+[tasks.fmt]
+description = "Format Go code"
+run = "go fmt ./..."
+
+[tasks.vet]
+description = "Run go vet"
+run = "go vet ./..."
+
+[tasks.tidy]
+description = "Tidy module dependencies"
+run = "go mod tidy"
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = "go clean && rm -f terrabutler"

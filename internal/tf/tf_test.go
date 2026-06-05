@@ -3,8 +3,8 @@ package tf
 import (
 	"testing"
 
-	"github.com/l58193/terrabutler/internal/settings"
-	"github.com/l58193/terrabutler/internal/utils"
+	"github.com/montblu/terrabutler/internal/settings"
+	"github.com/montblu/terrabutler/internal/utils"
 
 	"github.com/stretchr/testify/assert"
 )

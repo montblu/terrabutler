@@ -16,8 +16,12 @@ before:
     # - go generate ./...
 
 builds:
-  - env:
+  - main: ./cmd/terrabutler
+    binary: terrabutler
+    env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
     goos:
       - linux
       # - windows

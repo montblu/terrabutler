@@ -1,4 +1,4 @@
-module github.com/l58193/terrabutler
+module github.com/montblu/terrabutler
 
 go 1.26.0
 

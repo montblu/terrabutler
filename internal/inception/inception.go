@@ -4,10 +4,10 @@ import (
 	"errors"
 	"os"
 
-	"github.com/l58193/terrabutler/internal/logger"
-	"github.com/l58193/terrabutler/internal/settings"
-	"github.com/l58193/terrabutler/internal/tf"
-	"github.com/l58193/terrabutler/internal/utils"
+	"github.com/montblu/terrabutler/internal/logger"
+	"github.com/montblu/terrabutler/internal/settings"
+	"github.com/montblu/terrabutler/internal/tf"
+	"github.com/montblu/terrabutler/internal/utils"
 
 	"github.com/spf13/afero"
 )

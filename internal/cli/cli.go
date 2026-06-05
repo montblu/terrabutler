@@ -11,16 +11,16 @@ import (
 	"github.com/spf13/afero"
 	"github.com/urfave/cli/v3"
 
-	"github.com/l58193/terrabutler/internal/env"
-	"github.com/l58193/terrabutler/internal/inception"
-	"github.com/l58193/terrabutler/internal/logger"
-	"github.com/l58193/terrabutler/internal/requirements"
-	"github.com/l58193/terrabutler/internal/settings"
-	"github.com/l58193/terrabutler/internal/tf"
-	"github.com/l58193/terrabutler/internal/utils"
+	"github.com/montblu/terrabutler/internal/env"
+	"github.com/montblu/terrabutler/internal/inception"
+	"github.com/montblu/terrabutler/internal/logger"
+	"github.com/montblu/terrabutler/internal/requirements"
+	"github.com/montblu/terrabutler/internal/settings"
+	"github.com/montblu/terrabutler/internal/tf"
+	"github.com/montblu/terrabutler/internal/utils"
 )
 
-func Run(version string, fs afero.Fs) error {
+func Run(appName, version, commit, date string, fs afero.Fs) error {
 
 	//Verify the semantic version
 	utils.Is_semantic_version(version)
@@ -43,11 +43,10 @@ func Run(version string, fs afero.Fs) error {
 	defer logger.Zap.Sync()
 
 	cmd := &cli.Command{
-		Name:      "terrabutler",
+		Name:      appName,
 		Usage:     "The utility that helps keeping your IaC in one piece",
-		UsageText: "terrabutler [OPTIONS] COMMAND [ARGS]...",
-		//Here is where the terrabutler version is
-		Version: version,
+		UsageText: appName + " [OPTIONS] COMMAND [ARGS]...",
+		Version:   version,
 		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
 		HideVersion:           true,
@@ -55,29 +54,27 @@ func Run(version string, fs afero.Fs) error {
 		Suggest:               true,
 		CommandNotFound:       CommandNotFound,
 		OnUsageError:          OnUsageError,
+		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-			//Validating the settings
-			err := settings.Validate_settings(fs)
-			if err != nil {
+			if len(os.Args) > 1 && os.Args[1] == "version" {
+				return ctx, nil
+			}
+			if err := settings.Validate_settings(fs); err != nil {
 				return ctx, err
 			}
-
-			//Validating the requirements
-			err = requirements.Check_requirement(fs)
-			if err != nil {
+			if err := requirements.Check_requirement(fs); err != nil {
 				return ctx, err
 			}
 			return ctx, nil
 		},
-		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 		Commands: []*cli.Command{
-			{
-				Name:  "version",
-				Usage: "Show version and exit",
-				Action: func(ctx context.Context, c *cli.Command) error {
-					fmt.Fprintf(c.Root().Writer, "%s: %s\n", c.Root().Name, c.Root().Version)
-					return nil
-				},
+		{
+			Name:  "version",
+			Usage: "Show version and exit",
+			Action: func(ctx context.Context, c *cli.Command) error {
+				fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
+				return nil
+			},
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -85,7 +82,7 @@ func Run(version string, fs afero.Fs) error {
 			{
 				Name:                     "env",
 				Usage:                    "Manage environments",
-				UsageText:                "terrabutler env [OPTIONS] COMMAND [ARGS]...",
+				UsageText:                appName + " env [OPTIONS] COMMAND [ARGS]...",
 				HideHelp:                 true,
 				Suggest:                  true,
 				EnableShellCompletion:    true,
@@ -98,7 +95,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:                     "delete",
 						Aliases:                  []string{""},
 						Usage:                    "Delete an environment",
-						UsageText:                "terrabutler env delete [OPTIONS] NAME",
+						UsageText:                appName + " env delete [OPTIONS] NAME",
 						ArgsUsage:                "NAME",
 						HideHelp:                 true,
 						Suggest:                  true,
@@ -137,7 +134,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "list",
 						Aliases:   []string{""},
 						Usage:     "List environments",
-						UsageText: "terrabutler env list [OPTIONS]",
+						UsageText: appName + " env list [OPTIONS]",
 						HideHelp:  true,
 						Suggest:   true,
 						Flags: []cli.Flag{
@@ -167,7 +164,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "new",
 						Aliases:   []string{""},
 						Usage:     "Create a new environment",
-						UsageText: "terrabutler env new [OPTIONS] NAME",
+						UsageText: appName + " env new [OPTIONS] NAME",
 						HideHelp:  true,
 						ArgsUsage: "NAME",
 						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
@@ -207,7 +204,7 @@ func Run(version string, fs afero.Fs) error {
 						Aliases:                  []string{""},
 						HideHelp:                 true,
 						Usage:                    "Reload the current environment",
-						UsageText:                "terrabutler env reload [OPTIONS]",
+						UsageText:                appName + " env reload [OPTIONS]",
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -218,7 +215,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "select",
 						Aliases:   []string{""},
 						Usage:     "Select a environment",
-						UsageText: "terrabutler env select [OPTIONS] NAME",
+						UsageText: appName + " env select [OPTIONS] NAME",
 						HideHelp:  true,
 						ArgsUsage: "NAME",
 						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
@@ -249,7 +246,7 @@ func Run(version string, fs afero.Fs) error {
 						Aliases:                  []string{""},
 						HideHelp:                 true,
 						Usage:                    "Show the name of the current environment",
-						UsageText:                "terrabutler env show [OPTIONS]",
+						UsageText:                appName + " env show [OPTIONS]",
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -258,26 +255,26 @@ func Run(version string, fs afero.Fs) error {
 						return nil
 					}},
 				},
-				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-					return ctx, inception.Init_needed(fs)
-				},
-			},
-			{
-				Name:                     "init",
-				Usage:                    "Initialize the manager",
-				UsageText:                "terrabutler init [OPTIONS]",
-				HideHelp:                 true,
-				CommandNotFound:          CommandNotFound,
-				OnUsageError:             OnUsageError,
-				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					return inception.Init(fs)
-				},
-			},
+		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+			return ctx, inception.Init_needed(fs)
+		},
+	},
+	{
+		Name:                     "init",
+		Usage:                    "Initialize the manager",
+		UsageText:                appName + " init [OPTIONS]",
+		HideHelp:                 true,
+		CommandNotFound:          CommandNotFound,
+		OnUsageError:             OnUsageError,
+		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			return inception.Init(fs)
+		},
+	},
 			{
 				Name:                  "tf",
 				Usage:                 "Manage terraform commands",
-				UsageText:             "terrabutler tf [OPTIONS] COMMAND [ARGS]...",
+				UsageText:             appName + " tf [OPTIONS] COMMAND [ARGS]...",
 				HideHelp:              true,
 				EnableShellCompletion: true,
 				Suggest:               true,
@@ -288,7 +285,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "apply",
 						HideHelp:  true,
 						Usage:     "Create or update infrastructure.",
-						UsageText: "terrabutler tf apply [OPTIONS]",
+						UsageText: appName + " tf apply [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this Terraform configuration instead of the usual behavior."},
@@ -345,7 +342,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "console",
 						HideHelp:  true,
 						Usage:     "Try Terraform expressions at an interactive command...",
-						UsageText: "terrabutler tf console [OPTIONS]",
+						UsageText: appName + " tf console [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.StringFlag{Name: "state", Usage: "Legacy option for the local backend only. See the local backend's documentation for more information."},
 							&cli.BoolFlag{Name: "plan", Usage: "Create a new plan (as if running \"terraform plan\") and then evaluate expressions against its planned state, instead of evaluating against the current state. You can use this to inspect the effects of configuration changes that haven't been applied yet.."},
@@ -371,7 +368,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "destroy",
 						HideHelp:  true,
 						Usage:     "Prepare your working directory for other commands",
-						UsageText: "terrabutler tf destroy [OPTIONS]",
+						UsageText: appName + " tf destroy [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "auto-approve", Usage: "Skip interactive approval of plan before applying."},
 							// Requires BOOLEAN value --> Reversing
@@ -475,7 +472,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "generate-options",
 						HideHelp:  true,
 						Usage:     "Generate terraform options",
-						UsageText: "terrabutler tf generate-options [OPTIONS] {init|plan|apply}",
+						UsageText: appName + " tf generate-options [OPTIONS] {init|plan|apply}",
 						ArgsUsage: "{init|plan|apply}",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "Choice"},
@@ -494,7 +491,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "import",
 						HideHelp:  true,
 						Usage:     "Associate existing infrastructure with a Terraform...",
-						UsageText: "terrabutler tf import [OPTIONS] ADDR ID",
+						UsageText: appName + " tf import [OPTIONS] ADDR ID",
 						ArgsUsage: "ADDR ID",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "ADDR"},
@@ -546,7 +543,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "init",
 						HideHelp:  true,
 						Usage:     "Prepare your working directory for other commands",
-						UsageText: "terrabutler tf init [OPTIONS]",
+						UsageText: appName + " tf init [OPTIONS]",
 						Flags: []cli.Flag{
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-backend", Usage: "Disable backend or Terraform Cloud initialization for this configuration and use what what was previously initialized instead."},
@@ -608,7 +605,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "output",
 						HideHelp:  true,
 						Usage:     "Show output values from your root module",
-						UsageText: "terrabutler tf output [OPTIONS]",
+						UsageText: appName + " tf output [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "json", Usage: "If specified, machine readable output will be printed in JSON format."},
@@ -634,7 +631,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "plan",
 						HideHelp:  true,
 						Usage:     "Show changes required by the current configuration",
-						UsageText: "terrabutler tf plan [OPTIONS]",
+						UsageText: appName + " tf plan [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this"},
 							//Requires BOOLEAN value --> Reversing
@@ -692,13 +689,13 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "providers",
 						HideHelp:  true,
 						Usage:     "Show the providers required for this configuration",
-						UsageText: "terrabutler tf providers [OPTIONS] COMMAND [ARGS]...",
+						UsageText: appName + " tf providers [OPTIONS] COMMAND [ARGS]...",
 						Commands: []*cli.Command{
 							{
 								Name:      "lock",
 								Usage:     "Write out dependency locks for the configured providers",
 								ArgsUsage: "PROVIDERS...",
-								UsageText: "terrabutler tf providers lock [OPTIONS] PROVIDERS...",
+								UsageText: appName + " tf providers lock [OPTIONS] PROVIDERS...",
 								Arguments: []cli.Argument{
 									&cli.StringArgs{Max: -1, Name: "Providers"},
 								},
@@ -733,7 +730,7 @@ func Run(version string, fs afero.Fs) error {
 								Name:      "mirror",
 								Usage:     "Save local copies of all required provider plugins",
 								ArgsUsage: "TARGET_DIR",
-								UsageText: "terrabutler tf providers mirror [OPTIONS] TARGET_DIR",
+								UsageText: appName + " tf providers mirror [OPTIONS] TARGET_DIR",
 								Arguments: []cli.Argument{
 									&cli.StringArg{Name: "DIR"},
 								},
@@ -759,7 +756,7 @@ func Run(version string, fs afero.Fs) error {
 							{
 								Name:      "schema",
 								Usage:     "Show schemas for the providers used in the configuration",
-								UsageText: "terrabutler tf providers schema [OPTIONS]",
+								UsageText: appName + " tf providers schema [OPTIONS]",
 								Flags: []cli.Flag{
 									&cli.BoolFlag{Name: "json", Required: true, Usage: "Prints out a json representation of the schemas for all providers used in the current configuration.  [required]"},
 								},
@@ -783,7 +780,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "refresh",
 						HideHelp:  true,
 						Usage:     "Update the state to match remote systems",
-						UsageText: "terrabutler tf refresh [OPTIONS]",
+						UsageText: appName + " tf refresh [OPTIONS]",
 						Flags: []cli.Flag{
 							//Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
@@ -820,7 +817,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "show",
 						HideHelp:  true,
 						Usage:     "Show the current state or a saved plan",
-						UsageText: "terrabutler tf show [OPTIONS] [PATH]",
+						UsageText: appName + " tf show [OPTIONS] [PATH]",
 						ArgsUsage: "[PATH]",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "PATH"},
@@ -851,7 +848,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "state",
 						HideHelp:  true,
 						Usage:     "Advanced state management",
-						UsageText: "terrabutler tf state [OPTIONS] COMMAND [ARGS]...",
+						UsageText: appName + " tf state [OPTIONS] COMMAND [ARGS]...",
 						Commands: []*cli.Command{
 							{
 								Name:      "list",
@@ -1083,7 +1080,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "taint",
 						HideHelp:  true,
 						Usage:     "Mark a resource instance as not fully functional",
-						UsageText: "terrabutler tf taint [OPTIONS] ADDRESS",
+						UsageText: appName + " tf taint [OPTIONS] ADDRESS",
 						ArgsUsage: "ADDRESS",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "ADDR"},
@@ -1124,7 +1121,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "untaint",
 						HideHelp:  true,
 						Usage:     "Remove the 'tainted' state from a resource instance",
-						UsageText: "terrabutler tf untaint [OPTIONS] ADDRESS",
+						UsageText: appName + " tf untaint [OPTIONS] ADDRESS",
 						ArgsUsage: "ADDRESS",
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "ADDR"},
@@ -1165,7 +1162,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "validate",
 						HideHelp:  true,
 						Usage:     "Validate the configuration files",
-						UsageText: "terrabutler tf validate [OPTIONS]",
+						UsageText: appName + " tf validate [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "json", Usage: "Output the version information as a JSON object."},
@@ -1188,7 +1185,7 @@ func Run(version string, fs afero.Fs) error {
 						Name:      "version",
 						HideHelp:  true,
 						Usage:     "Show the current Terraform version",
-						UsageText: "terrabutler tf version [OPTIONS]",
+						UsageText: appName + " tf version [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "json", Usage: "Output the version information as a JSON object."},
 						},
@@ -1207,9 +1204,9 @@ func Run(version string, fs afero.Fs) error {
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageErrorSite,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 
-					err := inception.Init_needed(fs)
+			err := inception.Init_needed(fs)
 					if err != nil {
 						return ctx, err
 					}
