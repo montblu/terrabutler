@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/l58193/terrabutler/internal/cli"
-	"github.com/l58193/terrabutler/internal/logger"
+	"github.com/montblu/terrabutler/internal/cli"
+	"github.com/montblu/terrabutler/internal/logger"
 
 	"github.com/spf13/afero"
 )
