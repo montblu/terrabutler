@@ -17,7 +17,7 @@ var (
 func main() {
 	fs := afero.NewOsFs()
 
-	err := cli.Run(version, fs)
+	err := cli.Run(appName, version, commit, date, fs)
 	if err != nil {
 		logger.Zap.Error(err.Error())
 	}
