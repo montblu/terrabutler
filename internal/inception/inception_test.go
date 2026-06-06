@@ -18,8 +18,8 @@ func TestInitNeeded(t *testing.T) {
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating environment file initialized with env
-	afero.WriteFile(fs, utils.Paths["inception"]+"/.terraform/environment", []byte("env"), 0644)
+	// Creating environment file initialized with env
+	_ = afero.WriteFile(fs, utils.Paths["inception"]+"/.terraform/environment", []byte("env"), 0644)
 
 	assert.NoError(t, Init_needed(fs), "Failed, the environment file exists.")
 
@@ -32,15 +32,15 @@ func TestInit(t *testing.T) {
 		return nil, nil
 	}
 
-	settings.Conf.Set("environments.default.name", "env")
+	settings.Conf.Set("environments.default.name", "env") //nolint:errcheck
 	utils.Paths["inception"] = "inception"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
-	fs.MkdirAll(utils.Paths["inception"]+"/.terraform", 0644)
-	fs.MkdirAll(utils.Paths["backends"], 0644)
+	_ = fs.MkdirAll(utils.Paths["inception"]+"/.terraform", 0644)
+	_ = fs.MkdirAll(utils.Paths["backends"], 0644)
 
-	//Create the environment file
+	// Create the environment file
 	assert.NoError(t, Init(fs), "Failed, the environment file couldn't be created")
 
 	// Validate the environment file created

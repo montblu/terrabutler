@@ -29,7 +29,7 @@ var Conf = koanf.New(".")
 func get_settings(fs afero.Fs) error {
 
 	// Load default values using the confmap provider.
-	Conf.Load(confmap.Provider(map[string]any{
+	if err := Conf.Load(confmap.Provider(map[string]any{
 		"general.organization":                                nil,
 		"general.secrets_key_id":                              nil,
 		"sites.ordered":                                       []string{},
@@ -40,10 +40,12 @@ func get_settings(fs afero.Fs) error {
 		"environments.permanent":                              []string{},
 		"environments.temporary.secrets.firebase_credentials": nil,
 		"environments.temporary.secrets.mail_password":        nil,
-		//Optional
+		// Optional
 		"hooks.pre_env_select":  nil,
 		"hooks.post_env_select": nil,
-	}, "."), nil)
+	}, "."), nil); err != nil {
+		return err
+	}
 
 	b, err := afero.ReadFile(fs, Path)
 	if err != nil {
@@ -60,13 +62,13 @@ func get_settings(fs afero.Fs) error {
 // Validates the settings files
 func Validate_settings(fs afero.Fs) error {
 
-	//Gets the settings
+	// Gets the settings
 	err := get_settings(fs)
 	if err != nil {
 		return err
 	}
 
-	//Verify if all the required camps are filled
+	// Verify if all the required camps are filled
 	for key, value := range Conf.All() {
 
 		value = fmt.Sprint(value)
@@ -83,20 +85,19 @@ func Validate_settings(fs afero.Fs) error {
 // Writes settings file
 func Write_settings(fs afero.Fs, newSettings *koanf.Koanf) error {
 
-	//Marshal the new Settings file as a yaml file
+	// Marshal the new Settings file as a yaml file
 	b, _ := newSettings.Marshal(yaml.Parser())
 
 	f, err := fs.Create(Path)
 	if err != nil {
-		f.Close()
 		return errors.New("An error has occurred opening the settings file: " + err.Error())
 	}
 	l, err := f.Write(b)
 	if l == 0 && err != nil {
-		f.Close()
+		_ = f.Close()
 		return errors.New("An error has occurred writing to the settings file: " + err.Error())
 	}
-	err = f.Close()
+	_ = f.Close()
 
 	// Writes out to the location of the old settings
 	logger.Zap.Info("Settings written successfully.")

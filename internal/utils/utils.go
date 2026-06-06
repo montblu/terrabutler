@@ -28,10 +28,10 @@ func init_paths() (map[string]string, error) {
 	// Loading koanf instance
 	var k = koanf.New(".")
 
-	//Getting the environment variables
+	// Getting the environment variables
 	err := k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
 	if err != nil {
-		return paths, errors.New("An error occured while loading the environment variables: " + error.Error(err))
+		return paths, errors.New("An error occurred while loading the environment variables: " + error.Error(err))
 	}
 	root := k.String("TERRABUTLER_ROOT")
 
@@ -54,7 +54,7 @@ func Settings_path() string {
 // Check if the version corresponds to the semantic versioning.
 func Is_semantic_version(version string) error {
 	if !semver.IsValid(version) {
-		return errors.New("The version of terrabutler is not valid.")
+		return errors.New("the version of terrabutler is not valid")
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func Is_semantic_version(version string) error {
 // Get current_environment
 func getCurrentEnv(fs afero.Fs) (string, error) {
 
-	//Open site environment file
+	// Open site environment file
 	env, err := afero.ReadFile(fs, Paths["environment"])
 	logger.Zap.Debug("Path of Environment is: " + Paths["environment"])
 	if err != nil {

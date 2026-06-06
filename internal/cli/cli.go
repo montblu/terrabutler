@@ -22,38 +22,38 @@ import (
 
 func Run(appName, version, commit, date string, fs afero.Fs) error {
 
-	//Verify the semantic version
-	utils.Is_semantic_version(version)
+	// Verify the semantic version
+	_ = utils.Is_semantic_version(version)
 
-	//Changing the default help flag
+	// Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
 		Name:    "help",
 		Aliases: []string{"H", "h"},
 		Usage:   "Show this message and exit",
 	}
 
-	//Using the new HelpPrinter
+	// Using the new HelpPrinter
 	cli.HelpPrinter = HelpPrinterNewFunctions
 
-	//Applying the new templates for the helper
+	// Applying the new templates for the helper
 	cli.RootCommandHelpTemplate = RootCommandHelpTemplate
 	cli.CommandHelpTemplate = CommandHelpTemplate
 	cli.SubcommandHelpTemplate = SubcommandHelpTemplate
 
-	defer logger.Zap.Sync()
+	defer func() { _ = logger.Zap.Sync() }()
 
 	cmd := &cli.Command{
 		Name:      appName,
 		Usage:     "The utility that helps keeping your IaC in one piece",
 		UsageText: appName + " [OPTIONS] COMMAND [ARGS]...",
 		Version:   version,
-		//Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
+		// Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
-		HideVersion:           true,
-		EnableShellCompletion: true,
-		Suggest:               true,
-		CommandNotFound:       CommandNotFound,
-		OnUsageError:          OnUsageError,
+		HideVersion:              true,
+		EnableShellCompletion:    true,
+		Suggest:                  true,
+		CommandNotFound:          CommandNotFound,
+		OnUsageError:             OnUsageError,
 		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 			if len(os.Args) > 1 && os.Args[1] == "version" {
@@ -68,11 +68,11 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 			return ctx, nil
 		},
 		Commands: []*cli.Command{
-		{
-			Name:  "version",
-			Usage: "Show version and exit",
+			{
+				Name:  "version",
+				Usage: "Show version and exit",
 			Action: func(ctx context.Context, c *cli.Command) error {
-				fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
+				_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
 				return nil
 			},
 				CommandNotFound:          CommandNotFound,
@@ -90,7 +90,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Commands: []*cli.Command{
-					//Subcommands of Env
+					// Subcommands of Env
 					{
 						Name:                     "delete",
 						Aliases:                  []string{""},
@@ -106,7 +106,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Arguments:                []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								//Added destroy as alias to the -d flag
+								// Added destroy as alias to the -d flag
 								Name:    "destroy",
 								Aliases: []string{"d"},
 								Usage:   "Destroy all sites by inverse order.",
@@ -117,7 +117,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								Usage:   "Delete without asking for confirmation.",
 							},
 							&cli.BoolFlag{
-								//Flags with more than 1 letter are shown with double dash, but it is still accepted with -
+								// Flags with more than 1 letter are shown with double dash, but it is still accepted with -
 								Name:    "s3",
 								Aliases: []string{"S3"},
 								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
@@ -125,10 +125,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
-								return errors.New("Missing argument 'NAME'.")
+								return errors.New("missing argument 'NAME'")
 							}
-							env.DeleteEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"), fs)
-							return nil
+							return env.DeleteEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"), fs)
 						}},
 					{
 						Name:      "list",
@@ -195,7 +194,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
-								return errors.New("Missing argument 'NAME'.")
+								return errors.New("missing argument 'NAME'")
 							}
 							return env.CreateEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"), fs)
 						}},
@@ -236,10 +235,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
-								return errors.New("Missing argument 'NAME'.")
+								return errors.New("missing argument 'NAME'")
 							}
-							env.SetCurrentEnv(c.StringArg("ENV"), c.Bool("init"), fs)
-							return nil
+							return env.SetCurrentEnv(c.StringArg("ENV"), c.Bool("init"), fs)
 						}},
 					{
 						Name:                     "show",
@@ -251,26 +249,26 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 					Action: func(ctx context.Context, c *cli.Command) error {
-						fmt.Fprintf(c.Root().Writer, "%s\n", utils.CurrentEnv)
+						_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.CurrentEnv)
 						return nil
 					}},
 				},
-		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-			return ctx, inception.Init_needed(fs)
-		},
-	},
-	{
-		Name:                     "init",
-		Usage:                    "Initialize the manager",
-		UsageText:                appName + " init [OPTIONS]",
-		HideHelp:                 true,
-		CommandNotFound:          CommandNotFound,
-		OnUsageError:             OnUsageError,
-		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			return inception.Init(fs)
-		},
-	},
+				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+					return ctx, inception.Init_needed(fs)
+				},
+			},
+			{
+				Name:                     "init",
+				Usage:                    "Initialize the manager",
+				UsageText:                appName + " init [OPTIONS]",
+				HideHelp:                 true,
+				CommandNotFound:          CommandNotFound,
+				OnUsageError:             OnUsageError,
+				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return inception.Init(fs)
+				},
+			},
 			{
 				Name:                  "tf",
 				Usage:                 "Manage terraform commands",
@@ -296,7 +294,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
@@ -378,7 +376,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
@@ -458,7 +456,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
 							if c.StringArg("LOCK-ID") == "" {
-								return errors.New("Missing Argument 'LOCK_ID'.")
+								return errors.New("missing argument 'LOCK_ID'")
 
 							}
 							args := append([]string{}, c.StringArg("LOCK-ID"))
@@ -481,7 +479,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("Choice") != "init" && c.StringArg("Choice") != "plan" && c.StringArg("Choice") != "apply" {
-								return errors.New("Missing Argument '{init|plan|apply}' Choose one of the choices: init, plan or apply.")
+								return errors.New("missing argument '{init|plan|apply}' choose one of the choices: init, plan or apply")
 							}
 							logger.Zap.Info("Options:\n" + tf.ArgsPrint(c.StringArg("Choice"), c.String("site")))
 							return nil
@@ -499,9 +497,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing-config", Usage: "Allow import when no resource configuration block exists."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
-							//Requires BOOLEAN value -- Reversing
+							// Requires BOOLEAN value -- Reversing
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a variable in the Terraform configuration. This flag can be set multiple times."},
@@ -512,10 +510,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
 							if c.StringArg("ADDR") == "" {
-								return errors.New("Missing argument 'ADDR'.")
+								return errors.New("missing argument 'ADDR'")
 							}
 							if c.StringArg("ID") == "" {
-								return errors.New("Missing argument 'ID'.")
+								return errors.New("missing argument 'ID'")
 							}
 							args := append([]string{}, c.StringArg("ADDR"), c.StringArg("ID"))
 							if c.Bool("allow-missing-config") {
@@ -545,14 +543,14 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Usage:     "Prepare your working directory for other commands",
 						UsageText: appName + " tf init [OPTIONS]",
 						Flags: []cli.Flag{
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-backend", Usage: "Disable backend or Terraform Cloud initialization for this configuration and use what what was previously initialized instead."},
 							&cli.BoolFlag{Name: "force-copy", Usage: "Allow import when no resource configuration block exists."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-get", Usage: "Disable downloading modules for this configuration."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Disable interactive prompts. Note that some actions may require interactive prompts and will error if input is disabled."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "reconfigure", Usage: "Reconfigure a backend, ignoring any saved configuration."},
@@ -634,14 +632,14 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						UsageText: appName + " tf plan [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "destroy", Usage: "Select the 'destroy' planning mode, which creates a plan to destroy all objects currently managed by this"},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during backend migration. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "refresh-only", Usage: "Select the 'refresh only' planning mode, which checks whether remote objects still match the outcome of the most recent Terraform apply but does not propose any actions to undo any changes made outside of Terraform."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
@@ -711,7 +709,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if len(c.StringArgs("Providers")) == 0 {
-										return errors.New("Missing arguments 'PROVIDERS...'.")
+										return errors.New("missing arguments 'PROVIDERS...'")
 									}
 									args = append(args, c.StringArgs("Providers")...)
 									if c.String("fs-mirror") != "" {
@@ -744,7 +742,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if c.StringArg("DIR") == "" {
-										return errors.New("Missing argument 'TARGET_DIR'.")
+										return errors.New("missing argument 'TARGET_DIR'")
 									}
 									args = append(args, c.StringArg("DIR"))
 									if c.String("platform") != "" {
@@ -782,9 +780,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Usage:     "Update the state to match remote systems",
 						UsageText: appName + " tf refresh [OPTIONS]",
 						Flags: []cli.Flag{
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-input", Usage: "Don't ask for input for variables if not directly set."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Resource to target. Operation will be limited to this resource and its dependencies. This flag can be used multiple times."},
@@ -898,10 +896,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if c.StringArg("SOURCE") == "" {
-										return errors.New("Missing argument 'SOURCE'.")
+										return errors.New("missing argument 'SOURCE'")
 									}
 									if c.StringArg("DESTINATION") == "" {
-										return errors.New("Missing argument 'DESTINATION'.")
+										return errors.New("missing argument 'DESTINATION'")
 									}
 									args = append(args, c.String("SOURCE"), c.String("DESTINATION"))
 									if c.Bool("dry-run") {
@@ -945,7 +943,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if c.StringArg("PATH") == "" {
-										return errors.New("Missing argument 'PATH'.")
+										return errors.New("missing argument 'PATH'")
 									}
 									args = append(args, c.StringArg("PATH"))
 									if c.Bool("force") {
@@ -980,10 +978,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if c.StringArg("FROM_FQDN") == "" {
-										return errors.New("Missing argument 'FROM_PROVIDER_FQDN'.")
+										return errors.New("missing argument 'FROM_PROVIDER_FQDN'")
 									}
 									if c.StringArg("TO_FQDN") == "" {
-										return errors.New("Missing argument 'TO_PROVIDER_FQDN'.")
+										return errors.New("missing argument 'TO_PROVIDER_FQDN'")
 									}
 									args = append(args, c.StringArg("FROM_FQDN"), c.StringArg("TO_FQDN"))
 									if c.Bool("auto-approve") {
@@ -1022,7 +1020,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if c.StringArg("ADDR") == "" {
-										return errors.New("Missing argument 'ADDR'.")
+										return errors.New("missing argument 'ADDR'")
 									}
 									args = append(args, c.StringArg("ADDR"))
 									if c.Bool("dry-run") {
@@ -1062,7 +1060,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									options := []string{}
 									args := []string{}
 									if c.StringArg("ADDR") == "" {
-										return errors.New("Missing argument 'ADDR'.")
+										return errors.New("missing argument 'ADDR'")
 									}
 									args = append(args, c.StringArg("ADDR"))
 									if c.String("state") != "" {
@@ -1087,7 +1085,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing", Usage: "If specified, the command will succeed (exit code 0) even if the resource is missing."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
@@ -1098,7 +1096,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
 							if c.StringArg("ADDR") == "" {
-								return errors.New("Missing argument 'ADDR'.")
+								return errors.New("missing argument 'ADDR'")
 							}
 							args := append([]string{}, c.StringArg("ADDR"))
 							if c.Bool("allow-missing") {
@@ -1128,7 +1126,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "allow-missing", Usage: "If specified, the command will succeed (exit code 0) even if the resource is missing."},
-							//Requires BOOLEAN value --> Reversing
+							// Requires BOOLEAN value --> Reversing
 							&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 							&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 							&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
@@ -1139,7 +1137,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
 							if c.StringArg("ADDR") == "" {
-								return errors.New("Missing argument 'ADDR'.")
+								return errors.New("missing argument 'ADDR'")
 							}
 							args := append([]string{}, c.StringArg("ADDR"))
 							if c.Bool("allow-missing") {
@@ -1204,9 +1202,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageErrorSite,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 
-			err := inception.Init_needed(fs)
+					err := inception.Init_needed(fs)
 					if err != nil {
 						return ctx, err
 					}
@@ -1215,15 +1213,17 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 					site := c.String("site")
 					if strings.Contains(site, "site_") {
 						logger.Zap.Warn("There is no need to pass the 'site_' prefix.")
-						c.Set("site", strings.TrimPrefix(site, "site_"))
+						if err := c.Set("site", strings.TrimPrefix(site, "site_")); err != nil {
+							return ctx, err
+						}
 					}
-					//Changing site again fo correct display of the errors
+					// Changing site again fo correct display of the errors
 					site = c.String("site")
 
 					if _, err := fs.Stat("site_" + site); os.IsNotExist(err) && slices.Contains(sites, c.String("site")) {
-						return ctx, errors.New("The site " + site + " exists but is missing inside the config file.")
+						return ctx, errors.New("the site " + site + " exists but is missing inside the config file")
 					} else if site != "" && !slices.Contains(sites, c.String("site")) {
-						return ctx, errors.New("The site " + site + " does not exist.")
+						return ctx, errors.New("the site " + site + " does not exist")
 					}
 
 					return ctx, nil

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//It wont be tested the execution of terraform commands, because its inviable to test a running executable.
-//Creating mocks doesn't represent the "true output" of the execution of the command
+// It wont be tested the execution of terraform commands, because its inviable to test a running executable.
+// Creating mocks doesn't represent the "true output" of the execution of the command
 
 // It only be tested the Building of the terraform commands and if its correct.
 // If this passes the execution of terraform will also be correct, external factors, like not having terraform installed are reported as a error in the program.
@@ -18,7 +18,7 @@ import (
 // This test will also validate the NeedOptionsBuilder function
 func TestArgsPrint(t *testing.T) {
 
-	//Define the variables begin used
+	// Define the variables begin used
 	site := "site"
 	current_env = "env"
 	org := "org"
@@ -26,24 +26,24 @@ func TestArgsPrint(t *testing.T) {
 	backend_dir := "BACKEND_PATH"
 	variables_dir := "VARIABLES_PATH"
 
-	//Defining the global constants used
-	settings.Conf.Set("general.organization", org)
-	settings.Conf.Set("environments.default.name", default_env)
+	// Defining the global constants used
+	_ = settings.Conf.Set("general.organization", org)
+	_ = settings.Conf.Set("environments.default.name", default_env)
 	utils.Paths["backends"] = backend_dir
 	utils.Paths["variables"] = variables_dir
 
-	//Command Init on site inception
+	// Command Init on site inception
 	initArgsInception := ArgsPrint("init", "inception")
-	//Valid Output
+	// Valid Output
 	initArgsInceptionOutput := "-backend-config " + backend_dir + "/" + org + "-" + default_env + "-inception.tfvars"
 
-	//Command Init on another site
+	// Command Init on another site
 	initArgsSite := ArgsPrint("init", site)
 	initArgsSiteOutput := "-backend-config " + backend_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"
 
-	//Command Plan
+	// Command Plan
 	planArgs := ArgsPrint("plan", site)
-	//Command Apply
+	// Command Apply
 	applyArgsSite := ArgsPrint("apply", site)
 
 	// Plan and Apply should have the same output
@@ -59,11 +59,11 @@ func TestArgsPrint(t *testing.T) {
 }
 
 func TestCommandBuilder(t *testing.T) {
-	//A valid structure for a terraform command
+	// A valid structure for a terraform command
 	validTerraformCommand1 := CommandBuilder("cmd", "site", []string{"arg1", "arg2"}, []string{"flag1", "flag2"}, "")
 	validOutput1 := []string{"terraform", "cmd", "flag1", "flag2", "arg1", "arg2"}
 
-	//A valid structure for a terraform command with a subcommand, where the subcommand should be split
+	// A valid structure for a terraform command with a subcommand, where the subcommand should be split
 	validTerraformCommand2 := CommandBuilder("cmd subcommand", "site", []string{"arg1", "arg2"}, []string{"flag1", "flag2"}, "")
 	validOutput2 := []string{"terraform", "cmd", "subcommand", "flag1", "flag2", "arg1", "arg2"}
 

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"os"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -12,11 +11,11 @@ func TestInitPaths(t *testing.T) {
 
 	rootDir := "ROOT"
 
-	os.Setenv("TERRABUTLER_ROOT", rootDir)
+	t.Setenv("TERRABUTLER_ROOT", rootDir)
 
 	Paths, err := init_paths()
 
-	assert.NoError(t, err, "An error occured.")
+	assert.NoError(t, err, "An error occurred.")
 
 	assert.Equal(t, Paths["backends"], rootDir+"/configs/backends", "The path for backends is incorrect.")
 	assert.Equal(t, Paths["environment"], rootDir+"/site_inception/.terraform/environment", "The path for environment is incorrect.")
@@ -34,15 +33,15 @@ func TestValidSemanticVersion(t *testing.T) {
 
 func TestValidCurrentEnv(t *testing.T) {
 
-	//Defining Paths
+	// Defining Paths
 	Paths["environment"] = "ROOT/site_inception/.terraform/environment"
 	envName := "env"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating the environment file
-	afero.WriteFile(fs, Paths["environment"], []byte(envName), 0644)
+	// Creating the environment file
+	_ = afero.WriteFile(fs, Paths["environment"], []byte(envName), 0644)
 
 	env, err := getCurrentEnv(fs)
 

@@ -28,7 +28,7 @@ func inception_init_check(fs afero.Fs) bool {
 func Init_needed(fs afero.Fs) error {
 
 	if !inception_init_check(fs) {
-		return errors.New("The initialization hasn't been made yet. Please execute the following command to initialize it: terrabutler init")
+		return errors.New("the initialization hasn't been made yet. Please execute the following command to initialize it: terrabutler init")
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func Init(fs afero.Fs) error {
 		if err != nil {
 			return errors.New("There was an error while doing the initialization, Error info: " + err.Error())
 		}
-		//Try opening the new inception dir and create a file and write a file
+		// Try opening the new inception dir and create a file and write a file
 		f, err := fs.OpenFile(inception_dir+"/.terraform/environment", os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			return errors.New("The file that manages the environments could not be created, Error info: " + err.Error())
@@ -53,9 +53,11 @@ func Init(fs afero.Fs) error {
 		if err != nil {
 			return errors.New("Writing on the file that manages the environments wasn't possible, Error info: " + err.Error())
 		}
-		f.Close()
+		if err := f.Close(); err != nil {
+			return errors.New("failed to close the environment file: " + err.Error())
+		}
 
-		//If all is ok, display successfully inception
+		// If all is ok, display successfully inception
 		logger.Zap.Info("The initialization was successful!")
 	} else {
 		logger.Zap.Warn("The initialization was already done.")

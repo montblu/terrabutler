@@ -22,11 +22,11 @@ func TestConfirmationMenu(t *testing.T) {
 	yesResponse := bytes.NewBuffer([]byte("yes"))
 	scanner := bufio.NewScanner(yesResponse)
 
-	//Calling the function
+	// Calling the function
 	choiceYes, err := confirmationMenu(questionString, *scanner)
 
 	// Valitaing the result
-	assert.NoError(t, err, "Failed, an error occured while giving a Yes input.")
+	assert.NoError(t, err, "Failed, an error occurred while giving a Yes input.")
 	assert.Equal(t, true, choiceYes, "Failed, the input was yes, but returned false")
 
 	// Same for the invalid response
@@ -34,14 +34,14 @@ func TestConfirmationMenu(t *testing.T) {
 	scanner = bufio.NewScanner(noResponse)
 	choiceNo, err := confirmationMenu(questionString, *scanner)
 	assert.Equal(t, false, choiceNo, "Failed, the input was no/invalid, but returned true")
-	assert.NoError(t, err, "Failed, an error occured while giving a invalid/no input")
+	assert.NoError(t, err, "Failed, an error occurred while giving a invalid/no input")
 
 }
 
 func TestProtectedEnv(t *testing.T) {
 
 	// Defining the settings values
-	settings.Conf.Set("environments.permanent", []string{"OtherEnv1", "protectedEnv", "OtherEnv2"})
+	_ = settings.Conf.Set("environments.permanent", []string{"OtherEnv1", "protectedEnv", "OtherEnv2"})
 
 	assert.Equal(t, true, isProtectedEnv("protectedEnv"), "Failed, the environment is in the list of the protected environments.")
 	assert.Equal(t, false, isProtectedEnv("randomEnv"), "Failed, the environment is not in the list of the protected environments.")
@@ -74,26 +74,26 @@ func TestSetCurrentEnv(t *testing.T) {
 	runnerNoVisibleOutput = mockRunner
 	initAllSites = mockFunc
 
-	//Defining the environment file path
+	// Defining the environment file path
 	utils.Paths["environment"] = "PATH/environment"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Choose a existing env from the mockGetAvailableEnvs
+	// Choose a existing env from the mockGetAvailableEnvs
 	env := "env1"
 
-	//Run the tests for a valid environment
-	assert.NoError(t, SetCurrentEnv(env, false, fs), "Failed, the enviroment is in the list of available environments.")
+	// Run the tests for a valid environment
+	assert.NoError(t, SetCurrentEnv(env, false, fs), "Failed, the environment is in the list of available environments.")
 	newEnv, err := afero.ReadFile(fs, utils.Paths["environment"])
 	assert.NoError(t, err, "Failed, the environment file couldn't be readen.")
 	assert.Equal(t, env, string(newEnv), "Failed, the environment file wasn't been updated.")
 
-	//Choosing a invalid environment
+	// Choosing a invalid environment
 	env = "invalid"
 
-	//Run the tests for a invalid environment
-	assert.Error(t, SetCurrentEnv(env, false, fs), "Failed, the enviroment is not in the list of available environments.")
+	// Run the tests for a invalid environment
+	assert.Error(t, SetCurrentEnv(env, false, fs), "Failed, the environment is not in the list of available environments.")
 	newEnv, err = afero.ReadFile(fs, utils.Paths["environment"])
 	assert.NoError(t, err, "Failed, the environment file couldn't be readen.")
 	assert.NotEqual(t, env, string(newEnv), "Failed, the environment file was been updated to an invalid environment.")
@@ -103,36 +103,36 @@ func TestSetCurrentEnv(t *testing.T) {
 // Verify files where deleted
 func TestDeleteEnv(t *testing.T) {
 
-	//Mocking GetAvailableEnvironments
+	// Mocking GetAvailableEnvironments
 	GetAvailableEnvs = mockGetAvailableEnvs
-	//Mocking tf commands
+	// Mocking tf commands
 	commandRunner = mockCommandRunner
 
-	//Defining the variables used
+	// Defining the variables used
 	org := "org"
-	settings.Conf.Set("general.organization", org)
+	_ = settings.Conf.Set("general.organization", org)
 	// The protected envs should exist in the mock GetAvailableEnvironments
 	protectedEnvs := []string{"env0", "env3"}
-	settings.Conf.Set("environments.permanent", protectedEnvs)
+	_ = settings.Conf.Set("environments.permanent", protectedEnvs)
 	// Defining the current environment
 	current_env = "env0"
 	// The environment to be deleted
 	env := "env1"
 
-	//Defining the environment file path
+	// Defining the environment file path
 	utils.Paths["variables"] = "PATH"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	afero.WriteFile(fs, utils.Paths["variables"]+"/"+org+"-"+env+"-site.tfvars", nil, 0644)
-	afero.WriteFile(fs, utils.Paths["variables"]+"/"+org+"-"+env+".tfvars", nil, 0644)
+	_ = afero.WriteFile(fs, utils.Paths["variables"]+"/"+org+"-"+env+"-site.tfvars", nil, 0644)
+	_ = afero.WriteFile(fs, utils.Paths["variables"]+"/"+org+"-"+env+".tfvars", nil, 0644)
 
 	assert.NoError(t, DeleteEnv(env, true, false, fs), "Failed, the environment was a valid one.")
 
-	//Verify if all the file were deleted
+	// Verify if all the file were deleted
 	files, err := afero.ReadDir(fs, utils.Paths["variables"])
-	assert.NoError(t, err, "Failed, an error has occured while reading the variables folder.")
+	assert.NoError(t, err, "Failed, an error has occurred while reading the variables folder.")
 	for _, file := range files {
 		if !file.IsDir() {
 			if strings.Contains(file.Name(), org+"-"+env) {
@@ -141,7 +141,7 @@ func TestDeleteEnv(t *testing.T) {
 		}
 	}
 
-	//Trying to delete a invalid environment
+	// Trying to delete a invalid environment
 	env = "invalid"
 	assert.NoError(t, DeleteEnv(env, true, false, fs), "Failed, the environment doesn't exist, should give a warning.")
 	// Trying to delete the current environment
@@ -159,8 +159,8 @@ func TestCreateEnv(t *testing.T) {
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating the settings file
-	afero.WriteFile(fs, settings.Path, []byte(`
+	// Creating the settings file
+	_ = afero.WriteFile(fs, settings.Path, []byte(`
 environments:
     default:
         domain: domain
@@ -187,23 +187,23 @@ sites:
 	// The new environment to be created
 	newEnv := "newEnv"
 
-	//Mocking GetAvailableEnvironments
+	// Mocking GetAvailableEnvironments
 	GetAvailableEnvs = mockGetAvailableEnvs
-	//Mocking tf commands
+	// Mocking tf commands
 	commandRunner = mockCommandRunner
 
-	//Update the settings
+	// Update the settings
 	assert.NoError(t, settings.Validate_settings(fs), "Failed, the created settings file should be a valid one.")
 
 	assert.NoError(t, CreateEnv(newEnv, true, false, true, fs), "Failed, the environment to be created is a valid one.")
-	//Update the settings
+	// Update the settings
 	assert.NoError(t, settings.Validate_settings(fs), "Failed, the updated settings file should be a valid one.")
-	//Get the new permanent environments
+	// Get the new permanent environments
 	newPermanentEnvs := settings.Conf.Strings("environments.permanent")
 	assert.Contains(t, newPermanentEnvs, newEnv, "Failed, the settings file wasn't been updated correctly.")
 
 	// Trying to create a invalid environment
-	//Is a environment that already exists
+	// Is a environment that already exists
 	newEnv = "env2"
 	assert.NoError(t, CreateEnv(newEnv, true, false, true, fs), "Failed, the environment already exists, should give a warning.")
 
