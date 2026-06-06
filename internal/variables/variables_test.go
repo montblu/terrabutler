@@ -12,7 +12,7 @@ import (
 
 func TestGeneratePassword(t *testing.T) {
 
-	//Define password size
+	// Define password size
 	size := 25
 	password := generate_password(size)
 	assert.EqualValues(t, size, len(password), "Failed, the password its not being generated at the required size.")
@@ -21,20 +21,20 @@ func TestGeneratePassword(t *testing.T) {
 
 func TestGenerateVarFiles(t *testing.T) {
 
-	//Name of the temporary environment
+	// Name of the temporary environment
 	env := "tempEnv"
 	org := "org"
 	sites := []string{"site1", "site2"}
 	firebase_credentials := "DUMMY"
 	mail_password := "DUMMY"
 
-	//Define the settings file to get organization, sites, firebase_credentials and mail_password, all the settings defined to be used in the .j2 file
-	settings.Conf.Set("general.organization", org)
-	settings.Conf.Set("sites.ordered", sites)
-	settings.Conf.Set("environments.temporary.secrets.firebase_credentials", firebase_credentials)
-	settings.Conf.Set("environments.temporary.secrets.mail_password", mail_password)
+	// Define the settings file to get organization, sites, firebase_credentials and mail_password, all the settings defined to be used in the .j2 file
+	_ = settings.Conf.Set("general.organization", org)
+	_ = settings.Conf.Set("sites.ordered", sites)
+	_ = settings.Conf.Set("environments.temporary.secrets.firebase_credentials", firebase_credentials)
+	_ = settings.Conf.Set("environments.temporary.secrets.mail_password", mail_password)
 
-	//Define the path templates and the template files (The env and a another one)
+	// Define the path templates and the template files (The env and a another one)
 	variablesPath := "WRITE_PATH"
 	utils.Paths["variables"] = variablesPath
 	utils.Paths["templates"] = "PATH"
@@ -61,10 +61,10 @@ mailPassword = "` + mail_password + `"`
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	afero.WriteFile(fs, envTemplate, []byte(templateText), 0644)
-	afero.WriteFile(fs, template, []byte(templateText), 0644)
+	_ = afero.WriteFile(fs, envTemplate, []byte(templateText), 0644)
+	_ = afero.WriteFile(fs, template, []byte(templateText), 0644)
 
-	//Call the function
+	// Call the function
 	assert.NoError(t, Generate_var_files(env, fs), "Failed, the test wasn't supposed to fail, a valid template was provided.")
 
 	envTemplateData, err := afero.ReadFile(fs, variablesPath+"/"+org+"-"+env+".tfvars")

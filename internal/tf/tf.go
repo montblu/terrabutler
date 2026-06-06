@@ -17,11 +17,12 @@ var current_env = utils.CurrentEnv
 // Used for generate-options, prints arguments
 func ArgsPrint(command string, site string) string {
 	var needed_options string
-	if command == "init" {
+	switch command {
+	case "init":
 		needed_options = "backend"
-	} else if command == "plan" || command == "apply" {
+	case "plan", "apply":
 		needed_options = "var"
-	} else {
+	default:
 		needed_options = ""
 	}
 
@@ -34,22 +35,23 @@ func NeededOptionsBuilder(needed_options string, site string) []string {
 	org := settings.Conf.String("general.organization")
 	default_env := settings.Conf.String("environments.default.name")
 
-	if needed_options == "backend" {
+	switch needed_options {
+	case "backend":
 		backend_dir := utils.Paths["backends"]
 
-		if site == "inception" { //Init inception with default ENV
+		if site == "inception" { // Init inception with default ENV
 			return []string{"-backend-config", backend_dir + "/" + org + "-" + default_env + "-inception.tfvars"}
 		} else {
 			return []string{"-backend-config", backend_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"}
 		}
-	} else if needed_options == "var" {
+	case "var":
 		variables_dir := utils.Paths["variables"]
 
 		return []string{"-var-file", variables_dir + "/global.tfvars",
 			"-var-file", variables_dir + "/" + org + "-" + current_env + ".tfvars",
 			"-var-file", variables_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"}
 
-	} else { // If needed_options is empty, return empty slice
+	default:
 		return []string{}
 	}
 }
@@ -74,16 +76,16 @@ func CommandBuilder(command string, site string, args []string, options []string
 // Main runner function, which forms a terraform command and executes it
 func CommandRunner(command string, site string, args []string, options []string, needed_options string) error {
 
-	//Verifies if terraform exists
+	// Verifies if terraform exists
 	_, err := exec.LookPath("terraform")
 	if err != nil {
-		return errors.New("No Terraform executable found. Please install Terraform.")
+		return errors.New("no Terraform executable found. Please install Terraform")
 	}
 
-	//Builds the terraform command
+	// Builds the terraform command
 	runner_command := CommandBuilder(command, site, args, options, needed_options)
 
-	//Executes the command
+	// Executes the command
 	return Runner(runner_command, site)
 
 }
@@ -91,17 +93,18 @@ func CommandRunner(command string, site string, args []string, options []string,
 // Executes a command with its output on the console
 func Runner(command []string, site string) error {
 
-	//Runs the terraform command
+	// Runs the terraform command
+	//nolint:gosec // the command is built from internal constants, not user input
 	cmd := exec.Command(command[0], command[1:]...)
-	//Changes the current directory
+	// Changes the current directory
 	cmd.Dir = utils.Paths["root"] + "/site_" + site
-	//Uses the console input
+	// Uses the console input
 	cmd.Stdin = os.Stdin
-	//Prints the output to the console
+	// Prints the output to the console
 	cmd.Stdout = os.Stdout
-	//Prints the errors to the console
+	// Prints the errors to the console
 	cmd.Stderr = os.Stderr
-	//Runs the command
+	// Runs the command
 	err := cmd.Run()
 	if err != nil {
 		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + current_env + ", Error: " + err.Error())
@@ -112,16 +115,16 @@ func Runner(command []string, site string) error {
 // Runner function form a terraform commands that require no output visible
 func CommandRunnerNoVisibleOutput(command string, site string, args []string, options []string, needed_options string) ([]byte, error) {
 
-	//Verifies if terraform exists
+	// Verifies if terraform exists
 	_, err := exec.LookPath("terraform")
 	if err != nil {
-		return nil, errors.New("No Terraform executable found. Please install Terraform.")
+		return nil, errors.New("no Terraform executable found. Please install Terraform")
 	}
 
-	//Builds the terraform command
+	// Builds the terraform command
 	runner_command := CommandBuilder(command, site, args, options, needed_options)
 
-	//Executes the command
+	// Executes the command
 	return RunnerNoVisibleOutput(runner_command, site, os.Environ())
 
 }
@@ -129,15 +132,15 @@ func CommandRunnerNoVisibleOutput(command string, site string, args []string, op
 // Execute a command with a defined environment variables and no visible output
 func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]byte, error) {
 
-	//Runs the terraform command
+	//nolint:gosec // the command is built from internal constants, not user input
 	cmd := exec.Command(command[0], command[1:]...)
-	//Changes the current directory
+	// Changes the current directory
 	cmd.Dir = utils.Paths["root"] + "/site_" + site
-	//Defining Environment Variables
+	// Defining Environment Variables
 	cmd.Env = envVars
 	// Enabling error output
 	cmd.Stderr = os.Stderr
-	//Runs the command
+	// Runs the command
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + current_env + ", Error: " + err.Error())

@@ -17,7 +17,7 @@ run = "go test -cover ./..."
 
 [tasks.lint]
 description = "Run golangci-lint"
-run = "golangci-lint run"
+run = "golangci-lint run -c .github/lint/golangci.yaml"
 
 [tasks.lint-fix]
 description = "Run golangci-lint with auto-fix"

@@ -1,10 +1,11 @@
 package variables
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"slices"
 	"strings"
 
@@ -23,10 +24,10 @@ func Generate_var_files(env string, fs afero.Fs) error {
 
 	org := settings.Conf.String("general.organization")
 
-	//Get file templates
+	// Get file templates
 	templates, err := afero.ReadDir(fs, utils.Paths["templates"])
 	if err != nil {
-		return errors.New("Error reading templates directory.")
+		return errors.New("error reading templates directory")
 	}
 
 	// Initializing the data of the templates into a memory map, so it is compatible with tests
@@ -38,7 +39,7 @@ func Generate_var_files(env string, fs afero.Fs) error {
 		}
 	}
 
-	//Initializing file_loader
+	// Initializing file_loader
 	file_loader, err := loaders.NewMemoryLoader(templatesFilesData)
 	if err != nil {
 		return errors.New("Error initializing file_loader in templates dir, error: " + err.Error())
@@ -47,12 +48,12 @@ func Generate_var_files(env string, fs afero.Fs) error {
 	cfg := config.New()
 	cfg.StrictUndefined = true
 
-	//Get all the required fields
+	// Get all the required fields
 	sites := settings.Conf.Strings("sites.ordered")
 	firebase_credentials := settings.Conf.String("environments.temporary.secrets.firebase_credentials")
 	mail_password := settings.Conf.String("environments.temporary.secrets.mail_password")
 
-	//Remove inception from sites
+	// Remove inception from sites
 	if index := slices.Index(sites, "inception"); index != -1 {
 		sites = append(sites[:index], sites[index+1:]...)
 	}
@@ -68,17 +69,17 @@ func Generate_var_files(env string, fs afero.Fs) error {
 			"sites":                       sites,
 			"mail_password":               mail_password,
 			"firebase_credentials":        firebase_credentials}),
-		//Its Required to us a ControlStructure or the render fails
-		//Tests:             builtins.Tests,
+		// Its Required to us a ControlStructure or the render fails
+		// Tests:             builtins.Tests,
 		ControlStructures: builtins.ControlStructures,
 		// The other fields or optional
 		// Methods:           builtins.Methods,
 		// Filters:           builtins.Filters,
 	}
 
-	//os.Chdir(utils.Paths["templates"])
+	// os.Chdir(utils.Paths["templates"])
 
-	//For each template
+	// For each template
 	for _, template := range templates {
 
 		if !template.IsDir() {
@@ -97,27 +98,27 @@ func Generate_var_files(env string, fs afero.Fs) error {
 
 			name := strings.ReplaceAll(template.Name(), ".j2", "")
 
-			//If the name is env
+			// If the name is env
 			if name == "env" {
-				//Create new file and write the template output there
+				// Create new file and write the template output there
 				f, _ := fs.Create(utils.Paths["variables"] + "/" + org + "-" + env + ".tfvars")
 
 				l, err := f.Write(output)
 				if l == 0 && err != nil {
-					f.Close()
+					_ = f.Close()
 					return errors.New("An error has occurred writing to the file: " + err.Error())
 				}
-				err = f.Close()
+				_ = f.Close()
 			} else {
-				//Create new file and write the template output there
+				// Create new file and write the template output there
 				f, _ := fs.Create(utils.Paths["variables"] + "/" + org + "-" + env + "-" + name + ".tfvars")
 
 				l, err := f.Write(output)
 				if l == 0 && err != nil {
-					f.Close()
+					_ = f.Close()
 					return errors.New("An error has occurred writing to the file: " + err.Error())
 				}
-				f.Close()
+				_ = f.Close()
 			}
 		}
 	}
@@ -128,27 +129,32 @@ func Generate_var_files(env string, fs afero.Fs) error {
 
 func generate_password(size int) string {
 	characters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
-	charactersSplit := strings.Split(characters, "")
-	password := ""
+	charLen := big.NewInt(int64(len(characters)))
+	password := make([]byte, size)
 
 	logger.Zap.Debug(fmt.Sprintf("Size value: %d", size))
 
 	for i := 0; i < size; i++ {
-		password = password + charactersSplit[rand.Intn(len(charactersSplit))]
+		n, err := rand.Int(rand.Reader, charLen)
+		if err != nil {
+			logger.Zap.Error("failed to generate random number: " + err.Error())
+			return ""
+		}
+		password[i] = characters[n.Int64()]
 	}
-	return password
+	return string(password)
 }
 
 // The encryption of the AWS is not implemented, so the encoding and decoding is useless for now
 func encrypt_password(password string) string {
-	//region := settings.String("environments.default.region")
-	//key_id := settings.String("general.secrets_key_id")
+	// region := settings.String("environments.default.region")
+	// key_id := settings.String("general.secrets_key_id")
 
-	//This is Python version code....
+	// This is Python version code....
 	// environment = boto3.session.Session(profile_name=f"{ORG}-dev", region_name=REGION)
-	//kms = environment.client("kms")
-	//encrypted = kms.encrypt(KeyId=KEY_ID, Plaintext=password)
-	//password_encrypted = encrypted[u'CiphertextBlob']
+	// kms = environment.client("kms")
+	// encrypted = kms.encrypt(KeyId=KEY_ID, Plaintext=password)
+	// password_encrypted = encrypted[u'CiphertextBlob']
 
 	passEncoded := base64.StdEncoding.EncodeToString([]byte(password))
 	passDecoded, _ := base64.StdEncoding.DecodeString(passEncoded)

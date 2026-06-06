@@ -1,4 +1,4 @@
-//This file contains some functions that are used in the cli and the TextWrapper customized for the cli
+// This file contains some functions that are used in the cli and the TextWrapper customized for the cli
 
 package cli
 
@@ -38,7 +38,7 @@ func typeFlag(flag cli.Flag) string {
 		if strings.Compare(flag.Names()[0], "site") == 0 {
 			typeFlag = " SITE"
 		}
-		//Other types are ignored
+		// Other types are ignored
 	} else {
 		typeFlag = ""
 	}
@@ -80,17 +80,16 @@ func InvalidFlagAccessHandler(ctx context.Context, c *cli.Command, s string) {
 // Function for the Subcommands of tf, to show the required use of the flag -site
 func OnUsageErrorSite(ctx context.Context, cmd *cli.Command, err error, isSubcommand bool) error {
 
-	if err.Error() == "flag needs an argument: -site" {
+	switch {
+	case err.Error() == "flag needs an argument: -site":
 		fmt.Println("Usage: " + cmd.UsageText)
 		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
-		return errors.New("Option '-site' requires an argument.")
-	} else if err.Error() == "Required flag \"site\" not set" {
+		return errors.New("option '-site' requires an argument")
+	case err.Error() == "Required flag \"site\" not set":
 		fmt.Println("Usage: " + cmd.UsageText)
 		fmt.Println("Try '" + cmd.FullName() + " -h' for help.")
-		return errors.New("Missing option '-site'.")
-
-		//This case is treated in the InvalidFlagAccessHandler, and there you can know the flag 'name'
-	} else if strings.Contains(err.Error(), "flag provided but not defined:") {
+		return errors.New("missing option '-site'")
+	case strings.Contains(err.Error(), "flag provided but not defined:"):
 		return nil
 	}
 	return err

@@ -9,7 +9,7 @@ import (
 
 func TestWriteSettings(t *testing.T) {
 
-	//Path where the settings are
+	// Path where the settings are
 	Path = "PATH/settings.yml"
 	oldPath := "PATH/settingsOld.yml"
 
@@ -40,13 +40,13 @@ sites:
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating both settings files
-	afero.WriteFile(fs, Path, settingsFile, 0644)
-	afero.WriteFile(fs, oldPath, settingsFile, 0644)
+	// Creating both settings files
+	_ = afero.WriteFile(fs, Path, settingsFile, 0644)
+	_ = afero.WriteFile(fs, oldPath, settingsFile, 0644)
 
-	Validate_settings(fs)
+	_ = Validate_settings(fs)
 
-	//Modify current settings file, with the same use case in the program
+	// Modify current settings file, with the same use case in the program
 	envs := Conf.Strings("environments.permanent")
 	envs = append(envs, "NewEnvironment")
 	err := Conf.Set("environments.permanent", envs)
@@ -67,15 +67,15 @@ sites:
 
 func TestGetSettings(t *testing.T) {
 
-	//Path where the settings are
+	// Path where the settings are
 	Path = "PATH/settings.yml"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating the settings file
-	//It accepts empty files but they will fail in the validateSettings function
-	afero.WriteFile(fs, Path, []byte(``), 0644)
+	// Creating the settings file
+	// It accepts empty files but they will fail in the validateSettings function
+	_ = afero.WriteFile(fs, Path, []byte(``), 0644)
 
 	assert.NoError(t, get_settings(fs), "Failed, the file exists with an valid output.")
 
@@ -83,14 +83,14 @@ func TestGetSettings(t *testing.T) {
 
 func TestValidValidateSettings(t *testing.T) {
 
-	//Path where the settings are
+	// Path where the settings are
 	Path = "PATH/settings.yml"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating the settings file
-	afero.WriteFile(fs, Path, []byte(`
+	// Creating the settings file
+	_ = afero.WriteFile(fs, Path, []byte(`
 environments:
     default:
         domain: domain
@@ -120,7 +120,7 @@ sites:
 
 func TestInvalidGetSettings(t *testing.T) {
 
-	//Path where the settings are
+	// Path where the settings are
 	Path = "PATH/settings.yml"
 
 	// Use the in-memory filesystem
@@ -128,29 +128,29 @@ func TestInvalidGetSettings(t *testing.T) {
 
 	assert.Error(t, get_settings(fs), "Failed, the file doesn't exist.")
 
-	//If the file exists but have a invalid input
-	afero.WriteFile(fs, Path, []byte(`Invalid Input`), 0644)
+	// If the file exists but have a invalid input
+	_ = afero.WriteFile(fs, Path, []byte(`Invalid Input`), 0644)
 	assert.Error(t, get_settings(fs), "Failed, the file exists but the input is invalid.")
 
 }
 
 func TestInvalidValidateSettings(t *testing.T) {
 
-	//Path where the settings are
+	// Path where the settings are
 	Path = "PATH/settings.yml"
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	//Creating the settings file empty
-	afero.WriteFile(fs, Path, []byte(""), 0644)
+	// Creating the settings file empty
+	_ = afero.WriteFile(fs, Path, []byte(""), 0644)
 
 	assert.Error(t, Validate_settings(fs), "Failed, the settings file was empty.")
 
 	assert.Error(t, Validate_settings(fs), "Failed, the settings was the correct structure but its empty.")
 
-	//Writing the file with the correct structure but with invalid types
-	afero.WriteFile(fs, Path, []byte(`
+	// Writing the file with the correct structure but with invalid types
+	_ = afero.WriteFile(fs, Path, []byte(`
 environments:
     default:
         domain: null

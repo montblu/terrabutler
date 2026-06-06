@@ -40,38 +40,37 @@ func confirmationMenu(question string, scanner bufio.Scanner) (bool, error) {
 }
 
 func isProtectedEnv(env string) bool {
-
-	if slices.Contains(settings.Conf.Strings("environments.permanent"), env) {
-		return true
-	}
-	return false
+	return slices.Contains(settings.Conf.Strings("environments.permanent"), env)
 }
 
 func getAvailableEnvs(fs afero.Fs) ([]string, error) {
 
-	//List of env
+	// List of env
 	var envs []string
 
 	org := settings.Conf.String("general.organization")
 	default_env_name := settings.Conf.String("environments.default.name")
 
-	commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend")
+	_, err := commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend")
+	if err != nil {
+		return nil, err
+	}
 
 	workspaces, err := runnerNoVisibleOutput([]string{"terraform", "workspace", "list"}, "inception", os.Environ())
 	if err != nil {
 		return nil, errors.New("There was an error from terraform workspace for " + org + "-" + default_env_name + " environment. Error: " + err.Error())
 	}
-	//After getting the output string, its needed to
-	//Remove the new line
+	// After getting the output string, its needed to
+	// Remove the new line
 	workspaces_trim := strings.ReplaceAll(string(workspaces), "\n", "")
-	//Remove '*' and substitute with " " to still have the same number of " "
+	// Remove '*' and substitute with " " to still have the same number of " "
 	workspaces_trim = strings.ReplaceAll(workspaces_trim, "*", " ")
-	//Split the workspaces into a slice flag (Normally between each one exists 2 spaces)
+	// Split the workspaces into a slice flag (Normally between each one exists 2 spaces)
 	workspaces_split := strings.Split(workspaces_trim, "  ")
 	if len(workspaces_split) > 1 {
-		//Get the size of workspace
+		// Get the size of workspace
 		size := len(workspaces_split)
-		//Remove the first two members of the workspace (" " and default)
+		// Remove the first two members of the workspace (" " and default)
 		workspaces_split = workspaces_split[2:size]
 	}
 	envs = append(envs, workspaces_split...)
@@ -86,16 +85,16 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 		return errors.New("There was an error while getting the available environments. Error: " + err.Error())
 	}
 
-	//Check if env is the current in use
+	// Check if env is the current in use
 	if env == current_env {
 		logger.Zap.Warn("The environment you selected is the current one.")
 		logger.Zap.Warn("No changes were made.")
 		return nil
 	}
-	//Check if env exists
+	// Check if env exists
 	if !slices.Contains(available_envs, env) {
 		logger.Zap.Error("The environment '" + env + "' does not exist.")
-		return errors.New("You can create this environment with the 'new' command.")
+		return errors.New("you can create this environment with the 'new' command")
 	}
 	pre_hook := settings.Conf.String("hooks.pre_env_select")
 
@@ -110,31 +109,33 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 		}
 
 	}
-	//Get the pre_hook -> "pre_env_select", if exists
-	//Run pre_hook [CHANGE ENVIRONMENT: "TERRABUTLER_OLD_ENV": current_env, "TERRABUTLER_NEW_ENV": env]
-	//Show error if it occurs
+	// Get the pre_hook -> "pre_env_select", if exists
+	// Run pre_hook [CHANGE ENVIRONMENT: "TERRABUTLER_OLD_ENV": current_env, "TERRABUTLER_NEW_ENV": env]
+	// Show error if it occurs
 
-	//Try opening the file in path environments and writing the new env
-	//Show error if it fails
+	// Try opening the file in path environments and writing the new env
+	// Show error if it fails
 	f, err := fs.Create(utils.Paths["environment"])
 	if err != nil {
 		return errors.New("An error has occurred opening the environment file to update it: " + err.Error())
 	}
 	l, err := f.Write([]byte(env))
 	if l == 0 && err != nil {
-		f.Close()
+		_ = f.Close()
 		return errors.New("An error has occurred writing to the environment file to update it: " + err.Error())
 	}
-	err = f.Close()
+	_ = f.Close()
 
-	//If init true, run terraform_init_all_sites
+	// If init true, run terraform_init_all_sites
 	if init {
-		initAllSites()
+		if err := initAllSites(); err != nil {
+			return err
+		}
 	}
 
-	//Get the post_hook -> "post_env_select", if exists
-	//Run post_hook [CHANGE ENVIRONMENT: "TERRABUTLER_OLD_ENV": current_env, "TERRABUTLER_NEW_ENV": env]
-	//Show error if it occurs
+	// Get the post_hook -> "post_env_select", if exists
+	// Run post_hook [CHANGE ENVIRONMENT: "TERRABUTLER_OLD_ENV": current_env, "TERRABUTLER_NEW_ENV": env]
+	// Show error if it occurs
 	post_hook := settings.Conf.String("hooks.post_env_select")
 
 	if post_hook != "" {
@@ -149,7 +150,7 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 
 	}
 
-	//Show successfully message at the end
+	// Show successfully message at the end
 	logger.Zap.Info("Switched to environment '" + env + "'.")
 	return nil
 }
@@ -163,43 +164,43 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 		return errors.New("There was an error while getting the available environments. Error: " + err.Error())
 	}
 
-	//Check if env does exist
+	// Check if env does exist
 	if !slices.Contains(envs, env) {
 		logger.Zap.Error("The environment you are trying to delete does not exist.")
 		logger.Zap.Error("No changes were made.")
 		return nil
 	}
-	//Check if the env is the current in use
+	// Check if the env is the current in use
 	if env == current_env {
 		logger.Zap.Error("The environment you are trying to delete is your active environment.")
-		return errors.New("Please switch to another workspace and try again.")
+		return errors.New("please switch to another workspace and try again")
 
 	}
-	//Check if the env is permanent / use --> is_protected_env
+	// Check if the env is permanent / use --> is_protected_env
 	if isProtectedEnv(env) {
 		logger.Zap.Error("The environment you are trying to delete is a permanent environment and can not be deleted.")
-		return errors.New("No changes were made.")
+		return errors.New("no changes were made")
 	}
 
-	//Confirmation menu, if yes
+	// Confirmation menu, if yes
 	if !confirmation {
 		choice, err := confirmationMenu("Do you really want to delete '"+env+"' environment?", *bufio.NewScanner(os.Stdin))
 		if err != nil {
 			return err
 		}
 		if !choice {
-			return errors.New("Deletion cancelled.")
+			return errors.New("deletion cancelled")
 		}
 	}
 
-	//If destroy and is not a permanent env ^ already checked above, run tf_destroy_all_sites(env)
+	// If destroy and is not a permanent env ^ already checked above, run tf_destroy_all_sites(env)
 	if destroy {
 		err := destroyAllSites()
 		if err != nil {
 			return err
 		}
 	}
-	//For each file in variables, remove/delete it
+	// For each file in variables, remove/delete it
 	files, err := afero.ReadDir(fs, utils.Paths["variables"])
 	if err != nil {
 		return errors.New("There was a error while reading the directory to delete the environment " + env + ". Error: " + err.Error())
@@ -216,14 +217,14 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 		}
 	}
 
-	//Run the terraform workspace delete env [Path Inception] (with output and check)
+	// Run the terraform workspace delete env [Path Inception] (with output and check)
 	err = commandRunner("workspace delete "+env, "inception", []string{}, []string{}, "")
-	//Show a error message if process not executed correctly
+	// Show a error message if process not executed correctly
 	if err != nil {
 		return errors.New("here was an error while deleting the " + env + " environment: " + err.Error())
 	}
 
-	//In the end show a successfully executed message
+	// In the end show a successfully executed message
 	logger.Zap.Info("The environment '" + env + "' was deleted!")
 	return nil
 }
@@ -235,36 +236,38 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 		return errors.New("There was an error while getting the available environments. Error: " + err.Error())
 	}
 
-	//Check if env already exists
+	// Check if env already exists
 	if slices.Contains(envs, env) {
 		logger.Zap.Warn("The environment you are trying to create already exists.")
 		logger.Zap.Warn("No changes were made.")
 		return nil
 	}
 
-	//Make a confirmation menu
-	//If confirmation is true execute the function
+	// Make a confirmation menu
+	// If confirmation is true execute the function
 	if !confirmation {
 		choice, err := confirmationMenu("Do you really want to create '"+env+"' environment?", *bufio.NewScanner(os.Stdin))
 		if err != nil {
 			return err
 		}
 		if !choice {
-			return errors.New("Creation cancelled.")
+			return errors.New("creation cancelled")
 		}
 	}
 
-	//Run Terraform workspace new env [path inception] (with output and check)
+	// Run Terraform workspace new env [path inception] (with output and check)
 	err = commandRunner("workspace new "+env, "inception", []string{}, []string{}, "")
 	if err != nil {
 		return errors.New("here was an error while creating the new environment: " + err.Error())
 	}
 
-	//If temporary is true, generate the var files for the env
+	// If temporary is true, generate the var files for the env
 	if temporary {
-		variables.Generate_var_files(env, fs)
+		if err := variables.Generate_var_files(env, fs); err != nil {
+			return err
+		}
 	} else {
-		//Else is a permanent environment for the list
+		// Else is a permanent environment for the list
 		// Get the config file, append the new env to the config file and write the new config file
 		envs := settings.Conf.Strings("environments.permanent")
 		envs = append(envs, env)
@@ -278,8 +281,8 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 		}
 
 	}
-	//If temporary and apply are true, terraform_apply_all_sites
-	//Should OR apply?
+	// If temporary and apply are true, terraform_apply_all_sites
+	// Should OR apply?
 	if temporary && apply {
 		err := applyAllSites()
 		if err != nil {
@@ -287,7 +290,7 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 		}
 	}
 
-	//In the end show a successfully executed message
+	// In the end show a successfully executed message
 	logger.Zap.Info("Created and switched to the environment '" + env + "'!")
 	return nil
 
