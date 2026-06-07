@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func Generate_var_files(env string, fs afero.Fs) error {
+func GenerateVarFiles(env string, fs afero.Fs) error {
 
 	org := settings.Conf.String("general.organization")
 
@@ -65,7 +65,7 @@ func Generate_var_files(env string, fs afero.Fs) error {
 	environment := &exec.Environment{
 		Context: exec.NewContext(map[string]any{
 			"env":                         env,
-			"generate_encrypted_password": generate_encrypted_password,
+			"generate_encrypted_password": generateEncryptedPassword,
 			"sites":                       sites,
 			"mail_password":               mail_password,
 			"firebase_credentials":        firebase_credentials}),
@@ -127,7 +127,7 @@ func Generate_var_files(env string, fs afero.Fs) error {
 
 }
 
-func generate_password(size int) string {
+func generatePassword(size int) string {
 	characters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
 	charLen := big.NewInt(int64(len(characters)))
 	password := make([]byte, size)
@@ -146,7 +146,7 @@ func generate_password(size int) string {
 }
 
 // The encryption of the AWS is not implemented, so the encoding and decoding is useless for now
-func encrypt_password(password string) string {
+func encryptPassword(password string) string {
 	// region := settings.String("environments.default.region")
 	// key_id := settings.String("general.secrets_key_id")
 
@@ -161,7 +161,7 @@ func encrypt_password(password string) string {
 	return string(passDecoded)
 }
 
-func generate_encrypted_password(size int) string {
-	password := generate_password(size)
-	return encrypt_password(password)
+func generateEncryptedPassword(size int) string {
+	password := generatePassword(size)
+	return encryptPassword(password)
 }

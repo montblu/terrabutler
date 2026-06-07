@@ -13,7 +13,7 @@ func TestInitPaths(t *testing.T) {
 
 	t.Setenv("TERRABUTLER_ROOT", rootDir)
 
-	Paths, err := init_paths()
+	Paths, err := initPaths()
 
 	assert.NoError(t, err, "An error occurred.")
 
@@ -28,7 +28,7 @@ func TestInitPaths(t *testing.T) {
 }
 
 func TestValidSemanticVersion(t *testing.T) {
-	assert.NoError(t, Is_semantic_version("v3.3.3"), "Failed, a valid version was given.")
+	assert.NoError(t, IsSemanticVersion("v3.3.3"), "Failed, a valid version was given.")
 }
 
 func TestValidCurrentEnv(t *testing.T) {
@@ -50,7 +50,7 @@ func TestValidCurrentEnv(t *testing.T) {
 }
 
 func TestInvalidSemanticVersion(t *testing.T) {
-	assert.Error(t, Is_semantic_version("v1.Invalid.1"), "Failed, it was accepted a invalid semantic version.")
+	assert.Error(t, IsSemanticVersion("v1.Invalid.1"), "Failed, it was accepted a invalid semantic version.")
 }
 
 func TestInvalidCurrentEnv(t *testing.T) {

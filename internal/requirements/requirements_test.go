@@ -20,7 +20,7 @@ func TestRequirementsValid(t *testing.T) {
 	t.Setenv("TERRABUTLER_ROOT", "ROOT")
 	t.Setenv("TERRABUTLER_ENABLE", "true")
 
-	assert.NoError(t, Check_requirement(fs), "The test was not supposed to fail.")
+	assert.NoError(t, CheckRequirement(fs), "The test was not supposed to fail.")
 
 }
 
@@ -36,11 +36,11 @@ func TestRequirementsInvalidROOT(t *testing.T) {
 
 	t.Setenv("TERRABUTLER_ENABLE", "true")
 
-	assert.Error(t, Check_requirement(fs), "Failed, it was accepted with TERRABUTLER_ROOT empty")
+	assert.Error(t, CheckRequirement(fs), "Failed, it was accepted with TERRABUTLER_ROOT empty")
 
 	t.Setenv("TERRABUTLER_ROOT", "NOROOT")
 
-	assert.Error(t, Check_requirement(fs), "Failed, it was accepted with TERRABUTLER_ROOT set with the wrong directory")
+	assert.Error(t, CheckRequirement(fs), "Failed, it was accepted with TERRABUTLER_ROOT set with the wrong directory")
 
 }
 
@@ -55,15 +55,15 @@ func TestRequirementsInvalidENABLE(t *testing.T) {
 	_ = afero.WriteFile(fs, configPath, []byte(``), 0644)
 	t.Setenv("TERRABUTLER_ROOT", "ROOT")
 
-	assert.Error(t, Check_requirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE empty")
+	assert.Error(t, CheckRequirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE empty")
 
 	t.Setenv("TERRABUTLER_ENABLE", "false")
 
-	assert.Error(t, Check_requirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE set false")
+	assert.Error(t, CheckRequirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE set false")
 
 	t.Setenv("TERRABUTLER_ENABLE", "random")
 
-	assert.Error(t, Check_requirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE set with an invalid input")
+	assert.Error(t, CheckRequirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE set with an invalid input")
 
 }
 
@@ -76,17 +76,17 @@ func TestRequirementsInvalidConfigPath(t *testing.T) {
 	t.Setenv("TERRABUTLER_ENABLE", "true")
 
 	// No file exists
-	assert.Error(t, Check_requirement(fs), "Failed, it accepted a file which doesn't exists")
+	assert.Error(t, CheckRequirement(fs), "Failed, it accepted a file which doesn't exists")
 
 	configPath := "NOROOT/configs/settings.yml"
 	_ = afero.WriteFile(fs, configPath, []byte(``), 0644)
 
 	// A file ina different directory
-	assert.Error(t, Check_requirement(fs), "Failed, it accepted a file with a different in a different directory")
+	assert.Error(t, CheckRequirement(fs), "Failed, it accepted a file with a different in a different directory")
 
 	configPath = "ROOT/configs/settings.yaml"
 	_ = afero.WriteFile(fs, configPath, []byte(``), 0644)
 
 	// A file with a different name
-	assert.Error(t, Check_requirement(fs), "Failed, it accepted a file with a different name")
+	assert.Error(t, CheckRequirement(fs), "Failed, it accepted a file with a different name")
 }

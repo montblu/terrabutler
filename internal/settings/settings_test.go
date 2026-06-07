@@ -44,7 +44,7 @@ sites:
 	_ = afero.WriteFile(fs, Path, settingsFile, 0644)
 	_ = afero.WriteFile(fs, oldPath, settingsFile, 0644)
 
-	_ = Validate_settings(fs)
+	_ = ValidateSettings(fs)
 
 	// Modify current settings file, with the same use case in the program
 	envs := Conf.Strings("environments.permanent")
@@ -53,7 +53,7 @@ sites:
 
 	assert.NoError(t, err, "Failed, an error accessing the test files has occurred.")
 
-	assert.NoError(t, Write_settings(fs, Conf), "Failed, an error has occurred.")
+	assert.NoError(t, WriteSettings(fs, Conf), "Failed, an error has occurred.")
 
 	oldSettings, err := afero.ReadFile(fs, oldPath)
 	assert.NoError(t, err, "Failed, An error occurred while getting the data from the old settings file.")
@@ -77,7 +77,7 @@ func TestGetSettings(t *testing.T) {
 	// It accepts empty files but they will fail in the validateSettings function
 	_ = afero.WriteFile(fs, Path, []byte(``), 0644)
 
-	assert.NoError(t, get_settings(fs), "Failed, the file exists with an valid output.")
+	assert.NoError(t, getSettings(fs), "Failed, the file exists with an valid output.")
 
 }
 
@@ -114,7 +114,7 @@ sites:
     ordered:
         - inception`), 0644)
 
-	assert.NoError(t, Validate_settings(fs), "Failed, it was used a valid settings file.")
+	assert.NoError(t, ValidateSettings(fs), "Failed, it was used a valid settings file.")
 
 }
 
@@ -126,11 +126,11 @@ func TestInvalidGetSettings(t *testing.T) {
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	assert.Error(t, get_settings(fs), "Failed, the file doesn't exist.")
+	assert.Error(t, getSettings(fs), "Failed, the file doesn't exist.")
 
 	// If the file exists but have a invalid input
 	_ = afero.WriteFile(fs, Path, []byte(`Invalid Input`), 0644)
-	assert.Error(t, get_settings(fs), "Failed, the file exists but the input is invalid.")
+	assert.Error(t, getSettings(fs), "Failed, the file exists but the input is invalid.")
 
 }
 
@@ -145,9 +145,9 @@ func TestInvalidValidateSettings(t *testing.T) {
 	// Creating the settings file empty
 	_ = afero.WriteFile(fs, Path, []byte(""), 0644)
 
-	assert.Error(t, Validate_settings(fs), "Failed, the settings file was empty.")
+	assert.Error(t, ValidateSettings(fs), "Failed, the settings file was empty.")
 
-	assert.Error(t, Validate_settings(fs), "Failed, the settings was the correct structure but its empty.")
+	assert.Error(t, ValidateSettings(fs), "Failed, the settings was the correct structure but its empty.")
 
 	// Writing the file with the correct structure but with invalid types
 	_ = afero.WriteFile(fs, Path, []byte(`
@@ -171,5 +171,5 @@ hooks:
 sites:
     ordered: []`), 0644)
 
-	assert.Error(t, Validate_settings(fs), "Failed, the settings was the correct structure but has nil values.")
+	assert.Error(t, ValidateSettings(fs), "Failed, the settings was the correct structure but has nil values.")
 }

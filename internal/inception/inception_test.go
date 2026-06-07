@@ -21,7 +21,7 @@ func TestInitNeeded(t *testing.T) {
 	// Creating environment file initialized with env
 	_ = afero.WriteFile(fs, utils.Paths["inception"]+"/.terraform/environment", []byte("env"), 0644)
 
-	assert.NoError(t, Init_needed(fs), "Failed, the environment file exists.")
+	assert.NoError(t, InitNeeded(fs), "Failed, the environment file exists.")
 
 }
 

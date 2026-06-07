@@ -20,13 +20,13 @@ import (
 // - Validates the settings
 // - Writes the settings
 
-var Path = utils.Settings_path()
+var Path = utils.SettingsPath()
 
 // Global koanf instance, it has the Settings Configuration
 var Conf = koanf.New(".")
 
 // Loads the settings from the settings.yaml
-func get_settings(fs afero.Fs) error {
+func getSettings(fs afero.Fs) error {
 
 	// Load default values using the confmap provider.
 	if err := Conf.Load(confmap.Provider(map[string]any{
@@ -60,10 +60,10 @@ func get_settings(fs afero.Fs) error {
 }
 
 // Validates the settings files
-func Validate_settings(fs afero.Fs) error {
+func ValidateSettings(fs afero.Fs) error {
 
 	// Gets the settings
-	err := get_settings(fs)
+	err := getSettings(fs)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func Validate_settings(fs afero.Fs) error {
 }
 
 // Writes settings file
-func Write_settings(fs afero.Fs, newSettings *koanf.Koanf) error {
+func WriteSettings(fs afero.Fs, newSettings *koanf.Koanf) error {
 
 	// Marshal the new Settings file as a yaml file
 	b, _ := newSettings.Marshal(yaml.Parser())
