@@ -45,7 +45,7 @@ func TestInit(t *testing.T) {
 
 	// Validate the environment file created
 	env, err := afero.ReadFile(fs, utils.Paths["inception"]+"/.terraform/environment")
-	assert.NoError(t, err, "Failed, the environment file couldn't be redden.")
+	assert.NoError(t, err, "Failed, the environment file couldn't be read.")
 
 	// See if the content is correct
 	assert.Equal(t, settings.Conf.String("environments.default.name"), string(env), "Failed, the default environment name isn't correct in the environment file.")

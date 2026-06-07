@@ -23,7 +23,7 @@ func Check_requirement(fs afero.Fs) error {
 	// Getting the environment variables
 	err := k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
 	if err != nil {
-		return errors.New("An error occurred while loading the environment variables: " + error.Error(err))
+		return errors.New("An error occurred while loading the environment variables: " + err.Error())
 	}
 	root := k.String("TERRABUTLER_ROOT")
 	isEnabled := k.Bool("TERRABUTLER_ENABLE")
@@ -39,7 +39,7 @@ func Check_requirement(fs afero.Fs) error {
 	}
 	if _, err := fs.Stat(settingsFile); os.IsNotExist(err) {
 		//nolint:staticcheck // Terrabutler is a proper noun (project name)
-		return errors.New("Terrabutler can't find you settings file. Please create a 'settings.yml' file inside the 'configs' folder")
+		return errors.New("Terrabutler can't find your settings file. Please create a 'settings.yml' file inside the 'configs' folder")
 	}
 
 	return nil

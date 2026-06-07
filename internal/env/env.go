@@ -203,7 +203,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 	// For each file in variables, remove/delete it
 	files, err := afero.ReadDir(fs, utils.Paths["variables"])
 	if err != nil {
-		return errors.New("There was a error while reading the directory to delete the environment " + env + ". Error: " + err.Error())
+		return errors.New("There was an error while reading the directory to delete the environment " + env + ". Error: " + err.Error())
 	}
 	for _, file := range files {
 		if !file.IsDir() {
@@ -211,7 +211,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 				logger.Zap.Debug("Deleted File: " + file.Name())
 				err = fs.Remove(utils.Paths["variables"] + "/" + file.Name())
 				if err != nil {
-					return errors.New("There was a error while removing the file " + file.Name() + " of the environment " + env + ". Error: " + err.Error())
+					return errors.New("There was an error while removing the file " + file.Name() + " of the environment " + env + ". Error: " + err.Error())
 				}
 			}
 		}
@@ -221,7 +221,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 	err = commandRunner("workspace delete "+env, "inception", []string{}, []string{}, "")
 	// Show a error message if process not executed correctly
 	if err != nil {
-		return errors.New("here was an error while deleting the " + env + " environment: " + err.Error())
+		return errors.New("There was an error while deleting the " + env + " environment: " + err.Error())
 	}
 
 	// In the end show a successfully executed message
@@ -258,7 +258,7 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 	// Run Terraform workspace new env [path inception] (with output and check)
 	err = commandRunner("workspace new "+env, "inception", []string{}, []string{}, "")
 	if err != nil {
-		return errors.New("here was an error while creating the new environment: " + err.Error())
+		return errors.New("There was an error while creating the new environment: " + err.Error())
 	}
 
 	// If temporary is true, generate the var files for the env

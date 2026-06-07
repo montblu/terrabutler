@@ -63,7 +63,7 @@ func TestRequirementsInvalidENABLE(t *testing.T) {
 
 	t.Setenv("TERRABUTLER_ENABLE", "random")
 
-	assert.Error(t, Check_requirement(fs), "Failed,  it was accepted with TERRABUTLER_ENABLE set with a invalid input")
+	assert.Error(t, Check_requirement(fs), "Failed, it was accepted with TERRABUTLER_ENABLE set with an invalid input")
 
 }
 

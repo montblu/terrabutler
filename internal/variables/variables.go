@@ -69,10 +69,10 @@ func Generate_var_files(env string, fs afero.Fs) error {
 			"sites":                       sites,
 			"mail_password":               mail_password,
 			"firebase_credentials":        firebase_credentials}),
-		// Its Required to us a ControlStructure or the render fails
+		// It's required to use a ControlStructure or the render fails
 		// Tests:             builtins.Tests,
 		ControlStructures: builtins.ControlStructures,
-		// The other fields or optional
+		// The other fields are optional
 		// Methods:           builtins.Methods,
 		// Filters:           builtins.Filters,
 	}
