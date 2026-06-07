@@ -86,7 +86,7 @@ func TestSetCurrentEnv(t *testing.T) {
 	// Run the tests for a valid environment
 	assert.NoError(t, SetCurrentEnv(env, false, fs), "Failed, the environment is in the list of available environments.")
 	newEnv, err := afero.ReadFile(fs, utils.Paths["environment"])
-	assert.NoError(t, err, "Failed, the environment file couldn't be readen.")
+	assert.NoError(t, err, "Failed, the environment file couldn't be read.")
 	assert.Equal(t, env, string(newEnv), "Failed, the environment file wasn't been updated.")
 
 	// Choosing a invalid environment
@@ -95,7 +95,7 @@ func TestSetCurrentEnv(t *testing.T) {
 	// Run the tests for a invalid environment
 	assert.Error(t, SetCurrentEnv(env, false, fs), "Failed, the environment is not in the list of available environments.")
 	newEnv, err = afero.ReadFile(fs, utils.Paths["environment"])
-	assert.NoError(t, err, "Failed, the environment file couldn't be readen.")
+	assert.NoError(t, err, "Failed, the environment file couldn't be read.")
 	assert.NotEqual(t, env, string(newEnv), "Failed, the environment file was been updated to an invalid environment.")
 
 }

@@ -416,7 +416,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Name:      "fmt",
 						HideHelp:  true,
 						Usage:     "Reformat your configuration in the standardstyle",
-						UsageText: "terrabuter tf fmt [OPTIONS]",
+						UsageText: "terrabutler tf fmt [OPTIONS]",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{Name: "diff", Usage: "Display diffs of formatting changes."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
@@ -442,7 +442,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Name:      "force-unlock",
 						HideHelp:  true,
 						Usage:     "Release a stuck lock on the current workspace",
-						UsageText: "terrabuter tf force-unlock [OPTIONS] LOCK_ID",
+						UsageText: "terrabutler tf force-unlock [OPTIONS] LOCK_ID",
 						ArgsUsage: "LOCK_ID",
 						Arguments: []cli.Argument{&cli.StringArg{Name: "LOCK-ID", Value: ""}},
 						Flags: []cli.Flag{

@@ -39,7 +39,7 @@ func Check_requirement(fs afero.Fs) error {
 	}
 	if _, err := fs.Stat(settingsFile); os.IsNotExist(err) {
 		//nolint:staticcheck // Terrabutler is a proper noun (project name)
-		return errors.New("Terrabutler can't find you settings file. Please create a 'settings.yml' file inside the 'configs' folder")
+		return errors.New("Terrabutler can't find your settings file. Please create a 'settings.yml' file inside the 'configs' folder")
 	}
 
 	return nil
