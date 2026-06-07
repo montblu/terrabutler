@@ -23,7 +23,7 @@ func Check_requirement(fs afero.Fs) error {
 	// Getting the environment variables
 	err := k.Load(env.Provider(".", env.Opt{Prefix: "TERRABUTLER_"}), nil)
 	if err != nil {
-		return errors.New("An error occurred while loading the environment variables: " + error.Error(err))
+		return errors.New("An error occurred while loading the environment variables: " + err.Error())
 	}
 	root := k.String("TERRABUTLER_ROOT")
 	isEnabled := k.Bool("TERRABUTLER_ENABLE")
