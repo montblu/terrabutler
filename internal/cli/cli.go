@@ -220,9 +220,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name:    "init",
-								Aliases: []string{},
-								Usage:   "Disable auto init of the sites.",
+								Name:  "no-init",
+								Usage: "Skip auto init of the sites when selecting an environment.",
 							},
 							&cli.BoolFlag{
 								Name:    "s3",
@@ -237,7 +236,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.StringArg("ENV") == "" {
 								return errors.New("missing argument 'NAME'")
 							}
-							return env.SetCurrentEnv(c.StringArg("ENV"), c.Bool("init"), fs)
+							init := !c.Bool("no-init")
+							return env.SetCurrentEnv(c.StringArg("ENV"), init, fs)
 						}},
 					{
 						Name:                     "show",
