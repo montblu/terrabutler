@@ -236,7 +236,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.StringArg("ENV") == "" {
 								return errors.New("missing argument 'NAME'")
 							}
-							return env.SetCurrentEnv(c.StringArg("ENV"), c.Bool("init"), fs)
+							init := !c.Bool("no-init")
+							return env.SetCurrentEnv(c.StringArg("ENV"), init, fs)
 						}},
 					{
 						Name:                     "show",
