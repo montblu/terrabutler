@@ -220,9 +220,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Arguments: []cli.Argument{&cli.StringArg{Name: "ENV"}},
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name:    "init",
-								Aliases: []string{},
-								Usage:   "Disable auto init of the sites.",
+								Name:  "no-init",
+								Usage: "Skip auto init of the sites when selecting an environment.",
 							},
 							&cli.BoolFlag{
 								Name:    "s3",
