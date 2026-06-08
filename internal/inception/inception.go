@@ -15,7 +15,7 @@ import (
 // Creating var for mockable function
 var commandRunnerNoVisibleOutput = tf.CommandRunnerNoVisibleOutput
 
-func inception_init_check(fs afero.Fs) bool {
+func inceptionInitCheck(fs afero.Fs) bool {
 	dir := utils.Paths["inception"]
 	if _, err := fs.Stat(dir + "/.terraform"); !os.IsNotExist(err) {
 		if _, err2 := fs.Stat(dir + "/.terraform/environment"); !os.IsNotExist(err2) {
@@ -25,9 +25,9 @@ func inception_init_check(fs afero.Fs) bool {
 	return false
 }
 
-func Init_needed(fs afero.Fs) error {
+func InitNeeded(fs afero.Fs) error {
 
-	if !inception_init_check(fs) {
+	if !inceptionInitCheck(fs) {
 		return errors.New("the initialization hasn't been made yet. Please execute the following command to initialize it: terrabutler init")
 	}
 	return nil
@@ -38,7 +38,7 @@ func Init(fs afero.Fs) error {
 	default_env_name := settings.Conf.String("environments.default.name")
 	inception_dir := utils.Paths["inception"]
 
-	if !inception_init_check(fs) {
+	if !inceptionInitCheck(fs) {
 
 		_, err := commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend")
 		if err != nil {

@@ -193,11 +193,11 @@ sites:
 	commandRunner = mockCommandRunner
 
 	// Update the settings
-	assert.NoError(t, settings.Validate_settings(fs), "Failed, the created settings file should be a valid one.")
+	assert.NoError(t, settings.ValidateSettings(fs), "Failed, the created settings file should be a valid one.")
 
 	assert.NoError(t, CreateEnv(newEnv, true, false, true, fs), "Failed, the environment to be created is a valid one.")
 	// Update the settings
-	assert.NoError(t, settings.Validate_settings(fs), "Failed, the updated settings file should be a valid one.")
+	assert.NoError(t, settings.ValidateSettings(fs), "Failed, the updated settings file should be a valid one.")
 	// Get the new permanent environments
 	newPermanentEnvs := settings.Conf.Strings("environments.permanent")
 	assert.Contains(t, newPermanentEnvs, newEnv, "Failed, the settings file wasn't been updated correctly.")

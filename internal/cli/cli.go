@@ -23,7 +23,7 @@ import (
 func Run(appName, version, commit, date string, fs afero.Fs) error {
 
 	// Verify the semantic version
-	_ = utils.Is_semantic_version(version)
+	_ = utils.IsSemanticVersion(version)
 
 	// Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
@@ -59,10 +59,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 			if len(os.Args) > 1 && os.Args[1] == "version" {
 				return ctx, nil
 			}
-			if err := settings.Validate_settings(fs); err != nil {
+			if err := settings.ValidateSettings(fs); err != nil {
 				return ctx, err
 			}
-			if err := requirements.Check_requirement(fs); err != nil {
+			if err := requirements.CheckRequirement(fs); err != nil {
 				return ctx, err
 			}
 			return ctx, nil
@@ -254,7 +254,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 					}},
 				},
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-					return ctx, inception.Init_needed(fs)
+					return ctx, inception.InitNeeded(fs)
 				},
 			},
 			{
@@ -1204,7 +1204,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 
-					err := inception.Init_needed(fs)
+					err := inception.InitNeeded(fs)
 					if err != nil {
 						return ctx, err
 					}

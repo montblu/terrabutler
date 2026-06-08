@@ -14,7 +14,7 @@ func TestGeneratePassword(t *testing.T) {
 
 	// Define password size
 	size := 25
-	password := generate_password(size)
+	password := generatePassword(size)
 	assert.EqualValues(t, size, len(password), "Failed, the password its not being generated at the required size.")
 
 }
@@ -65,7 +65,7 @@ mailPassword = "` + mail_password + `"`
 	_ = afero.WriteFile(fs, template, []byte(templateText), 0644)
 
 	// Call the function
-	assert.NoError(t, Generate_var_files(env, fs), "Failed, the test wasn't supposed to fail, a valid template was provided.")
+	assert.NoError(t, GenerateVarFiles(env, fs), "Failed, the test wasn't supposed to fail, a valid template was provided.")
 
 	envTemplateData, err := afero.ReadFile(fs, variablesPath+"/"+org+"-"+env+".tfvars")
 	assert.NoError(t, err, "Failed, An error occurred while getting the data from the generated env template.")

@@ -12,7 +12,7 @@ import (
 )
 
 // Checks the requirements before running the application.
-func Check_requirement(fs afero.Fs) error {
+func CheckRequirement(fs afero.Fs) error {
 
 	// Sync logger
 	defer func() { _ = logger.Zap.Sync() }()

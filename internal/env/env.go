@@ -263,7 +263,7 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 
 	// If temporary is true, generate the var files for the env
 	if temporary {
-		if err := variables.Generate_var_files(env, fs); err != nil {
+		if err := variables.GenerateVarFiles(env, fs); err != nil {
 			return err
 		}
 	} else {
@@ -275,7 +275,7 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 		if err != nil {
 			return errors.New("Error adding the new environment to the config file. Error: " + err.Error())
 		}
-		err = settings.Write_settings(fs, settings.Conf)
+		err = settings.WriteSettings(fs, settings.Conf)
 		if err != nil {
 			return err
 		}

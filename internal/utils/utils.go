@@ -16,12 +16,12 @@ import (
 // - Define Paths
 // - Add semantic Versioning
 
-var Paths, _ = init_paths()
+var Paths, _ = initPaths()
 
 var CurrentEnv, _ = getCurrentEnv(afero.NewOsFs())
 
 // Function that initializes the Path Map
-func init_paths() (map[string]string, error) {
+func initPaths() (map[string]string, error) {
 
 	var paths = make(map[string]string)
 
@@ -47,12 +47,12 @@ func init_paths() (map[string]string, error) {
 }
 
 // Returns the settings path
-func Settings_path() string {
+func SettingsPath() string {
 	return Paths["settings"]
 }
 
 // Check if the version corresponds to the semantic versioning.
-func Is_semantic_version(version string) error {
+func IsSemanticVersion(version string) error {
 	if !semver.IsValid(version) {
 		return errors.New("the version of terrabutler is not valid")
 	}
