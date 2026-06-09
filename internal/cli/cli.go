@@ -116,12 +116,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								Aliases: []string{"Y"},
 								Usage:   "Delete without asking for confirmation.",
 							},
-							&cli.BoolFlag{
-								// Flags with more than 1 letter are shown with double dash, but it is still accepted with -
-								Name:    "s3",
-								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
-							},
+
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
@@ -136,12 +131,6 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						UsageText: appName + " env list [OPTIONS]",
 						HideHelp:  true,
 						Suggest:   true,
-						Flags: []cli.Flag{
-							&cli.BoolFlag{
-								Name:    "s3",
-								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
-							}},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -183,11 +172,6 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								Aliases: []string{"apply"},
 								Usage:   "Apply all terraform sites prior the creation of the environment.",
 							},
-							&cli.BoolFlag{
-								Name:    "s3",
-								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
-							},
 						},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
@@ -222,11 +206,6 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.BoolFlag{
 								Name:  "no-init",
 								Usage: "Skip auto init of the sites when selecting an environment.",
-							},
-							&cli.BoolFlag{
-								Name:    "s3",
-								Aliases: []string{"S3"},
-								Usage:   "Access S3 instead of parsing terraform output. (Not Used for Now)",
 							},
 						},
 						CommandNotFound:          CommandNotFound,
