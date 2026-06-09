@@ -116,7 +116,6 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								Aliases: []string{"Y"},
 								Usage:   "Delete without asking for confirmation.",
 							},
-
 						},
 						Action: func(ctx context.Context, c *cli.Command) error {
 							if c.StringArg("ENV") == "" {
