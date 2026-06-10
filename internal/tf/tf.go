@@ -183,6 +183,9 @@ func ApplyAllSites() error {
 	return nil
 }
 
+// Creating var for mockable function in tests
+var commandRunnerNoVisibleOutputVar = CommandRunnerNoVisibleOutput
+
 func InitAllSites() error {
 	sites := settings.Conf.Strings("sites.ordered")
 	// Remove "inception" from the list of sites to be initialized.
