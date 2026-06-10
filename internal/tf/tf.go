@@ -2,14 +2,19 @@ package tf
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/montblu/terrabutler/internal/logger"
 	"github.com/montblu/terrabutler/internal/settings"
 	"github.com/montblu/terrabutler/internal/utils"
+
+	"golang.org/x/term"
 )
 
 // Used for generate-options, prints arguments
