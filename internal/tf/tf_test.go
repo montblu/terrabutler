@@ -1,6 +1,8 @@
 package tf
 
 import (
+	"errors"
+	"sync"
 	"testing"
 
 	"github.com/montblu/terrabutler/internal/settings"
@@ -70,4 +72,51 @@ func TestCommandBuilder(t *testing.T) {
 	assert.Equal(t, validOutput1, validTerraformCommand1, "Failed, the first command build is not valid.")
 	assert.Equal(t, validOutput2, validTerraformCommand2, "Failed, the second command build is not valid.")
 
+}
+
+func TestInitAllSitesSuccess(t *testing.T) {
+	var mu sync.Mutex
+	callCount := 0
+	calledSites := []string{}
+
+	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+		mu.Lock()
+		callCount++
+		calledSites = append(calledSites, site)
+		mu.Unlock()
+		return nil, nil
+	}
+
+	settings.Conf.Set("sites.ordered", []string{"inception", "site-a", "site-b", "site-c"}) //nolint:errcheck
+
+	err := InitAllSites()
+
+	assert.NoError(t, err, "Init should not fail")
+	assert.Equal(t, 3, callCount, "Should init 3 sites (inception removed)")
+	assert.Equal(t, 3, len(calledSites), "All 3 sites should be called")
+	assert.NotContains(t, calledSites, "inception", "Inception should be filtered out")
+}
+
+func TestInitAllSitesWithErrors(t *testing.T) {
+	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+		if site == "site-b" {
+			return nil, errors.New("backend unavailable")
+		}
+		return nil, nil
+	}
+
+	settings.Conf.Set("sites.ordered", []string{"site-a", "site-b", "site-c"}) //nolint:errcheck
+
+	err := InitAllSites()
+
+	assert.Error(t, err, "Init should return error when some sites fail")
+	assert.Contains(t, err.Error(), "1/3 sites failed", "Error should indicate failure count")
+}
+
+func TestInitAllSitesEmptyList(t *testing.T) {
+	// Only inception in the list — after filtering, nothing left
+	settings.Conf.Set("sites.ordered", []string{"inception"}) //nolint:errcheck
+
+	err := InitAllSites()
+	assert.NoError(t, err, "Should not error when no sites to init")
 }
