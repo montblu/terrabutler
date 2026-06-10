@@ -115,7 +115,7 @@ func TestDeleteEnv(t *testing.T) {
 	protectedEnvs := []string{"env0", "env3"}
 	_ = settings.Conf.Set("environments.permanent", protectedEnvs)
 	// Defining the current environment
-	current_env = "env0"
+	utils.SetCurrentEnvForTest("env0")
 	// The environment to be deleted
 	env := "env1"
 
@@ -145,7 +145,7 @@ func TestDeleteEnv(t *testing.T) {
 	env = "invalid"
 	assert.NoError(t, DeleteEnv(env, true, false, fs), "Failed, the environment doesn't exist, should give a warning.")
 	// Trying to delete the current environment
-	assert.Error(t, DeleteEnv(current_env, true, false, fs), "Failed, the environment to be deleted is the current one.")
+	assert.Error(t, DeleteEnv("env0", true, false, fs), "Failed, the environment to be deleted is the current one.")
 	// Trying to delete a protected environment
 	env = "env3"
 	assert.Error(t, DeleteEnv(env, true, false, fs), "Failed, the environment to be deleted is a permanent one.")

@@ -43,7 +43,7 @@ func TestValidCurrentEnv(t *testing.T) {
 	// Creating the environment file
 	_ = afero.WriteFile(fs, Paths["environment"], []byte(envName), 0644)
 
-	env, err := getCurrentEnv(fs)
+	env, err := currentEnv(fs)
 
 	assert.Equal(t, env, envName, "Failed, returned name of the current environment is incorrect.")
 	assert.NoError(t, err, "Failed, an error occurred opening/reading the file.")
@@ -60,7 +60,7 @@ func TestInvalidCurrentEnv(t *testing.T) {
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
 
-	env, err := getCurrentEnv(fs)
+	env, err := currentEnv(fs)
 
 	assert.NotEqual(t, env, envName, "Failed, returned name of the current environment is the same.")
 	assert.Error(t, err, "Failed, there was no file to be read.")

@@ -17,8 +17,22 @@ import (
 // - Add semantic Versioning
 
 var Paths, _ = initPaths()
+var testEnv string
 
-var CurrentEnv, _ = getCurrentEnv(afero.NewOsFs())
+// GetCurrentEnv reads and returns the active environment from the filesystem.
+func GetCurrentEnv() string {
+	env, err := currentEnv(afero.NewOsFs())
+	if err != nil {
+		return ""
+	}
+	return env
+}
+
+// SetCurrentEnvForTest sets a mock environment override for tests.
+// Call with an empty string to reset.
+func SetCurrentEnvForTest(env string) {
+	testEnv = env
+}
 
 // Function that initializes the Path Map
 func initPaths() (map[string]string, error) {
@@ -59,8 +73,11 @@ func IsSemanticVersion(version string) error {
 	return nil
 }
 
-// Get current_environment
-func getCurrentEnv(fs afero.Fs) (string, error) {
+// currentEnv reads the environment file from the given filesystem.
+func currentEnv(fs afero.Fs) (string, error) {
+	if testEnv != "" {
+		return testEnv, nil
+	}
 
 	// Open site environment file
 	env, err := afero.ReadFile(fs, Paths["environment"])

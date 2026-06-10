@@ -12,8 +12,6 @@ import (
 	"github.com/montblu/terrabutler/internal/utils"
 )
 
-var current_env = utils.CurrentEnv
-
 // Used for generate-options, prints arguments
 func ArgsPrint(command string, site string) string {
 	var needed_options string
@@ -34,6 +32,7 @@ func ArgsPrint(command string, site string) string {
 func NeededOptionsBuilder(needed_options string, site string) []string {
 	org := settings.Conf.String("general.organization")
 	default_env := settings.Conf.String("environments.default.name")
+	current_env := utils.GetCurrentEnv()
 
 	switch needed_options {
 	case "backend":
@@ -107,7 +106,7 @@ func Runner(command []string, site string) error {
 	// Runs the command
 	err := cmd.Run()
 	if err != nil {
-		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + current_env + ", Error: " + err.Error())
+		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
 	}
 	return nil
 }
@@ -143,7 +142,7 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	// Runs the command
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + current_env + ", Error: " + err.Error())
+		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
 	}
 	return output, nil
 }

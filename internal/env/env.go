@@ -26,8 +26,6 @@ var initAllSites = tf.InitAllSites
 var applyAllSites = tf.ApplyAllSites
 var destroyAllSites = tf.DestroyAllSites
 
-var current_env = utils.CurrentEnv
-
 func confirmationMenu(question string, scanner bufio.Scanner) (bool, error) {
 	fmt.Printf("%s [y/N]: ", question)
 	scanner.Scan()
@@ -79,6 +77,7 @@ func getAvailableEnvs(fs afero.Fs) ([]string, error) {
 }
 
 func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
+	current_env := utils.GetCurrentEnv()
 
 	available_envs, err := GetAvailableEnvs(fs)
 	if err != nil {
@@ -119,8 +118,8 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 	if err != nil {
 		return errors.New("An error has occurred opening the environment file to update it: " + err.Error())
 	}
-	l, err := f.Write([]byte(env))
-	if l == 0 && err != nil {
+	_, err = f.Write([]byte(env))
+	if err != nil {
 		_ = f.Close()
 		return errors.New("An error has occurred writing to the environment file to update it: " + err.Error())
 	}
@@ -171,7 +170,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 		return nil
 	}
 	// Check if the env is the current in use
-	if env == current_env {
+	if env == utils.GetCurrentEnv() {
 		logger.Zap.Error("The environment you are trying to delete is your active environment.")
 		return errors.New("please switch to another workspace and try again")
 

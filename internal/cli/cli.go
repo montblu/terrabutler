@@ -139,7 +139,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								return err
 							}
 							for _, env := range envs {
-								if env == utils.CurrentEnv {
+								if env == utils.GetCurrentEnv() {
 									fmt.Println("\u2192", env)
 								} else {
 									fmt.Println(env)
@@ -227,7 +227,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 					Action: func(ctx context.Context, c *cli.Command) error {
-						_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.CurrentEnv)
+						_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
 						return nil
 					}},
 				},
