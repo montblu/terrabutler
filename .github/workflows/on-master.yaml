@@ -30,7 +30,17 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@v6
 
+      - name: Check for doc changes
+        uses: dorny/paths-filter@v4
+        id: changes
+        with:
+          filters: |
+            docs:
+              - 'mkdocs.yml'
+              - 'docs/**'
+
       - name: Deploy docs
+        if: steps.changes.outputs.docs == 'true'
         uses: ./.github/actions/mkdocs
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
