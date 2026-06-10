@@ -199,3 +199,23 @@ func InitAllSites() error {
 	}
 	return nil
 }
+
+func drawProgressBar(done, failed, total int) {
+	const width = 30
+	filled := (done * width) / total
+	bar := strings.Repeat("=", filled) + strings.Repeat(" ", width-filled)
+
+	status := fmt.Sprintf("[%s] %d/%d sites", bar, done, total)
+	if failed > 0 {
+		status += fmt.Sprintf(" (%d failed)", failed)
+	}
+	fmt.Fprintf(os.Stderr, "\r\033[K%s", status)
+}
+
+func isTerminal(w io.Writer) bool {
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	return term.IsTerminal(int(f.Fd()))
+}
