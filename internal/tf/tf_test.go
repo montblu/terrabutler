@@ -20,7 +20,7 @@ func TestArgsPrint(t *testing.T) {
 
 	// Define the variables begin used
 	site := "site"
-	current_env = "env"
+	utils.SetCurrentEnvForTest("env")
 	org := "org"
 	default_env := "default"
 	backend_dir := "BACKEND_PATH"
@@ -39,7 +39,7 @@ func TestArgsPrint(t *testing.T) {
 
 	// Command Init on another site
 	initArgsSite := ArgsPrint("init", site)
-	initArgsSiteOutput := "-backend-config " + backend_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"
+	initArgsSiteOutput := "-backend-config " + backend_dir + "/" + org + "-" + "env" + "-" + site + ".tfvars"
 
 	// Command Plan
 	planArgs := ArgsPrint("plan", site)
@@ -48,8 +48,8 @@ func TestArgsPrint(t *testing.T) {
 
 	// Plan and Apply should have the same output
 	planAndApplyArgsOutput := "-var-file " + variables_dir + "/global.tfvars" +
-		" -var-file " + variables_dir + "/" + org + "-" + current_env + ".tfvars" +
-		" -var-file " + variables_dir + "/" + org + "-" + current_env + "-" + site + ".tfvars"
+		" -var-file " + variables_dir + "/" + org + "-" + "env" + ".tfvars" +
+		" -var-file " + variables_dir + "/" + org + "-" + "env" + "-" + site + ".tfvars"
 
 	assert.Equal(t, initArgsInceptionOutput, initArgsInception, "Failed building arguments for init, the argument created for the backend option for the site inception is invalid.")
 	assert.Equal(t, initArgsSiteOutput, initArgsSite, "Failed building arguments for init, the argument created for the backend option for a generic site is invalid.")
