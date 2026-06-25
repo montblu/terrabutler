@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/montblu/terrabutler/internal/cli"
 	"github.com/montblu/terrabutler/internal/logger"
 
@@ -20,5 +22,6 @@ func main() {
 	err := cli.Run(appName, version, commit, date, fs)
 	if err != nil {
 		logger.Zap.Error(err.Error())
+		os.Exit(1)
 	}
 }

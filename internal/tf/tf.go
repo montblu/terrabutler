@@ -2,14 +2,19 @@ package tf
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/montblu/terrabutler/internal/logger"
 	"github.com/montblu/terrabutler/internal/settings"
 	"github.com/montblu/terrabutler/internal/utils"
+
+	"golang.org/x/term"
 )
 
 // Used for generate-options, prints arguments
@@ -178,19 +183,100 @@ func ApplyAllSites() error {
 	return nil
 }
 
+// Creating var for mockable function in tests
+var commandRunnerNoVisibleOutputVar = CommandRunnerNoVisibleOutput
+
 func InitAllSites() error {
 	sites := settings.Conf.Strings("sites.ordered")
 	// Remove "inception" from the list of sites to be initialized.
 	if index := slices.Index(sites, "inception"); index != -1 {
 		sites = slices.Delete(sites, index, index+1)
 	}
-	for _, site := range sites {
 
-		logger.Zap.Warn("Initializing " + site + " site")
-		err := CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend")
-		if err != nil {
-			return errors.New("Error initializing all sites, during site " + site + ", Error: " + err.Error())
+	if len(sites) == 0 {
+		return nil
+	}
+
+	total := len(sites)
+	logger.Zap.Info(fmt.Sprintf("Initializing %d sites in parallel...", total))
+
+	type result struct {
+		site string
+		err  error
+	}
+
+	results := make(chan result, total)
+	var wg sync.WaitGroup
+
+	for _, site := range sites {
+		wg.Add(1)
+		go func(s string) {
+			defer wg.Done()
+			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, []string{"-reconfigure"}, "backend")
+			results <- result{site: s, err: err}
+		}(site)
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	isTerm := isTerminal(os.Stderr)
+	completed := 0
+	failed := 0
+	var errs []error
+
+	for r := range results {
+		completed++
+		if r.err != nil {
+			failed++
+			errs = append(errs, fmt.Errorf("site %s: %w", r.site, r.err))
+		}
+
+		if isTerm {
+			drawProgressBar(completed, failed, total)
+		} else {
+			status := "✔"
+			if r.err != nil {
+				status = "✗"
+			}
+			fmt.Fprintf(os.Stderr, "  %s site %s\n", status, r.site)
 		}
 	}
+
+	if isTerm {
+		fmt.Fprintln(os.Stderr)
+	}
+
+	for _, e := range errs {
+		logger.Zap.Error(e.Error())
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("%d/%d sites failed to initialize", failed, total)
+	}
+
+	logger.Zap.Info("All sites initialized successfully")
 	return nil
+}
+
+func drawProgressBar(done, failed, total int) {
+	const width = 30
+	filled := (done * width) / total
+	bar := strings.Repeat("=", filled) + strings.Repeat(" ", width-filled)
+
+	status := fmt.Sprintf("[%s] %d/%d sites", bar, done, total)
+	if failed > 0 {
+		status += fmt.Sprintf(" (%d failed)", failed)
+	}
+	fmt.Fprintf(os.Stderr, "\r\033[K%s", status)
+}
+
+func isTerminal(w io.Writer) bool {
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	return term.IsTerminal(int(f.Fd()))
 }
