@@ -1,0 +1,23 @@
+name: Release binaries
+description: Runs GoReleaser
+
+inputs:
+  token:
+    description: Github token
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: "1.26"
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v7
+      with:
+        version: latest
+        args: release
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}

@@ -1,0 +1,167 @@
+package variables
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"math/big"
+	"slices"
+	"strings"
+
+	"github.com/montblu/terrabutler/internal/logger"
+	"github.com/montblu/terrabutler/internal/settings"
+	"github.com/montblu/terrabutler/internal/utils"
+
+	"github.com/nikolalohinski/gonja/v2/builtins"
+	"github.com/nikolalohinski/gonja/v2/config"
+	"github.com/nikolalohinski/gonja/v2/exec"
+	"github.com/nikolalohinski/gonja/v2/loaders"
+	"github.com/spf13/afero"
+)
+
+func GenerateVarFiles(env string, fs afero.Fs) error {
+
+	org := settings.Conf.String("general.organization")
+
+	// Get file templates
+	templates, err := afero.ReadDir(fs, utils.Paths["templates"])
+	if err != nil {
+		return errors.New("error reading templates directory")
+	}
+
+	// Initializing the data of the templates into a memory map, so it is compatible with tests
+	templatesFilesData := make(map[string]string)
+	for _, template := range templates {
+		if !template.IsDir() {
+			data, _ := afero.ReadFile(fs, utils.Paths["templates"]+"/"+template.Name())
+			templatesFilesData["/"+template.Name()] = string(data)
+		}
+	}
+
+	// Initializing file_loader
+	file_loader, err := loaders.NewMemoryLoader(templatesFilesData)
+	if err != nil {
+		return errors.New("Error initializing file_loader in templates dir, error: " + err.Error())
+	}
+
+	cfg := config.New()
+	cfg.StrictUndefined = true
+
+	// Get all the required fields
+	sites := settings.Conf.Strings("sites.ordered")
+	firebase_credentials := settings.Conf.String("environments.temporary.secrets.firebase_credentials")
+	mail_password := settings.Conf.String("environments.temporary.secrets.mail_password")
+
+	// Remove inception from sites
+	if index := slices.Index(sites, "inception"); index != -1 {
+		sites = append(sites[:index], sites[index+1:]...)
+	}
+
+	// Sort sites alphabetically
+	slices.Sort(sites)
+
+	// In the Environment you can add the context
+	environment := &exec.Environment{
+		Context: exec.NewContext(map[string]any{
+			"env":                         env,
+			"generate_encrypted_password": generateEncryptedPassword,
+			"sites":                       sites,
+			"mail_password":               mail_password,
+			"firebase_credentials":        firebase_credentials}),
+		// It's required to use a ControlStructure or the render fails
+		// Tests:             builtins.Tests,
+		ControlStructures: builtins.ControlStructures,
+		// The other fields are optional
+		// Methods:           builtins.Methods,
+		// Filters:           builtins.Filters,
+	}
+
+	// os.Chdir(utils.Paths["templates"])
+
+	// For each template
+	for _, template := range templates {
+
+		if !template.IsDir() {
+
+			logger.Zap.Debug("Template file: " + template.Name())
+
+			temp, err := exec.NewTemplate(template.Name(), cfg, file_loader, environment)
+			if err != nil {
+				return errors.New("Error opening the template " + template.Name() + ", Error: " + err.Error())
+			}
+
+			output, err := temp.ExecuteToBytes(environment.Context)
+			if err != nil {
+				return errors.New("Error rendering template " + template.Name() + ", Error: " + err.Error())
+			}
+
+			name := strings.ReplaceAll(template.Name(), ".j2", "")
+
+			// If the name is env
+			if name == "env" {
+				// Create new file and write the template output there
+				f, _ := fs.Create(utils.Paths["variables"] + "/" + org + "-" + env + ".tfvars")
+
+				l, err := f.Write(output)
+				if l == 0 && err != nil {
+					_ = f.Close()
+					return errors.New("An error has occurred writing to the file: " + err.Error())
+				}
+				_ = f.Close()
+			} else {
+				// Create new file and write the template output there
+				f, _ := fs.Create(utils.Paths["variables"] + "/" + org + "-" + env + "-" + name + ".tfvars")
+
+				l, err := f.Write(output)
+				if l == 0 && err != nil {
+					_ = f.Close()
+					return errors.New("An error has occurred writing to the file: " + err.Error())
+				}
+				_ = f.Close()
+			}
+		}
+	}
+
+	return nil
+
+}
+
+func generatePassword(size int) string {
+	characters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
+	charLen := big.NewInt(int64(len(characters)))
+	password := make([]byte, size)
+
+	logger.Zap.Debug(fmt.Sprintf("Size value: %d", size))
+
+	for i := 0; i < size; i++ {
+		n, err := rand.Int(rand.Reader, charLen)
+		if err != nil {
+			logger.Zap.Error("failed to generate random number: " + err.Error())
+			return ""
+		}
+		password[i] = characters[n.Int64()]
+	}
+	return string(password)
+}
+
+// The encryption of the AWS is not implemented, so the encoding and decoding is useless for now
+func encryptPassword(password string) string {
+	// region := settings.String("environments.default.region")
+	// key_id := settings.String("general.secrets_key_id")
+
+	// This is Python version code....
+	// environment = boto3.session.Session(profile_name=f"{ORG}-dev", region_name=REGION)
+	// kms = environment.client("kms")
+	// encrypted = kms.encrypt(KeyId=KEY_ID, Plaintext=password)
+	// password_encrypted = encrypted[u'CiphertextBlob']
+
+	passEncoded := base64.StdEncoding.EncodeToString([]byte(password))
+	passDecoded, _ := base64.StdEncoding.DecodeString(passEncoded)
+	return string(passDecoded)
+}
+
+func generateEncryptedPassword(size int) string {
+	password := generatePassword(size)
+	return encryptPassword(password)
+}
