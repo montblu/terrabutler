@@ -52,11 +52,34 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 		HideVersion:              true,
 		EnableShellCompletion:    true,
 		Suggest:                  true,
+		// Users source the output to enable tab-completion in their shell:
+		//   source <(terrabutler completion bash)   # ~/.bashrc
+		//   source <(terrabutler completion zsh)    # ~/.zshrc
+		//   terrabutler completion fish > ~/.config/fish/completions/terrabutler.fish
+		ConfigureShellCompletionCommand: func(c *cli.Command) {
+			c.Hidden = false
+			c.Usage = "Output shell completion script for bash, zsh or fish"
+			c.Description = "Output shell completion script for bash, zsh or fish.\n" +
+				"Source the output to enable completion.\n\n" +
+				"# .bashrc\n" +
+				"source <(" + appName + " completion bash)\n\n" +
+				"# .zshrc\n" +
+				"source <(" + appName + " completion zsh)\n\n" +
+				"# fish\n" +
+				 appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
+			filtered := make([]*cli.Command, 0, len(c.Commands))
+			for _, sub := range c.Commands {
+				if sub.Name != "pwsh" {
+					filtered = append(filtered, sub)
+				}
+			}
+			c.Commands = filtered
+		},
 		CommandNotFound:          CommandNotFound,
 		OnUsageError:             OnUsageError,
 		InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 		Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-			if len(os.Args) > 1 && os.Args[1] == "version" {
+			if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "completion") {
 				return ctx, nil
 			}
 			if err := settings.ValidateSettings(fs); err != nil {
