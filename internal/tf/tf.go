@@ -6,9 +6,11 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"slices"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/montblu/terrabutler/internal/logger"
 	"github.com/montblu/terrabutler/internal/settings"
@@ -108,6 +110,12 @@ func Runner(command []string, site string) error {
 	cmd.Stdout = os.Stdout
 	// Prints the errors to the console
 	cmd.Stderr = os.Stderr
+
+	// Trap ctrl+C and just wait for terraform
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
+
 	// Runs the command
 	err := cmd.Run()
 	if err != nil {
@@ -144,6 +152,12 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	cmd.Env = envVars
 	// Enabling error output
 	cmd.Stderr = os.Stderr
+
+	// Trap ctrl+C and just wait for terraform
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
+
 	// Runs the command
 	output, err := cmd.Output()
 	if err != nil {
