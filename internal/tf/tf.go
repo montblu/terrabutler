@@ -1,6 +1,7 @@
 package tf
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -130,12 +131,18 @@ func Runner(command []string, site string) error {
 	// Prints the errors to the console
 	cmd.Stderr = os.Stderr
 
+	// Starts the command first so cmd.Process is fully assigned before the
+	// signal-trap goroutine reads it, avoiding a data race with exec.Cmd.Start().
+	if err := cmd.Start(); err != nil {
+		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+	}
+
 	// Trap ctrl+C and just wait for terraform
 	stop := trapTerminationSignals(cmd)
 	defer stop()
 
-	// Runs the command
-	err := cmd.Run()
+	// Waits for the command to finish
+	err := cmd.Wait()
 	if err != nil {
 		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
 	}
@@ -170,17 +177,27 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	cmd.Env = envVars
 	// Enabling error output
 	cmd.Stderr = os.Stderr
+	// Captures stdout manually since cmd.Output() would call Start() internally,
+	// which must happen before trapTerminationSignals is set up (see below).
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+
+	// Starts the command first so cmd.Process is fully assigned before the
+	// signal-trap goroutine reads it, avoiding a data race with exec.Cmd.Start().
+	if err := cmd.Start(); err != nil {
+		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+	}
 
 	// Trap ctrl+C and just wait for terraform
 	stop := trapTerminationSignals(cmd)
 	defer stop()
 
-	// Runs the command
-	output, err := cmd.Output()
+	// Waits for the command to finish
+	err := cmd.Wait()
 	if err != nil {
 		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
 	}
-	return output, nil
+	return stdout.Bytes(), nil
 }
 
 // New commands to be used in all sites
