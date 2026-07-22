@@ -1,14 +1,17 @@
 package tf
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"slices"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/montblu/terrabutler/internal/logger"
 	"github.com/montblu/terrabutler/internal/settings"
@@ -77,6 +80,25 @@ func CommandBuilder(command string, site string, args []string, options []string
 	return base_command
 }
 
+// trapTerminationSignals prevents Go's default terminate-on-signal behavior so the
+// parent can wait for the terraform child to exit cleanly, and forwards the signal
+// to the child process. Do not read sigChan for any other purpose.
+func trapTerminationSignals(cmd *exec.Cmd) (stop func()) {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for sig := range sigChan {
+			if cmd.Process != nil {
+				_ = cmd.Process.Signal(sig)
+			}
+		}
+	}()
+	return func() {
+		signal.Stop(sigChan)
+		close(sigChan)
+	}
+}
+
 // Main runner function, which forms a terraform command and executes it
 func CommandRunner(command string, site string, args []string, options []string, needed_options string) error {
 
@@ -108,8 +130,19 @@ func Runner(command []string, site string) error {
 	cmd.Stdout = os.Stdout
 	// Prints the errors to the console
 	cmd.Stderr = os.Stderr
-	// Runs the command
-	err := cmd.Run()
+
+	// Starts the command first so cmd.Process is fully assigned before the
+	// signal-trap goroutine reads it, avoiding a data race with exec.Cmd.Start().
+	if err := cmd.Start(); err != nil {
+		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+	}
+
+	// Trap ctrl+C and just wait for terraform
+	stop := trapTerminationSignals(cmd)
+	defer stop()
+
+	// Waits for the command to finish
+	err := cmd.Wait()
 	if err != nil {
 		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
 	}
@@ -144,12 +177,27 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	cmd.Env = envVars
 	// Enabling error output
 	cmd.Stderr = os.Stderr
-	// Runs the command
-	output, err := cmd.Output()
+	// Captures stdout manually since cmd.Output() would call Start() internally,
+	// which must happen before trapTerminationSignals is set up (see below).
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+
+	// Starts the command first so cmd.Process is fully assigned before the
+	// signal-trap goroutine reads it, avoiding a data race with exec.Cmd.Start().
+	if err := cmd.Start(); err != nil {
+		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+	}
+
+	// Trap ctrl+C and just wait for terraform
+	stop := trapTerminationSignals(cmd)
+	defer stop()
+
+	// Waits for the command to finish
+	err := cmd.Wait()
 	if err != nil {
 		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
 	}
-	return output, nil
+	return stdout.Bytes(), nil
 }
 
 // New commands to be used in all sites
