@@ -8,7 +8,7 @@ require (
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/knadh/koanf/providers/env/v2 v2.0.0
 	github.com/knadh/koanf/providers/rawbytes v1.0.0
-	github.com/knadh/koanf/v2 v2.3.3
+	github.com/knadh/koanf/v2 v2.3.5
 	//Gonja
 	github.com/nikolalohinski/gonja/v2 v2.8.0
 	//FS
@@ -22,6 +22,8 @@ require (
 	//Semver
 	golang.org/x/mod v0.34.0
 )
+
+require golang.org/x/term v0.44.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -40,7 +42,6 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
