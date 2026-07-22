@@ -116,6 +116,14 @@ func Runner(command []string, site string) error {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
 
+	go func() {
+		for sig := range sigChan {
+			if cmd.Process != nil {
+				_ = cmd.Process.Signal(sig)
+			}
+		}
+	}()
+
 	// Runs the command
 	err := cmd.Run()
 	if err != nil {
@@ -157,6 +165,14 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
+
+	go func() {
+		for sig := range sigChan {
+			if cmd.Process != nil {
+				_ = cmd.Process.Signal(sig)
+			}
+		}
+	}()
 
 	// Runs the command
 	output, err := cmd.Output()
