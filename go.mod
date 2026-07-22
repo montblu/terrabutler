@@ -20,7 +20,7 @@ require (
 	//zap
 	go.uber.org/zap v1.28.0
 	//Semver
-	golang.org/x/mod v0.34.0
+	golang.org/x/mod v0.38.0
 )
 
 require golang.org/x/term v0.44.0
