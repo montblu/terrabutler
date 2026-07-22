@@ -18,7 +18,7 @@ require (
 	//Cli
 	github.com/urfave/cli/v3 v3.10.1
 	//zap
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	//Semver
 	golang.org/x/mod v0.34.0
 )
