@@ -79,6 +79,25 @@ func CommandBuilder(command string, site string, args []string, options []string
 	return base_command
 }
 
+// trapTerminationSignals prevents Go's default terminate-on-signal behavior so the
+// parent can wait for the terraform child to exit cleanly, and forwards the signal
+// to the child process. Do not read sigChan for any other purpose.
+func trapTerminationSignals(cmd *exec.Cmd) (stop func()) {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for sig := range sigChan {
+			if cmd.Process != nil {
+				_ = cmd.Process.Signal(sig)
+			}
+		}
+	}()
+	return func() {
+		signal.Stop(sigChan)
+		close(sigChan)
+	}
+}
+
 // Main runner function, which forms a terraform command and executes it
 func CommandRunner(command string, site string, args []string, options []string, needed_options string) error {
 
@@ -112,17 +131,8 @@ func Runner(command []string, site string) error {
 	cmd.Stderr = os.Stderr
 
 	// Trap ctrl+C and just wait for terraform
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	defer signal.Stop(sigChan)
-
-	go func() {
-		for sig := range sigChan {
-			if cmd.Process != nil {
-				_ = cmd.Process.Signal(sig)
-			}
-		}
-	}()
+	stop := trapTerminationSignals(cmd)
+	defer stop()
 
 	// Runs the command
 	err := cmd.Run()
@@ -162,17 +172,8 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	cmd.Stderr = os.Stderr
 
 	// Trap ctrl+C and just wait for terraform
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	defer signal.Stop(sigChan)
-
-	go func() {
-		for sig := range sigChan {
-			if cmd.Process != nil {
-				_ = cmd.Process.Signal(sig)
-			}
-		}
-	}()
+	stop := trapTerminationSignals(cmd)
+	defer stop()
 
 	// Runs the command
 	output, err := cmd.Output()
