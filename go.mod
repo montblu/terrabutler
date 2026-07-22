@@ -10,7 +10,7 @@ require (
 	github.com/knadh/koanf/providers/rawbytes v1.0.0
 	github.com/knadh/koanf/v2 v2.3.5
 	//Gonja
-	github.com/nikolalohinski/gonja/v2 v2.8.0
+	github.com/nikolalohinski/gonja/v2 v2.9.0
 	//FS
 	github.com/spf13/afero v1.15.0
 	//Error
