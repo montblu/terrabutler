@@ -54,7 +54,7 @@ func getAvailableEnvs(fs afero.Fs) ([]string, error) {
 		return nil, err
 	}
 
-	workspaces, err := runnerNoVisibleOutput([]string{"terraform", "workspace", "list"}, "inception", os.Environ())
+	workspaces, err := runnerNoVisibleOutput([]string{"terraform", "workspace", "list"}, "inception", tf.TerraformEnv())
 	if err != nil {
 		return nil, errors.New("There was an error from terraform workspace for " + org + "-" + default_env_name + " environment. Error: " + err.Error())
 	}

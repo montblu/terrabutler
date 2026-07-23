@@ -2,6 +2,7 @@ package tf
 
 import (
 	"errors"
+	"os"
 	"sync"
 	"testing"
 
@@ -72,6 +73,38 @@ func TestCommandBuilder(t *testing.T) {
 	assert.Equal(t, validOutput1, validTerraformCommand1, "Failed, the first command build is not valid.")
 	assert.Equal(t, validOutput2, validTerraformCommand2, "Failed, the second command build is not valid.")
 
+}
+
+func TestTerraformUserAgent(t *testing.T) {
+	// userAgent is package-level global state; restore it so this test does not
+	// leak into others.
+	original := userAgent
+	defer func() { userAgent = original }()
+
+	// The default (used when the build version is unknown) carries the product
+	userAgent = apnUserAgent + " terrabutler"
+	assert.Contains(t, TerraformEnv(), "TF_APPEND_USER_AGENT="+apnUserAgent+" terrabutler",
+		"TerraformEnv should append the default user agent when no version is set.")
+
+	// SetUserAgent tags the user agent with the build version.
+	SetUserAgent("1.2.3")
+	assert.Equal(t, apnUserAgent+" terrabutler/1.2.3", userAgent,
+		"SetUserAgent should build a versioned user agent with the APN attribution tag.")
+
+	env := TerraformEnv()
+	assert.Contains(t, env, "TF_APPEND_USER_AGENT="+apnUserAgent+" terrabutler/1.2.3",
+		"TerraformEnv should append the versioned TF_APPEND_USER_AGENT variable.")
+	assert.Equal(t, "APN_1.1/pc_2me4418zjym9qcbpo4pbtq8rl$", apnUserAgent,
+		"The APN attribution tag must match the partner-assigned value.")
+
+	// The parent environment must still be inherited, not replaced.
+	t.Setenv("TERRABUTLER_UA_INHERIT_CHECK", "present")
+	assert.Contains(t, TerraformEnv(), "TERRABUTLER_UA_INHERIT_CHECK=present",
+		"TerraformEnv should inherit the parent environment, not overwrite it.")
+
+	// TerraformEnv must not mutate os.Environ(); it should only add one entry.
+	assert.Equal(t, len(os.Environ())+1, len(TerraformEnv()),
+		"TerraformEnv should add exactly one variable to the inherited environment.")
 }
 
 func TestInitAllSitesSuccess(t *testing.T) {
