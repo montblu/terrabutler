@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 
 	"github.com/montblu/terrabutler/internal/logger"
@@ -19,6 +20,33 @@ import (
 
 	"golang.org/x/term"
 )
+
+// User-Agent
+const apnUserAgent = "APN_1.1/pc_2me4418zjym9qcbpo4pbtq8rl$"
+
+// userAgent is appended to Terraform's HTTP User-Agent via TF_APPEND_USER_AGENT.
+// It is normally set once at startup by SetUserAgent, but is stored behind an
+// atomic.Pointer so concurrent reads/writes stay race-free even if that
+// startup-ordering assumption changes later (e.g. a per-command override).
+var userAgent atomic.Pointer[string]
+
+func init() {
+	def := apnUserAgent + " terrabutler"
+	userAgent.Store(&def)
+}
+
+// SetUserAgent configures the User-Agent suffix Terraform reports, based on the
+// build version. Call once at startup before any terraform command runs.
+func SetUserAgent(version string) {
+	v := apnUserAgent + " terrabutler/" + version
+	userAgent.Store(&v)
+}
+
+// TerraformEnv returns the parent environment augmented with TF_APPEND_USER_AGENT
+// so every terraform invocation identifies itself as terrabutler.
+func TerraformEnv() []string {
+	return append(os.Environ(), "TF_APPEND_USER_AGENT="+*userAgent.Load())
+}
 
 // Used for generate-options, prints arguments
 func ArgsPrint(command string, site string) string {
@@ -124,6 +152,8 @@ func Runner(command []string, site string) error {
 	cmd := exec.Command(command[0], command[1:]...)
 	// Changes the current directory
 	cmd.Dir = utils.Paths["root"] + "/site_" + site
+	// Advertises terrabutler in Terraform's User-Agent
+	cmd.Env = TerraformEnv()
 	// Uses the console input
 	cmd.Stdin = os.Stdin
 	// Prints the output to the console
@@ -162,7 +192,7 @@ func CommandRunnerNoVisibleOutput(command string, site string, args []string, op
 	runner_command := CommandBuilder(command, site, args, options, needed_options)
 
 	// Executes the command
-	return RunnerNoVisibleOutput(runner_command, site, os.Environ())
+	return RunnerNoVisibleOutput(runner_command, site, TerraformEnv())
 
 }
 

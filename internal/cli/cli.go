@@ -25,6 +25,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 	// Verify the semantic version
 	_ = utils.IsSemanticVersion(version)
 
+	// Advertise terrabutler (and its version) in Terraform's User-Agent
+	tf.SetUserAgent(version)
+
 	// Changing the default help flag
 	cli.HelpFlag = &cli.BoolFlag{
 		Name:    "help",
