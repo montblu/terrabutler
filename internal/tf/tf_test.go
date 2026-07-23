@@ -78,17 +78,18 @@ func TestCommandBuilder(t *testing.T) {
 func TestTerraformUserAgent(t *testing.T) {
 	// userAgent is package-level global state; restore it so this test does not
 	// leak into others.
-	original := userAgent
-	defer func() { userAgent = original }()
+	original := *userAgent.Load()
+	defer func() { userAgent.Store(&original) }()
 
 	// The default (used when the build version is unknown) carries the product
-	userAgent = apnUserAgent + " terrabutler"
+	def := apnUserAgent + " terrabutler"
+	userAgent.Store(&def)
 	assert.Contains(t, TerraformEnv(), "TF_APPEND_USER_AGENT="+apnUserAgent+" terrabutler",
 		"TerraformEnv should append the default user agent when no version is set.")
 
 	// SetUserAgent tags the user agent with the build version.
 	SetUserAgent("1.2.3")
-	assert.Equal(t, apnUserAgent+" terrabutler/1.2.3", userAgent,
+	assert.Equal(t, apnUserAgent+" terrabutler/1.2.3", *userAgent.Load(),
 		"SetUserAgent should build a versioned user agent with the APN attribution tag.")
 
 	env := TerraformEnv()
