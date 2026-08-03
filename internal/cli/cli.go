@@ -905,7 +905,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.StringArg("DESTINATION") == "" {
 										return errors.New("missing argument 'DESTINATION'")
 									}
-									args = append(args, c.String("SOURCE"), c.String("DESTINATION"))
+									args = append(args, c.StringArg("SOURCE"), c.StringArg("DESTINATION"))
 									if c.Bool("dry-run") {
 										options = append(options, "-dry-run")
 									}
