@@ -692,6 +692,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						HideHelp:  true,
 						Usage:     "Show the providers required for this configuration",
 						UsageText: appName + " tf providers [OPTIONS] COMMAND [ARGS]...",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+						},
 						Commands: []*cli.Command{
 							{
 								Name:      "lock",
@@ -777,6 +780,19 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+						Action: func(ctx context.Context, c *cli.Command) error {
+							// With an Action set, unmatched arguments reach here instead of
+							// CommandNotFound, so unknown subcommands are rejected explicitly.
+							if c.Args().Present() {
+								CommandNotFound(ctx, c, c.Args().First())
+								return nil
+							}
+							options := []string{}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							return tf.CommandRunner("providers", c.String("site"), []string{}, options, "")
+						},
 					},
 					{
 						Name:      "refresh",
