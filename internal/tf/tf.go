@@ -108,17 +108,18 @@ func CommandBuilder(command string, site string, args []string, options []string
 	return base_command
 }
 
-// trapTerminationSignals prevents Go's default terminate-on-signal behavior so the
-// parent can wait for the terraform child to exit cleanly, and forwards the signal
-// to the child process. Do not read sigChan for any other purpose.
+// trapTerminationSignals stops Go from killing terrabutler immediately on
+// SIGINT/SIGTERM, so we can wait for terraform to exit cleanly instead.
+// We don't forward the signal to terraform ourselves - it's already in our
+// process group, so the terminal sends it there directly. Forwarding it again
+// was the bug in #234: terraform got the signal twice and treated that as a
+// hard-stop instead of a graceful shutdown.
 func trapTerminationSignals(cmd *exec.Cmd) (stop func()) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		for sig := range sigChan {
-			if cmd.Process != nil {
-				_ = cmd.Process.Signal(sig)
-			}
+		for range sigChan {
+			// Just drain - terraform already got the signal.
 		}
 	}()
 	return func() {
