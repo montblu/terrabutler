@@ -936,6 +936,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
+									if c.String("state") != "" {
+										options = append(options, "-state="+c.String("state"))
+									}
 									if c.String("state-out") != "" {
 										options = append(options, "-state-out="+c.String("state-out"))
 									}
