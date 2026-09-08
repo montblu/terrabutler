@@ -112,6 +112,13 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 	// Run pre_hook [CHANGE ENVIRONMENT: "TERRABUTLER_OLD_ENV": current_env, "TERRABUTLER_NEW_ENV": env]
 	// Show error if it occurs
 
+	// If init true, run terraform_init_all_sites
+	if init {
+		if err := initAllSites(); err != nil {
+			return err
+		}
+	}
+
 	// Try opening the file in path environments and writing the new env
 	// Show error if it fails
 	f, err := fs.Create(utils.Paths["environment"])
@@ -125,12 +132,6 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 	}
 	_ = f.Close()
 
-	// If init true, run terraform_init_all_sites
-	if init {
-		if err := initAllSites(); err != nil {
-			return err
-		}
-	}
 
 	// Get the post_hook -> "post_env_select", if exists
 	// Run post_hook [CHANGE ENVIRONMENT: "TERRABUTLER_OLD_ENV": current_env, "TERRABUTLER_NEW_ENV": env]
