@@ -52,9 +52,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 		Version:   version,
 		// Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
-		HideVersion:              true,
-		EnableShellCompletion:    true,
-		Suggest:                  true,
+		HideVersion:           true,
+		EnableShellCompletion: true,
+		Suggest:               true,
 		// Users source the output to enable tab-completion in their shell:
 		//   source <(terrabutler completion bash)   # ~/.bashrc
 		//   source <(terrabutler completion zsh)    # ~/.zshrc
@@ -69,7 +69,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 				"# .zshrc\n" +
 				"source <(" + appName + " completion zsh)\n\n" +
 				"# fish\n" +
-				 appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
+				appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
 			filtered := make([]*cli.Command, 0, len(c.Commands))
 			for _, sub := range c.Commands {
 				if sub.Name != "pwsh" {
@@ -97,10 +97,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 			{
 				Name:  "version",
 				Usage: "Show version and exit",
-			Action: func(ctx context.Context, c *cli.Command) error {
-				_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
-				return nil
-			},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
+					return nil
+				},
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -150,12 +150,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							return env.DeleteEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"), fs)
 						}},
 					{
-						Name:      "list",
-						Aliases:   []string{""},
-						Usage:     "List environments",
-						UsageText: appName + " env list [OPTIONS]",
-						HideHelp:  true,
-						Suggest:   true,
+						Name:                     "list",
+						Aliases:                  []string{""},
+						Usage:                    "List environments",
+						UsageText:                appName + " env list [OPTIONS]",
+						HideHelp:                 true,
+						Suggest:                  true,
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -252,10 +252,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-					Action: func(ctx context.Context, c *cli.Command) error {
-						_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
-						return nil
-					}},
+						Action: func(ctx context.Context, c *cli.Command) error {
+							_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
+							return nil
+						}},
 				},
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 					return ctx, inception.InitNeeded(fs)
@@ -909,6 +909,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+									&cli.StringFlag{Name: "state", Usage: "Overrides the state filename to the provided value when reading the prior state snapshot."},
+									&cli.StringFlag{Name: "state-out", Usage: "Overrides the state filename to the provided value when writing new state snapshots."},
 								},
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -933,6 +935,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
+									}
+									if c.String("state") != "" {
+										options = append(options, "-state="+c.String("state"))
+									}
+									if c.String("state-out") != "" {
+										options = append(options, "-state-out="+c.String("state-out"))
 									}
 									return tf.CommandRunner("state mv", c.String("site"), args, options, "")
 								},
