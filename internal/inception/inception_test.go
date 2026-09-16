@@ -28,12 +28,16 @@ func TestInitNeeded(t *testing.T) {
 func TestInit(t *testing.T) {
 
 	// Mockable tf function (the output isn't important here...)
-	commandRunnerNoVisibleOutput = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+	commandRunnerNoVisibleOutput = func(command, site string, args, options []string, needed_options string, fs afero.Fs) ([]byte, error) {
 		return nil, nil
 	}
 
-	settings.Conf.Set("environments.default.name", "env") //nolint:errcheck
+	envDefault := "env"
+
+	settings.Conf.Set("environments.default.name", envDefault) //nolint:errcheck
 	utils.Paths["inception"] = "inception"
+	//Creating the sites which will be tested the file creation
+	settings.Conf.Set("sites.ordered", []string{"site-a", "site-b", "site-c"})
 
 	// Use the in-memory filesystem
 	fs := afero.NewMemMapFs()
@@ -47,7 +51,12 @@ func TestInit(t *testing.T) {
 	env, err := afero.ReadFile(fs, utils.Paths["inception"]+"/.terraform/environment")
 	assert.NoError(t, err, "Failed, the environment file couldn't be read.")
 
-	// See if the content is correct
 	assert.Equal(t, settings.Conf.String("environments.default.name"), string(env), "Failed, the default environment name isn't correct in the environment file.")
 
+	// Test for each site if the environment file was created with the default environment name
+	for _, site := range settings.Conf.Strings("sites.ordered") {
+		siteEnv, err := afero.ReadFile(fs, utils.Paths["root"]+"/site_"+site+"/.terraform/.terrabutler_env")
+		assert.NoError(t, err, "Failed, the environment file for site "+site+" couldn't be read.")
+		assert.Equal(t, envDefault, string(siteEnv), "Failed, the default environment name isn't correct in the environment file for site "+site+".")
+	}
 }

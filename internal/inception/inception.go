@@ -37,10 +37,11 @@ func Init(fs afero.Fs) error {
 
 	default_env_name := settings.Conf.String("environments.default.name")
 	inception_dir := utils.Paths["inception"]
+	sites := settings.Conf.Strings("sites.ordered")
 
 	if !inceptionInitCheck(fs) {
 
-		_, err := commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend")
+		_, err := commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend", fs)
 		if err != nil {
 			return errors.New("There was an error while doing the initialization, Error info: " + err.Error())
 		}
@@ -55,6 +56,13 @@ func Init(fs afero.Fs) error {
 		}
 		if err := f.Close(); err != nil {
 			return errors.New("failed to close the environment file: " + err.Error())
+		}
+
+		//Creates the current environment file of the sites with the default environment
+		for _, site := range sites {
+			if err := utils.SaveSiteEnv(site, default_env_name, fs); err != nil {
+				return errors.New("Failed to save environment for site " + site + ": " + err.Error())
+			}
 		}
 
 		// If all is ok, display successfully inception

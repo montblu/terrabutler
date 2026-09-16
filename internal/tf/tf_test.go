@@ -8,6 +8,7 @@ import (
 
 	"github.com/montblu/terrabutler/internal/settings"
 	"github.com/montblu/terrabutler/internal/utils"
+	"github.com/spf13/afero"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,6 +21,8 @@ import (
 
 // This test will also validate the NeedOptionsBuilder function
 func TestArgsPrint(t *testing.T) {
+
+	fs := afero.NewMemMapFs()
 
 	// Define the variables begin used
 	site := "site"
@@ -36,18 +39,18 @@ func TestArgsPrint(t *testing.T) {
 	utils.Paths["variables"] = variables_dir
 
 	// Command Init on site inception
-	initArgsInception := ArgsPrint("init", "inception")
+	initArgsInception := ArgsPrint("init", "inception", fs)
 	// Valid Output
 	initArgsInceptionOutput := "-backend-config " + backend_dir + "/" + org + "-" + default_env + "-inception.tfvars"
 
 	// Command Init on another site
-	initArgsSite := ArgsPrint("init", site)
+	initArgsSite := ArgsPrint("init", site, fs)
 	initArgsSiteOutput := "-backend-config " + backend_dir + "/" + org + "-" + "env" + "-" + site + ".tfvars"
 
 	// Command Plan
-	planArgs := ArgsPrint("plan", site)
+	planArgs := ArgsPrint("plan", site, fs)
 	// Command Apply
-	applyArgsSite := ArgsPrint("apply", site)
+	applyArgsSite := ArgsPrint("apply", site, fs)
 
 	// Plan and Apply should have the same output
 	planAndApplyArgsOutput := "-var-file " + variables_dir + "/global.tfvars" +
@@ -62,12 +65,15 @@ func TestArgsPrint(t *testing.T) {
 }
 
 func TestCommandBuilder(t *testing.T) {
+
+	fs := afero.NewMemMapFs()
+
 	// A valid structure for a terraform command
-	validTerraformCommand1 := CommandBuilder("cmd", "site", []string{"arg1", "arg2"}, []string{"flag1", "flag2"}, "")
+	validTerraformCommand1 := CommandBuilder("cmd", "site", []string{"arg1", "arg2"}, []string{"flag1", "flag2"}, "", fs)
 	validOutput1 := []string{"terraform", "cmd", "flag1", "flag2", "arg1", "arg2"}
 
 	// A valid structure for a terraform command with a subcommand, where the subcommand should be split
-	validTerraformCommand2 := CommandBuilder("cmd subcommand", "site", []string{"arg1", "arg2"}, []string{"flag1", "flag2"}, "")
+	validTerraformCommand2 := CommandBuilder("cmd subcommand", "site", []string{"arg1", "arg2"}, []string{"flag1", "flag2"}, "", fs)
 	validOutput2 := []string{"terraform", "cmd", "subcommand", "flag1", "flag2", "arg1", "arg2"}
 
 	assert.Equal(t, validOutput1, validTerraformCommand1, "Failed, the first command build is not valid.")
@@ -113,7 +119,7 @@ func TestInitAllSitesSuccess(t *testing.T) {
 	callCount := 0
 	calledSites := []string{}
 
-	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string, fs afero.Fs) ([]byte, error) {
 		mu.Lock()
 		callCount++
 		calledSites = append(calledSites, site)
@@ -123,16 +129,40 @@ func TestInitAllSitesSuccess(t *testing.T) {
 
 	settings.Conf.Set("sites.ordered", []string{"inception", "site-a", "site-b", "site-c"}) //nolint:errcheck
 
-	err := InitAllSites()
+	fs := afero.NewMemMapFs()
+
+	// Creating the environment file, with the new environment
+	// This is done because if the environments files from the sites fails to be created
+	// The values in fileSiteX will be ""
+	// And this to test this, the utils.GetCurrentEnv() should return a value different from ""
+	newEnv := "newEnv"
+	utils.Paths["environment"] = "ROOT/site_inception/.terraform/environment"
+	_ = afero.WriteFile(fs, utils.Paths["environment"], []byte(newEnv), 0644)
+
+	// Environment that will be set in the file environment of the sites
+	env := "oldEnv"
+	// Environment that will be set in the file environment of the sites if those succeed
+	newEnv = utils.GetCurrentEnv(fs)
+
+	err := InitAllSites(env, fs)
+
+	//Get each value for the sites to check if the environment was set correctly
+	fileSiteA, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-a/.terraform/.terrabutler_env")
+	fileSiteB, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-b/.terraform/.terrabutler_env")
+	fileSiteC, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-c/.terraform/.terrabutler_env")
 
 	assert.NoError(t, err, "Init should not fail")
 	assert.Equal(t, 3, callCount, "Should init 3 sites (inception removed)")
 	assert.Equal(t, 3, len(calledSites), "All 3 sites should be called")
 	assert.NotContains(t, calledSites, "inception", "Inception should be filtered out")
+	//Test the value in the files
+	assert.Equal(t, newEnv, string(fileSiteA), "site-a should have a .terrabutler_environment file with "+newEnv)
+	assert.Equal(t, newEnv, string(fileSiteB), "site-b should have a .terrabutler_environment file with "+newEnv)
+	assert.Equal(t, newEnv, string(fileSiteC), "site-c should have .terrabutler_environment file with "+newEnv)
 }
 
 func TestInitAllSitesWithErrors(t *testing.T) {
-	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string, fs afero.Fs) ([]byte, error) {
 		if site == "site-b" {
 			return nil, errors.New("backend unavailable")
 		}
@@ -141,16 +171,39 @@ func TestInitAllSitesWithErrors(t *testing.T) {
 
 	settings.Conf.Set("sites.ordered", []string{"site-a", "site-b", "site-c"}) //nolint:errcheck
 
-	err := InitAllSites()
+	fs := afero.NewMemMapFs()
+
+	newEnv := "newEnv"
+	utils.Paths["environment"] = "ROOT/site_inception/.terraform/environment"
+	_ = afero.WriteFile(fs, utils.Paths["environment"], []byte(newEnv), 0644)
+
+	// Environment that will be set in the file environment of the sites if those fail
+	oldEnv := "oldEnv"
+	// Environment that will be set in the file environment of the sites if those succeed
+	newEnv = utils.GetCurrentEnv(fs)
+
+	err := InitAllSites(oldEnv, fs)
+
+	//Get each value for the sites to check if the environment was set correctly
+	fileSiteA, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-a/.terraform/.terrabutler_env")
+	fileSiteB, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-b/.terraform/.terrabutler_env")
+	fileSiteC, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-c/.terraform/.terrabutler_env")
 
 	assert.Error(t, err, "Init should return error when some sites fail")
 	assert.Contains(t, err.Error(), "1/3 sites failed", "Error should indicate failure count")
+	//Test the value in the files
+	assert.Equal(t, newEnv, string(fileSiteA), "site-a should have a .terrabutler_environment file with "+newEnv)
+	assert.Equal(t, oldEnv, string(fileSiteB), "site-b should have a .terrabutler_environment file with "+oldEnv)
+	assert.Equal(t, newEnv, string(fileSiteC), "site-c should have .terrabutler_environment file with "+newEnv)
 }
 
 func TestInitAllSitesEmptyList(t *testing.T) {
 	// Only inception in the list — after filtering, nothing left
 	settings.Conf.Set("sites.ordered", []string{"inception"}) //nolint:errcheck
 
-	err := InitAllSites()
+	fs := afero.NewMemMapFs()
+	env := "env"
+
+	err := InitAllSites(env, fs)
 	assert.NoError(t, err, "Should not error when no sites to init")
 }

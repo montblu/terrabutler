@@ -54,15 +54,15 @@ func mockGetAvailableEnvs(fs afero.Fs) ([]string, error) {
 }
 
 // Mocks for all the tf functions used..
-func mockCommandRunner(command string, site string, args []string, flags []string, oa string) error {
+func mockCommandRunner(command string, site string, args []string, flags []string, oa string, fs afero.Fs) error {
 	return nil
 }
 
-func mockRunner(command []string, site string, envVars []string) ([]byte, error) {
+func mockRunner(command []string, site string, envVars []string, fs afero.Fs) ([]byte, error) {
 	return nil, nil
 }
 
-func mockFunc() error {
+func mockInitAllSites(current_env string, fs afero.Fs) error {
 	return nil
 }
 
@@ -72,7 +72,7 @@ func TestSetCurrentEnv(t *testing.T) {
 	// Setting up the mock functions used
 	GetAvailableEnvs = mockGetAvailableEnvs
 	runnerNoVisibleOutput = mockRunner
-	initAllSites = mockFunc
+	initAllSites = mockInitAllSites
 
 	// Defining the environment file path
 	utils.Paths["environment"] = "PATH/environment"

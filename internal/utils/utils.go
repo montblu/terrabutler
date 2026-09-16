@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"os"
 
 	"github.com/knadh/koanf/providers/env/v2"
 	"github.com/knadh/koanf/v2"
@@ -20,8 +21,8 @@ var Paths, _ = initPaths()
 var testEnv string
 
 // GetCurrentEnv reads and returns the active environment from the filesystem.
-func GetCurrentEnv() string {
-	env, err := currentEnv(afero.NewOsFs())
+func GetCurrentEnv(fs afero.Fs) string {
+	env, err := currentEnv(fs)
 	if err != nil {
 		return ""
 	}
@@ -87,4 +88,22 @@ func currentEnv(fs afero.Fs) (string, error) {
 	}
 
 	return string(env), nil
+}
+
+func SaveSiteEnv(site string, env string, fs afero.Fs) error {
+	siteEnvPath := Paths["root"] + "/site_" + site + "/.terraform/.terrabutler_env"
+
+	f, err := fs.OpenFile(siteEnvPath, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return errors.New("The file that manages the environments for the site " + site + " could not be created, Error info: " + err.Error())
+	}
+	_, err = f.Write([]byte(env))
+	if err != nil {
+		return errors.New("Writing on the file that manages the environments for the site " + site + " wasn't possible, Error info: " + err.Error())
+	}
+	if err := f.Close(); err != nil {
+		return errors.New("Failed to close the environment file for site " + site + ": " + err.Error())
+	}
+
+	return nil
 }
