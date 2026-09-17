@@ -1251,11 +1251,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 					if err != nil {
 						logger.Zap.Warn("There is no environment validation file for this site.")
 						logger.Zap.Warn("To create this file run terrabutler env reload or terrabutler env select.")
-					} else {
-						if string(env) != utils.GetCurrentEnv(fs) {
+					} else if string(env) != utils.GetCurrentEnv(fs) {
 							logger.Zap.Error("Environments Mismatched! The current terrabutler environment is " + utils.GetCurrentEnv(fs) + ", but the site " + site + " is in the " + string(env) + " environment.")
-							return ctx, errors.New("Try to run terrabutler env reload or terrabutler env select successfully to make this site be in the current environment.")
-						}
+							return ctx, errors.New("try to run terrabutler env reload or terrabutler env select successfully to make this site be in the current environment")
 					}
 					return ctx, nil
 				},

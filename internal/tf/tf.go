@@ -313,7 +313,7 @@ func InitAllSites(oldEnv string, fs afero.Fs) error {
 
 		// If there is no error in the site, save/update the current environment of the site.
 		if r.err == nil {
-			//Save the current environment on the environment file of the site
+			// Save the current environment on the environment file of the site
 			if err := utils.SaveSiteEnv(r.site, newEnv, fs); err != nil {
 				errs = append(errs, fmt.Errorf("failed to save the new environment for site %s: %v", r.site, err))
 			}

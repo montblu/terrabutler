@@ -58,7 +58,7 @@ func Init(fs afero.Fs) error {
 			return errors.New("failed to close the environment file: " + err.Error())
 		}
 
-		//Creates the current environment file of the sites with the default environment
+		// Creates the current environment file of the sites with the default environment
 		for _, site := range sites {
 			if err := utils.SaveSiteEnv(site, default_env_name, fs); err != nil {
 				return errors.New("Failed to save environment for site " + site + ": " + err.Error())

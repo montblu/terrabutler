@@ -36,7 +36,7 @@ func TestInit(t *testing.T) {
 
 	settings.Conf.Set("environments.default.name", envDefault) //nolint:errcheck
 	utils.Paths["inception"] = "inception"
-	//Creating the sites which will be tested the file creation
+	// Creating the sites which will be tested the file creation
 	settings.Conf.Set("sites.ordered", []string{"site-a", "site-b", "site-c"})
 
 	// Use the in-memory filesystem
