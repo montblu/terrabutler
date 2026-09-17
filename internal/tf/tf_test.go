@@ -146,7 +146,7 @@ func TestInitAllSitesSuccess(t *testing.T) {
 
 	err := InitAllSites(env, fs)
 
-	//Get each value for the sites to check if the environment was set correctly
+	// Get each value for the sites to check if the environment was set correctly
 	fileSiteA, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-a/.terraform/.terrabutler_env")
 	fileSiteB, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-b/.terraform/.terrabutler_env")
 	fileSiteC, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-c/.terraform/.terrabutler_env")
@@ -155,7 +155,7 @@ func TestInitAllSitesSuccess(t *testing.T) {
 	assert.Equal(t, 3, callCount, "Should init 3 sites (inception removed)")
 	assert.Equal(t, 3, len(calledSites), "All 3 sites should be called")
 	assert.NotContains(t, calledSites, "inception", "Inception should be filtered out")
-	//Test the value in the files
+	// Test the value in the files
 	assert.Equal(t, newEnv, string(fileSiteA), "site-a should have a .terrabutler_environment file with "+newEnv)
 	assert.Equal(t, newEnv, string(fileSiteB), "site-b should have a .terrabutler_environment file with "+newEnv)
 	assert.Equal(t, newEnv, string(fileSiteC), "site-c should have .terrabutler_environment file with "+newEnv)
@@ -184,14 +184,14 @@ func TestInitAllSitesWithErrors(t *testing.T) {
 
 	err := InitAllSites(oldEnv, fs)
 
-	//Get each value for the sites to check if the environment was set correctly
+	// Get each value for the sites to check if the environment was set correctly
 	fileSiteA, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-a/.terraform/.terrabutler_env")
 	fileSiteB, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-b/.terraform/.terrabutler_env")
 	fileSiteC, _ := afero.ReadFile(fs, utils.Paths["root"]+"/site_site-c/.terraform/.terrabutler_env")
 
 	assert.Error(t, err, "Init should return error when some sites fail")
 	assert.Contains(t, err.Error(), "1/3 sites failed", "Error should indicate failure count")
-	//Test the value in the files
+	// Test the value in the files
 	assert.Equal(t, newEnv, string(fileSiteA), "site-a should have a .terrabutler_environment file with "+newEnv)
 	assert.Equal(t, oldEnv, string(fileSiteB), "site-b should have a .terrabutler_environment file with "+oldEnv)
 	assert.Equal(t, newEnv, string(fileSiteC), "site-c should have .terrabutler_environment file with "+newEnv)
