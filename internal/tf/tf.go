@@ -17,6 +17,7 @@ import (
 	"github.com/montblu/terrabutler/internal/logger"
 	"github.com/montblu/terrabutler/internal/settings"
 	"github.com/montblu/terrabutler/internal/utils"
+	"github.com/spf13/afero"
 
 	"golang.org/x/term"
 )
@@ -49,7 +50,7 @@ func TerraformEnv() []string {
 }
 
 // Used for generate-options, prints arguments
-func ArgsPrint(command string, site string) string {
+func ArgsPrint(command string, site string, fs afero.Fs) string {
 	var needed_options string
 	switch command {
 	case "init":
@@ -60,15 +61,15 @@ func ArgsPrint(command string, site string) string {
 		needed_options = ""
 	}
 
-	options := NeededOptionsBuilder(needed_options, site)
+	options := NeededOptionsBuilder(needed_options, site, fs)
 	return strings.Join(options, " ")
 }
 
 // Create array of needed options for backend or var files
-func NeededOptionsBuilder(needed_options string, site string) []string {
+func NeededOptionsBuilder(needed_options string, site string, fs afero.Fs) []string {
 	org := settings.Conf.String("general.organization")
 	default_env := settings.Conf.String("environments.default.name")
-	current_env := utils.GetCurrentEnv()
+	current_env := utils.GetCurrentEnv(fs)
 
 	switch needed_options {
 	case "backend":
@@ -92,13 +93,13 @@ func NeededOptionsBuilder(needed_options string, site string) []string {
 }
 
 // Command builder
-func CommandBuilder(command string, site string, args []string, options []string, needed_options string) []string {
+func CommandBuilder(command string, site string, args []string, options []string, needed_options string, fs afero.Fs) []string {
 
 	base_command := []string{"terraform"}
 	base_command = append(base_command, strings.Split(command, " ")...)
 
 	if needed_options == "backend" || needed_options == "var" {
-		aux := NeededOptionsBuilder(needed_options, site)
+		aux := NeededOptionsBuilder(needed_options, site, fs)
 		base_command = append(base_command, aux...)
 	}
 
@@ -129,7 +130,7 @@ func trapTerminationSignals(cmd *exec.Cmd) (stop func()) {
 }
 
 // Main runner function, which forms a terraform command and executes it
-func CommandRunner(command string, site string, args []string, options []string, needed_options string) error {
+func CommandRunner(command string, site string, args []string, options []string, needed_options string, fs afero.Fs) error {
 
 	// Verifies if terraform exists
 	_, err := exec.LookPath("terraform")
@@ -138,15 +139,15 @@ func CommandRunner(command string, site string, args []string, options []string,
 	}
 
 	// Builds the terraform command
-	runner_command := CommandBuilder(command, site, args, options, needed_options)
+	runner_command := CommandBuilder(command, site, args, options, needed_options, fs)
 
 	// Executes the command
-	return Runner(runner_command, site)
+	return Runner(runner_command, site, fs)
 
 }
 
 // Executes a command with its output on the console
-func Runner(command []string, site string) error {
+func Runner(command []string, site string, fs afero.Fs) error {
 
 	// Runs the terraform command
 	//nolint:gosec // the command is built from internal constants, not user input
@@ -165,7 +166,7 @@ func Runner(command []string, site string) error {
 	// Starts the command first so cmd.Process is fully assigned before the
 	// signal-trap goroutine reads it, avoiding a data race with exec.Cmd.Start().
 	if err := cmd.Start(); err != nil {
-		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv(fs) + ", Error: " + err.Error())
 	}
 
 	// Trap ctrl+C and just wait for terraform
@@ -175,13 +176,13 @@ func Runner(command []string, site string) error {
 	// Waits for the command to finish
 	err := cmd.Wait()
 	if err != nil {
-		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+		return errors.New("There was an error during execution of terraform " + command[0] + " in the site " + site + " in the environment " + utils.GetCurrentEnv(fs) + ", Error: " + err.Error())
 	}
 	return nil
 }
 
 // Runner function form a terraform commands that require no output visible
-func CommandRunnerNoVisibleOutput(command string, site string, args []string, options []string, needed_options string) ([]byte, error) {
+func CommandRunnerNoVisibleOutput(command string, site string, args []string, options []string, needed_options string, fs afero.Fs) ([]byte, error) {
 
 	// Verifies if terraform exists
 	_, err := exec.LookPath("terraform")
@@ -190,15 +191,15 @@ func CommandRunnerNoVisibleOutput(command string, site string, args []string, op
 	}
 
 	// Builds the terraform command
-	runner_command := CommandBuilder(command, site, args, options, needed_options)
+	runner_command := CommandBuilder(command, site, args, options, needed_options, fs)
 
 	// Executes the command
-	return RunnerNoVisibleOutput(runner_command, site, TerraformEnv())
+	return RunnerNoVisibleOutput(runner_command, site, TerraformEnv(), fs)
 
 }
 
 // Execute a command with a defined environment variables and no visible output
-func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]byte, error) {
+func RunnerNoVisibleOutput(command []string, site string, envVars []string, fs afero.Fs) ([]byte, error) {
 
 	//nolint:gosec // the command is built from internal constants, not user input
 	cmd := exec.Command(command[0], command[1:]...)
@@ -216,7 +217,7 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	// Starts the command first so cmd.Process is fully assigned before the
 	// signal-trap goroutine reads it, avoiding a data race with exec.Cmd.Start().
 	if err := cmd.Start(); err != nil {
-		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv(fs) + ", Error: " + err.Error())
 	}
 
 	// Trap ctrl+C and just wait for terraform
@@ -226,17 +227,17 @@ func RunnerNoVisibleOutput(command []string, site string, envVars []string) ([]b
 	// Waits for the command to finish
 	err := cmd.Wait()
 	if err != nil {
-		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv() + ", Error: " + err.Error())
+		return nil, errors.New("There was an error during execution of " + strings.Join(command, " ") + " in the site " + site + " in the environment " + utils.GetCurrentEnv(fs) + ", Error: " + err.Error())
 	}
 	return stdout.Bytes(), nil
 }
 
 // New commands to be used in all sites
-func DestroyAllSites() error {
+func DestroyAllSites(fs afero.Fs) error {
 	sites := settings.Conf.Strings("sites.ordered")
 	slices.Reverse(sites)
 	for _, site := range sites {
-		err := CommandRunner("destroy", site, []string{}, []string{"-auto-approve"}, "var")
+		err := CommandRunner("destroy", site, []string{}, []string{"-auto-approve"}, "var", fs)
 		if err != nil {
 			return errors.New("Error destroying all sites, during site " + site + ", Error: " + err.Error())
 		}
@@ -245,16 +246,16 @@ func DestroyAllSites() error {
 	return nil
 }
 
-func ApplyAllSites() error {
+func ApplyAllSites(fs afero.Fs) error {
 	sites := settings.Conf.Strings("sites.ordered")
 	for _, site := range sites {
 		if site != "inception" {
-			err := CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend")
+			err := CommandRunner("init", site, []string{}, []string{"-reconfigure"}, "backend", fs)
 			if err != nil {
 				return errors.New("Error initializing site during apply-all, site " + site + ", Error: " + err.Error())
 			}
 		}
-		err := CommandRunner("apply", site, []string{}, []string{"-auto-approve"}, "var")
+		err := CommandRunner("apply", site, []string{}, []string{"-auto-approve"}, "var", fs)
 		if err != nil {
 			return errors.New("Error applying all sites, during site " + site + ", Error: " + err.Error())
 		}
@@ -265,8 +266,9 @@ func ApplyAllSites() error {
 // Creating var for mockable function in tests
 var commandRunnerNoVisibleOutputVar = CommandRunnerNoVisibleOutput
 
-func InitAllSites() error {
+func InitAllSites(oldEnv string, fs afero.Fs) error {
 	sites := settings.Conf.Strings("sites.ordered")
+	newEnv := utils.GetCurrentEnv(fs)
 	// Remove "inception" from the list of sites to be initialized.
 	if index := slices.Index(sites, "inception"); index != -1 {
 		sites = slices.Delete(sites, index, index+1)
@@ -291,7 +293,7 @@ func InitAllSites() error {
 		wg.Add(1)
 		go func(s string) {
 			defer wg.Done()
-			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, []string{"-reconfigure"}, "backend")
+			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, []string{"-reconfigure"}, "backend", fs)
 			results <- result{site: s, err: err}
 		}(site)
 	}
@@ -308,8 +310,25 @@ func InitAllSites() error {
 
 	for r := range results {
 		completed++
+
+		// If there is no error in the site, save/update the current environment of the site.
+		if r.err == nil {
+			// Save the current environment on the environment file of the site
+			if err := utils.SaveSiteEnv(r.site, newEnv, fs); err != nil {
+				errs = append(errs, fmt.Errorf("failed to save the new environment for site %s: %v", r.site, err))
+			}
+		}
+
 		if r.err != nil {
 			failed++
+			// If the oldEnv is empty, it means InitAllSites was called from env reload
+			// so isn't needed to save the old environment on the environment file of the file
+			if oldEnv != "" {
+				// If the site failed save the environment of the site
+				if err := utils.SaveSiteEnv(r.site, oldEnv, fs); err != nil {
+					errs = append(errs, fmt.Errorf("failed to save the old environment for site %s: %v", r.site, err))
+				}
+			}
 			errs = append(errs, fmt.Errorf("site %s: %w", r.site, r.err))
 		}
 
