@@ -16,7 +16,7 @@ require (
 	//Error
 	github.com/stretchr/testify v1.12.1
 	//Cli
-	github.com/urfave/cli/v3 v3.10.1
+	github.com/urfave/cli/v3 v3.13.0
 	//zap
 	go.uber.org/zap v1.28.0
 	//Semver
