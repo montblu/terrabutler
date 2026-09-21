@@ -23,7 +23,7 @@ require (
 	golang.org/x/mod v0.41.0
 )
 
-require golang.org/x/term v0.45.0
+require golang.org/x/term v0.46.0
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -41,7 +41,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
