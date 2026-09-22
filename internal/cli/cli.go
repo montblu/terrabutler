@@ -917,6 +917,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+									&cli.StringFlag{Name: "state", Usage: "Overrides the state filename to the provided value when reading the prior state snapshot."},
+									&cli.StringFlag{Name: "state-out", Usage: "Overrides the state filename to the provided value when writing new state snapshots."},
 								},
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -941,6 +943,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
+									}
+									if c.String("state") != "" {
+										options = append(options, "-state="+c.String("state"))
+									}
+									if c.String("state-out") != "" {
+										options = append(options, "-state-out="+c.String("state-out"))
 									}
 									return tf.CommandRunner("state mv", c.String("site"), args, options, "")
 								},
