@@ -18,3 +18,13 @@ builds:
     goarch:
       - amd64
       - arm64
+
+# Explicit `files` replaces goreleaser's default list (LICENSE*/README*/CHANGELOG*), so those are
+# spelled out here too. `skills/**/*` ships the Agent Skill at `skills/terrabutler/` inside the
+# archive, matching the `archive:skills/terrabutler` resource declared in the packslip release step.
+archives:
+  - files:
+      - LICENSE*
+      - README*
+      - CHANGELOG*
+      - skills/**/*
