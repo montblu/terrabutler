@@ -165,7 +165,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								return err
 							}
 							for _, env := range envs {
-								if env == utils.GetCurrentEnv() {
+								if env == utils.GetCurrentEnv(fs) {
 									fmt.Println("\u2192", env)
 								} else {
 									fmt.Println(env)
@@ -217,7 +217,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(context.Context, *cli.Command) error {
-							return tf.InitAllSites()
+							return tf.InitAllSites("", fs)
 						}},
 					{
 						Name:      "select",
@@ -253,7 +253,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
-							_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
+							_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv(fs))
 							return nil
 						}},
 				},
@@ -341,7 +341,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("compact-warnings") {
 								options = append(options, "-compact-warnings")
 							}
-							return tf.CommandRunner("apply", c.String("site"), []string{}, options, "var")
+							return tf.CommandRunner("apply", c.String("site"), []string{}, options, "var", fs)
 						},
 					},
 					{
@@ -367,7 +367,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							return tf.CommandRunner("console", c.String("site"), []string{}, options, "var")
+							return tf.CommandRunner("console", c.String("site"), []string{}, options, "var", fs)
 						},
 					},
 					{
@@ -417,7 +417,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							return tf.CommandRunner("destroy", c.String("site"), []string{}, options, "var")
+							return tf.CommandRunner("destroy", c.String("site"), []string{}, options, "var", fs)
 						},
 					},
 					{
@@ -443,7 +443,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("recursive") {
 								options = append(options, "-recursive")
 							}
-							return tf.CommandRunner("fmt", c.String("site"), []string{}, options, "")
+							return tf.CommandRunner("fmt", c.String("site"), []string{}, options, "", fs)
 						},
 					},
 					{
@@ -471,7 +471,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("force") {
 								options = append(options, "-force")
 							}
-							return tf.CommandRunner("force-unlock", c.String("site"), args, options, "")
+							return tf.CommandRunner("force-unlock", c.String("site"), args, options, "", fs)
 						},
 					},
 					{
@@ -489,7 +489,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.StringArg("Choice") != "init" && c.StringArg("Choice") != "plan" && c.StringArg("Choice") != "apply" {
 								return errors.New("missing argument '{init|plan|apply}' choose one of the choices: init, plan or apply")
 							}
-							logger.Zap.Info("Options:\n" + tf.ArgsPrint(c.StringArg("Choice"), c.String("site")))
+							logger.Zap.Info("Options:\n" + tf.ArgsPrint(c.StringArg("Choice"), c.String("site"), fs))
 							return nil
 						},
 					},
@@ -542,7 +542,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("ignore-remote-version") {
 								options = append(options, "-ignore-remote-version")
 							}
-							return tf.CommandRunner("import", c.String("site"), args, options, "var")
+							return tf.CommandRunner("import", c.String("site"), args, options, "var", fs)
 						},
 					},
 					{
@@ -604,7 +604,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("ignore-remote-version") {
 								options = append(options, "-ignore-remote-version")
 							}
-							return tf.CommandRunner("init", c.String("site"), []string{}, options, "backend")
+							return tf.CommandRunner("init", c.String("site"), []string{}, options, "backend", fs)
 						},
 					},
 					{
@@ -630,7 +630,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("raw") {
 								options = append(options, "-raw")
 							}
-							return tf.CommandRunner("output", c.String("site"), []string{}, options, "")
+							return tf.CommandRunner("output", c.String("site"), []string{}, options, "", fs)
 						},
 					},
 					{
@@ -692,7 +692,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								options = append(options, "-compact-warnings")
 							}
 
-							return tf.CommandRunner("plan", c.String("site"), []string{}, options, "var")
+							return tf.CommandRunner("plan", c.String("site"), []string{}, options, "var", fs)
 						},
 					},
 					{
@@ -736,7 +736,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.String("platform") != "" {
 										options = append(options, "-platform="+c.String("platform"))
 									}
-									return tf.CommandRunner("providers lock", c.String("site"), args, options, "")
+									return tf.CommandRunner("providers lock", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -763,7 +763,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.String("platform") != "" {
 										options = append(options, "-platform="+c.String("platform"))
 									}
-									return tf.CommandRunner("providers mirror", c.String("site"), args, options, "")
+									return tf.CommandRunner("providers mirror", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -781,7 +781,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.Bool("json") {
 										options = append(options, "-json")
 									}
-									return tf.CommandRunner("providers schema", c.String("site"), []string{}, options, "")
+									return tf.CommandRunner("providers schema", c.String("site"), []string{}, options, "", fs)
 								},
 							},
 						},
@@ -799,7 +799,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("no-color") {
 								options = append(options, "-no-color")
 							}
-							return tf.CommandRunner("providers", c.String("site"), []string{}, options, "")
+							return tf.CommandRunner("providers", c.String("site"), []string{}, options, "", fs)
 						},
 					},
 					{
@@ -836,7 +836,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
 							}
-							return tf.CommandRunner("refresh", c.String("site"), []string{}, options, "var")
+							return tf.CommandRunner("refresh", c.String("site"), []string{}, options, "var", fs)
 						},
 					},
 					{
@@ -867,7 +867,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("no-color") {
 								options = append(options, "-no-color")
 							}
-							return tf.CommandRunner("show", c.String("site"), args, options, "")
+							return tf.CommandRunner("show", c.String("site"), args, options, "", fs)
 						},
 					},
 					{
@@ -901,7 +901,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.String("id") != "" {
 										options = append(options, "-id "+c.String("id"))
 									}
-									return tf.CommandRunner("state list", c.String("site"), args, options, "")
+									return tf.CommandRunner("state list", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -950,7 +950,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.String("state-out") != "" {
 										options = append(options, "-state-out="+c.String("state-out"))
 									}
-									return tf.CommandRunner("state mv", c.String("site"), args, options, "")
+									return tf.CommandRunner("state mv", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -958,7 +958,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								Usage:        "Pull current state and output to stdouts",
 								OnUsageError: OnUsageErrorSite,
 								Action: func(ctx context.Context, c *cli.Command) error {
-									return tf.CommandRunner("state", c.String("site"), []string{"pull"}, []string{}, "")
+									return tf.CommandRunner("state", c.String("site"), []string{"pull"}, []string{}, "", fs)
 								},
 							},
 							{
@@ -991,7 +991,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.String("lock-timeout") != "" {
 										options = append(options, "-lock-timeout="+c.String("lock-timeout"))
 									}
-									return tf.CommandRunner("state push", c.String("site"), args, options, "")
+									return tf.CommandRunner("state push", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -1032,7 +1032,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									return tf.CommandRunner("state replace-provider", c.String("site"), args, options, "")
+									return tf.CommandRunner("state replace-provider", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -1077,7 +1077,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
 									}
-									return tf.CommandRunner("state rm", c.String("site"), args, options, "")
+									return tf.CommandRunner("state rm", c.String("site"), args, options, "", fs)
 								},
 							},
 							{
@@ -1102,7 +1102,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.String("state") != "" {
 										options = append(options, "-state "+c.StringArg("state"))
 									}
-									return tf.CommandRunner("state show", c.String("site"), args, options, "")
+									return tf.CommandRunner("state show", c.String("site"), args, options, "", fs)
 								},
 							},
 						},
@@ -1148,7 +1148,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								options = append(options, "-ignore-remote-version")
 							}
 
-							return tf.CommandRunner("taint", c.String("site"), args, options, "")
+							return tf.CommandRunner("taint", c.String("site"), args, options, "", fs)
 						},
 					},
 					{
@@ -1189,7 +1189,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 								options = append(options, "-ignore-remote-version")
 							}
 
-							return tf.CommandRunner("untaint", c.String("site"), args, options, "")
+							return tf.CommandRunner("untaint", c.String("site"), args, options, "", fs)
 						},
 					},
 					{
@@ -1212,7 +1212,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("no-color") {
 								options = append(options, "-no-color")
 							}
-							return tf.CommandRunner("validate", c.String("site"), []string{}, options, "")
+							return tf.CommandRunner("validate", c.String("site"), []string{}, options, "", fs)
 						},
 					},
 					{
@@ -1231,7 +1231,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.Bool("json") {
 								options = append(options, "-json")
 							}
-							return tf.CommandRunner("version", c.String("site"), []string{}, options, "")
+							return tf.CommandRunner("version", c.String("site"), []string{}, options, "", fs)
 						},
 					},
 				},
@@ -1262,6 +1262,15 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						return ctx, errors.New("the site " + site + " does not exist")
 					}
 
+					// Check if the site is in the current environment, if not, return an error
+					env, err := afero.ReadFile(fs, utils.Paths["root"]+"/site_"+site+"/.terraform/.terrabutler_env")
+					if err != nil {
+						logger.Zap.Warn("There is no environment validation file for this site.")
+						logger.Zap.Warn("To create this file run terrabutler env reload or terrabutler env select.")
+					} else if string(env) != utils.GetCurrentEnv(fs) {
+							logger.Zap.Error("Environments Mismatched! The current terrabutler environment is " + utils.GetCurrentEnv(fs) + ", but the site " + site + " is in the " + string(env) + " environment.")
+							return ctx, errors.New("try to run terrabutler env reload or terrabutler env select successfully to make this site be in the current environment")
+					}
 					return ctx, nil
 				},
 			}},

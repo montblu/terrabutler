@@ -65,3 +65,21 @@ func TestInvalidCurrentEnv(t *testing.T) {
 	assert.NotEqual(t, env, envName, "Failed, returned name of the current environment is the same.")
 	assert.Error(t, err, "Failed, there was no file to be read.")
 }
+
+func TestSaveSiteEnv(t *testing.T) {
+	site := "site"
+	env := "env"
+
+	// Use the in-memory filesystem
+	fs := afero.NewMemMapFs()
+
+	err := SaveSiteEnv(site, env, fs)
+
+	assert.NoError(t, err, "Failed, an error occurred saving the environment for the site.")
+
+	// Verify if the file was created and has the correct content
+	filePath := Paths["root"] + "/site_" + site + "/.terraform/.terrabutler_env"
+	savedEnv, err := afero.ReadFile(fs, filePath)
+	assert.NoError(t, err, "Failed, an error occurred reading the environment file for the site.")
+	assert.Equal(t, string(savedEnv), env, "Failed, the saved environment in the file is incorrect.")
+}

@@ -49,12 +49,12 @@ func getAvailableEnvs(fs afero.Fs) ([]string, error) {
 	org := settings.Conf.String("general.organization")
 	default_env_name := settings.Conf.String("environments.default.name")
 
-	_, err := commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend")
+	_, err := commandRunnerNoVisibleOutput("init", "inception", []string{}, []string{}, "backend", fs)
 	if err != nil {
 		return nil, err
 	}
 
-	workspaces, err := runnerNoVisibleOutput([]string{"terraform", "workspace", "list"}, "inception", tf.TerraformEnv())
+	workspaces, err := runnerNoVisibleOutput([]string{"terraform", "workspace", "list"}, "inception", tf.TerraformEnv(), fs)
 	if err != nil {
 		return nil, errors.New("There was an error from terraform workspace for " + org + "-" + default_env_name + " environment. Error: " + err.Error())
 	}
@@ -77,7 +77,7 @@ func getAvailableEnvs(fs afero.Fs) ([]string, error) {
 }
 
 func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
-	current_env := utils.GetCurrentEnv()
+	current_env := utils.GetCurrentEnv(fs)
 
 	available_envs, err := GetAvailableEnvs(fs)
 	if err != nil {
@@ -102,7 +102,7 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 		envVars := []string{
 			"TERRABUTLER_OLD_ENV=" + current_env,
 			"TERRABUTLER_NEW_ENV=" + env}
-		_, err := runnerNoVisibleOutput(command, "inception", envVars)
+		_, err := runnerNoVisibleOutput(command, "inception", envVars, fs)
 		if err != nil {
 			return errors.New("The pre_env_select hook has failed: " + err.Error())
 		}
@@ -127,7 +127,7 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 
 	// If init true, run terraform_init_all_sites
 	if init {
-		if err := initAllSites(); err != nil {
+		if err := initAllSites(current_env, fs); err != nil {
 			return err
 		}
 	}
@@ -142,7 +142,7 @@ func SetCurrentEnv(env string, init bool, fs afero.Fs) error {
 		envVars := []string{
 			"TERRABUTLER_OLD_ENV=" + current_env,
 			"TERRABUTLER_NEW_ENV=" + env}
-		_, err := runnerNoVisibleOutput(command, "inception", envVars)
+		_, err := runnerNoVisibleOutput(command, "inception", envVars, fs)
 		if err != nil {
 			return errors.New("The post_env_select hook has failed: " + err.Error())
 		}
@@ -170,7 +170,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 		return nil
 	}
 	// Check if the env is the current in use
-	if env == utils.GetCurrentEnv() {
+	if env == utils.GetCurrentEnv(fs) {
 		logger.Zap.Error("The environment you are trying to delete is your active environment.")
 		return errors.New("please switch to another workspace and try again")
 
@@ -194,7 +194,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 
 	// If destroy and is not a permanent env ^ already checked above, run tf_destroy_all_sites(env)
 	if destroy {
-		err := destroyAllSites()
+		err := destroyAllSites(fs)
 		if err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ func DeleteEnv(env string, confirmation bool, destroy bool, fs afero.Fs) error {
 	}
 
 	// Run the terraform workspace delete env [Path Inception] (with output and check)
-	err = commandRunner("workspace delete "+env, "inception", []string{}, []string{}, "")
+	err = commandRunner("workspace delete "+env, "inception", []string{}, []string{}, "", fs)
 	// Show a error message if process not executed correctly
 	if err != nil {
 		return errors.New("There was an error while deleting the " + env + " environment: " + err.Error())
@@ -255,7 +255,7 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 	}
 
 	// Run Terraform workspace new env [path inception] (with output and check)
-	err = commandRunner("workspace new "+env, "inception", []string{}, []string{}, "")
+	err = commandRunner("workspace new "+env, "inception", []string{}, []string{}, "", fs)
 	if err != nil {
 		return errors.New("There was an error while creating the new environment: " + err.Error())
 	}
@@ -283,7 +283,7 @@ func CreateEnv(env string, confirmation bool, temporary bool, apply bool, fs afe
 	// If temporary and apply are true, terraform_apply_all_sites
 	// Should OR apply?
 	if temporary && apply {
-		err := applyAllSites()
+		err := applyAllSites(fs)
 		if err != nil {
 			return err
 		}
