@@ -52,9 +52,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 		Version:   version,
 		// Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
-		HideVersion:              true,
-		EnableShellCompletion:    true,
-		Suggest:                  true,
+		HideVersion:           true,
+		EnableShellCompletion: true,
+		Suggest:               true,
 		// Users source the output to enable tab-completion in their shell:
 		//   source <(terrabutler completion bash)   # ~/.bashrc
 		//   source <(terrabutler completion zsh)    # ~/.zshrc
@@ -69,7 +69,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 				"# .zshrc\n" +
 				"source <(" + appName + " completion zsh)\n\n" +
 				"# fish\n" +
-				 appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
+				appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
 			filtered := make([]*cli.Command, 0, len(c.Commands))
 			for _, sub := range c.Commands {
 				if sub.Name != "pwsh" {
@@ -97,10 +97,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 			{
 				Name:  "version",
 				Usage: "Show version and exit",
-			Action: func(ctx context.Context, c *cli.Command) error {
-				_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
-				return nil
-			},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
+					return nil
+				},
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -150,12 +150,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							return env.DeleteEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"), fs)
 						}},
 					{
-						Name:      "list",
-						Aliases:   []string{""},
-						Usage:     "List environments",
-						UsageText: appName + " env list [OPTIONS]",
-						HideHelp:  true,
-						Suggest:   true,
+						Name:                     "list",
+						Aliases:                  []string{""},
+						Usage:                    "List environments",
+						UsageText:                appName + " env list [OPTIONS]",
+						HideHelp:                 true,
+						Suggest:                  true,
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -252,10 +252,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-					Action: func(ctx context.Context, c *cli.Command) error {
-						_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
-						return nil
-					}},
+						Action: func(ctx context.Context, c *cli.Command) error {
+							_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
+							return nil
+						}},
 				},
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 					return ctx, inception.InitNeeded(fs)
@@ -302,6 +302,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.BoolFlag{Name: "compact-warnings", Usage: "If specified, warnings will be printed in a more compact format."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -336,6 +337,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
+							}
+							if c.Bool("compact-warnings") {
+								options = append(options, "-compact-warnings")
 							}
 							return tf.CommandRunner("apply", c.String("site"), []string{}, options, "var")
 						},
@@ -648,6 +652,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
+							&cli.BoolFlag{Name: "compact-warnings", Usage: "If specified, warnings will be printed in a more compact format."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -682,6 +687,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							}
 							if c.String("out") != "" {
 								options = append(options, "-out="+c.String("out"))
+							}
+							if c.Bool("compact-warnings") {
+								options = append(options, "-compact-warnings")
 							}
 
 							return tf.CommandRunner("plan", c.String("site"), []string{}, options, "var")
