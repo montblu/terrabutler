@@ -29,6 +29,10 @@ jobs:
     needs:
       - lint
       - test
+    permissions:
+      contents: write      # upload release assets (goreleaser) and the packslip bundle
+      id-token: write      # sign the packslip manifest with the workflow's OIDC identity
+      attestations: write  # publish build provenance for the released artifacts
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -36,4 +40,13 @@ jobs:
       - name: Release
         uses: ./.github/actions/goreleaser
         with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Publish packslip manifest
+        uses: jdx/packslip@74c75db7d611b36dd5a157999ec16cf823ccf80c # v1.2.0
+        with:
+          artifacts: dist/*.tar.gz
+          bin: terrabutler
+          resources: |
+            skill/terrabutler=archive:skills/terrabutler
           token: "${{ secrets.GITHUB_TOKEN }}"
