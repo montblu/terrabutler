@@ -22,22 +22,12 @@ mkdir <project_name>
 
 Start by downloading the Terrabutler Template Project from the repository source below: 
 
-[![Version-shield]](https://github.com/lucascanero/terrabutler-template/archive/refs/heads/example-template.zip)
+[![Version-shield]](https://github.com/montblu/template-terrabutler-aws/archive/refs/heads/main.zip)
 
 Copy the files inside `./terrabutler-template/` to the root of your project folder.
 
 ```shell
 $ cp -a /terrabutler-template/. /<project_name>/
-```
-
-### Create a new workspace
-
-Before configuring terrabutler, inside `<project_name>/site_inception` folder, you will need to create a Terraform Workspace: 
-For example, we are gonna call it "staging"
-
-```shell
-$ cd site_inception
-$ terraform workspace new staging
 ```
 
 ### Change Variables
@@ -82,6 +72,19 @@ Perform an Terraform Initialization inside site_inception:
 $ cd /site_inception/
 $ terraform init
 ```
+
+#### Create a new workspace
+
+Before configuring terrabutler, still inside `<project_name>/site_inception` folder, you will need to create a Terraform Workspace: 
+For example, we are gonna call it "staging"
+
+```shell
+$ cd site_inception
+$ terraform workspace new staging
+```
+
+#### Apply the site inception
+
 Perform an Terraform Apply with the `.tfvars` inside `/config/variables/`:
 
 `./configs/variables/global.tfvars` </br>
@@ -108,8 +111,8 @@ $ terraform init -backend-config=<inception_backend_path>
 ```
 
 ???+ tip
-   Example:
-   $ terraform init -backend-config="./configs/backends/<project_name>-<environment_name>-inception.tfvars"
+    Example:
+    $ terraform init -backend-config="./configs/backends/<project_name>-<environment_name>-inception.tfvars"
 
 #### Delete the local state
 
