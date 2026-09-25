@@ -302,6 +302,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.BoolFlag{Name: "compact-warnings", Usage: "If specified, warnings will be printed in a more compact format."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -336,6 +337,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
+							}
+							if c.Bool("compact-warnings") {
+								options = append(options, "-compact-warnings")
 							}
 							return tf.CommandRunner("apply", c.String("site"), []string{}, options, "var", fs)
 						},
@@ -648,6 +652,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
+							&cli.BoolFlag{Name: "compact-warnings", Usage: "If specified, warnings will be printed in a more compact format."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -682,6 +687,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							}
 							if c.String("out") != "" {
 								options = append(options, "-out="+c.String("out"))
+							}
+							if c.Bool("compact-warnings") {
+								options = append(options, "-compact-warnings")
 							}
 
 							return tf.CommandRunner("plan", c.String("site"), []string{}, options, "var", fs)
@@ -909,6 +917,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+									&cli.StringFlag{Name: "state", Usage: "Overrides the state filename to the provided value when reading the prior state snapshot."},
+									&cli.StringFlag{Name: "state-out", Usage: "Overrides the state filename to the provided value when writing new state snapshots."},
 								},
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -933,6 +943,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
+									}
+									if c.String("state") != "" {
+										options = append(options, "-state="+c.String("state"))
+									}
+									if c.String("state-out") != "" {
+										options = append(options, "-state-out="+c.String("state-out"))
 									}
 									return tf.CommandRunner("state mv", c.String("site"), args, options, "", fs)
 								},
