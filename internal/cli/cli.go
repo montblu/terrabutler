@@ -208,15 +208,24 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							return env.CreateEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"), fs)
 						}},
 					{
-						Name:                     "reload",
-						Aliases:                  []string{""},
-						HideHelp:                 true,
-						Usage:                    "Reload the current environment",
-						UsageText:                appName + " env reload [OPTIONS]",
+						Name:      "reload",
+						Aliases:   []string{""},
+						HideHelp:  true,
+						Usage:     "Reload the current environment",
+						UsageText: appName + " env reload [OPTIONS]",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "upgrade",
+								Usage: "Upgrade the modules and providers of all sites, including inception.",
+							},
+						},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-						Action: func(context.Context, *cli.Command) error {
+						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.Bool("upgrade") {
+								return tf.UpgradeAllSites()
+							}
 							return tf.InitAllSites()
 						}},
 					{
