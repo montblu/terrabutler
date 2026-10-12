@@ -266,9 +266,31 @@ func ApplyAllSites() error {
 var commandRunnerNoVisibleOutputVar = CommandRunnerNoVisibleOutput
 
 func InitAllSites() error {
+	return initAllSites(false)
+}
+
+// Same as InitAllSites, but also upgrades the modules and providers of every site, inception included
+func UpgradeAllSites() error {
+	return initAllSites(true)
+}
+
+// Options used to init a site when initializing all sites
+func initAllSitesOptions(site string, upgrade bool) []string {
+	options := []string{}
+	// Inception keeps its saved backend configuration, since it holds the current environment.
+	if site != "inception" {
+		options = append(options, "-reconfigure")
+	}
+	if upgrade {
+		options = append(options, "-upgrade")
+	}
+	return options
+}
+
+func initAllSites(upgrade bool) error {
 	sites := settings.Conf.Strings("sites.ordered")
-	// Remove "inception" from the list of sites to be initialized.
-	if index := slices.Index(sites, "inception"); index != -1 {
+	// Remove "inception" from the list of sites to be initialized, unless upgrading.
+	if index := slices.Index(sites, "inception"); index != -1 && !upgrade {
 		sites = slices.Delete(sites, index, index+1)
 	}
 
@@ -277,7 +299,11 @@ func InitAllSites() error {
 	}
 
 	total := len(sites)
-	logger.Zap.Info(fmt.Sprintf("Initializing %d sites in parallel...", total))
+	if upgrade {
+		logger.Zap.Info(fmt.Sprintf("Initializing and upgrading %d sites in parallel...", total))
+	} else {
+		logger.Zap.Info(fmt.Sprintf("Initializing %d sites in parallel...", total))
+	}
 
 	type result struct {
 		site string
@@ -291,7 +317,7 @@ func InitAllSites() error {
 		wg.Add(1)
 		go func(s string) {
 			defer wg.Done()
-			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, []string{"-reconfigure"}, "backend")
+			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, initAllSitesOptions(s, upgrade), "backend")
 			results <- result{site: s, err: err}
 		}(site)
 	}

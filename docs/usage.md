@@ -60,6 +60,16 @@ terrabutler env select staging
 
 The command above change the current environment to `staging`.
 
+The `reload` subcommand initializes again all the sites of the current environment, except the
+inception one. To also upgrade the modules and providers of every site, inception included, use
+the `--upgrade` flag:
+
+``` shell
+terrabutler env reload --upgrade
+```
+
+The command above runs `terraform init -upgrade` in all the sites of the current environment.
+
 ### Command `tf`
 
 > [!TIP]

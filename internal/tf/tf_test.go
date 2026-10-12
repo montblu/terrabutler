@@ -112,11 +112,13 @@ func TestInitAllSitesSuccess(t *testing.T) {
 	var mu sync.Mutex
 	callCount := 0
 	calledSites := []string{}
+	calledOptions := map[string][]string{}
 
 	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
 		mu.Lock()
 		callCount++
 		calledSites = append(calledSites, site)
+		calledOptions[site] = options
 		mu.Unlock()
 		return nil, nil
 	}
@@ -128,7 +130,51 @@ func TestInitAllSitesSuccess(t *testing.T) {
 	assert.NoError(t, err, "Init should not fail")
 	assert.Equal(t, 3, callCount, "Should init 3 sites (inception removed)")
 	assert.Equal(t, 3, len(calledSites), "All 3 sites should be called")
+	assert.Equal(t, map[string][]string{
+		"site-a": {"-reconfigure"},
+		"site-b": {"-reconfigure"},
+		"site-c": {"-reconfigure"},
+	}, calledOptions, "Init should only reconfigure the sites")
 	assert.NotContains(t, calledSites, "inception", "Inception should be filtered out")
+}
+
+func TestUpgradeAllSitesSuccess(t *testing.T) {
+	var mu sync.Mutex
+	calledOptions := map[string][]string{}
+
+	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+		mu.Lock()
+		calledOptions[site] = options
+		mu.Unlock()
+		return nil, nil
+	}
+
+	settings.Conf.Set("sites.ordered", []string{"inception", "site-a", "site-b"}) //nolint:errcheck
+
+	err := UpgradeAllSites()
+
+	assert.NoError(t, err, "Upgrade should not fail")
+	assert.Equal(t, map[string][]string{
+		"inception": {"-upgrade"},
+		"site-a":    {"-reconfigure", "-upgrade"},
+		"site-b":    {"-reconfigure", "-upgrade"},
+	}, calledOptions, "Upgrade should include inception, without reconfiguring it")
+}
+
+func TestUpgradeAllSitesWithErrors(t *testing.T) {
+	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
+		if site == "inception" {
+			return nil, errors.New("backend unavailable")
+		}
+		return nil, nil
+	}
+
+	settings.Conf.Set("sites.ordered", []string{"inception", "site-a", "site-b"}) //nolint:errcheck
+
+	err := UpgradeAllSites()
+
+	assert.Error(t, err, "Upgrade should return error when some sites fail")
+	assert.Contains(t, err.Error(), "1/3 sites failed", "Error should indicate failure count")
 }
 
 func TestInitAllSitesWithErrors(t *testing.T) {
