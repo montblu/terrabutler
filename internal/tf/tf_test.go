@@ -112,11 +112,13 @@ func TestInitAllSitesSuccess(t *testing.T) {
 	var mu sync.Mutex
 	callCount := 0
 	calledSites := []string{}
+	calledOptions := map[string][]string{}
 
 	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
 		mu.Lock()
 		callCount++
 		calledSites = append(calledSites, site)
+		calledOptions[site] = options
 		mu.Unlock()
 		return nil, nil
 	}
@@ -128,29 +130,12 @@ func TestInitAllSitesSuccess(t *testing.T) {
 	assert.NoError(t, err, "Init should not fail")
 	assert.Equal(t, 3, callCount, "Should init 3 sites (inception removed)")
 	assert.Equal(t, 3, len(calledSites), "All 3 sites should be called")
-	assert.NotContains(t, calledSites, "inception", "Inception should be filtered out")
-}
-
-func TestInitAllSitesOptions(t *testing.T) {
-	var mu sync.Mutex
-	calledOptions := map[string][]string{}
-
-	commandRunnerNoVisibleOutputVar = func(command, site string, args, options []string, needed_options string) ([]byte, error) {
-		mu.Lock()
-		calledOptions[site] = options
-		mu.Unlock()
-		return nil, nil
-	}
-
-	settings.Conf.Set("sites.ordered", []string{"inception", "site-a", "site-b"}) //nolint:errcheck
-
-	err := InitAllSites()
-
-	assert.NoError(t, err, "Init should not fail")
 	assert.Equal(t, map[string][]string{
 		"site-a": {"-reconfigure"},
 		"site-b": {"-reconfigure"},
+		"site-c": {"-reconfigure"},
 	}, calledOptions, "Init should only reconfigure the sites")
+	assert.NotContains(t, calledSites, "inception", "Inception should be filtered out")
 }
 
 func TestUpgradeAllSitesSuccess(t *testing.T) {
