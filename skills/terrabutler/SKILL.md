@@ -90,7 +90,7 @@ This means one of two things:
 ### Diagnose which one — do this FIRST, before any other troubleshooting
 Don't guess. A fresh clone has **no** generated working dirs, so check for them:
 ```bash
-ls -d site_inception/.terraform 2>/dev/null && echo INITIALIZED || echo NOT-INITIALIZED
+[ -f site_inception/.terraform/environment ] && echo INITIALIZED || echo NOT-INITIALIZED
 ```
 - `NOT-INITIALIZED` → the repo needs `terrabutler init` **before ANY terrabutler command will
   work** (see below). This is the common case on a fresh clone — assume it whenever the "not
