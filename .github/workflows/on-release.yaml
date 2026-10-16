@@ -43,10 +43,6 @@ jobs:
           token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Publish packslip manifest
-        uses: jdx/packslip@74c75db7d611b36dd5a157999ec16cf823ccf80c # v1.2.0
+        uses: ./.github/actions/packslip
         with:
-          artifacts: dist/*.tar.gz
-          bin: terrabutler
-          resources: |
-            skill/terrabutler=archive:skills/terrabutler
           token: "${{ secrets.GITHUB_TOKEN }}"
