@@ -40,11 +40,17 @@ terrabutler tf -site <site> validate     # Validate configuration files
 terrabutler tf -site <site> fmt          # Reformat configuration (local files only)
 terrabutler tf -site <site> show         # Show current state or a saved plan
 terrabutler tf -site <site> output       # Show output values
+terrabutler tf -site <site> version      # Show the Terraform version in use
+terrabutler tf -site <site> generate-options {init|plan|apply}  # Show the flags terrabutler would pass to terraform
 terrabutler env show                     # Show current environment name
 terrabutler env list                     # List available environments
 mise run tf:summarize -- <site>          # Summarize a plan (read-only), if the project defines it
 mise tasks                               # List the project's available mise tasks
 ```
+
+`version` and `generate-options` are inoffensive — `version` only reports the Terraform version
+terrabutler is calling, and `generate-options` only prints the flags terrabutler would pass to
+terraform for `init`/`plan`/`apply`. Neither reads or changes infrastructure, state, or files.
 
 Plus non-terrabutler read-only formatting/inspection: `terraform fmt`.
 That is the complete list. Nothing else may be executed.
@@ -200,6 +206,8 @@ All subcommands require `-site <site>`:
 | `output`   | `--json`      | Machine-readable JSON output                                              |
 | `output`   | `--raw`       | Print a single value's raw string instead of a formatted representation   |
 | `output`   | `--no-color`  | Output without color                                                      |
+| `version`  | `--json`      | Output the version information as a JSON object                           |
+| `generate-options` | `{init\|plan\|apply}` | Positional arg (required): which subcommand's flags to print      |
 
 ### Flags for `plan` / `apply` / `destroy` — reference only, these commands are FORBIDDEN
 
@@ -361,6 +369,8 @@ terrabutler tf -site <site> validate    # Validate a site's configuration
 terrabutler tf -site <site> fmt         # Reformat a site's .tf files
 terrabutler tf -site <site> show        # Show state or a saved plan
 terrabutler tf -site <site> output      # Show output values
+terrabutler tf -site <site> version     # Show the Terraform version in use
+terrabutler tf -site <site> generate-options {init|plan|apply}  # Show flags terrabutler would pass
 mise run tf:summarize -- <site>         # Summarize a plan (read-only), if defined
 cat <project-root>/configs/settings.yml # Discover sites and deploy order
 mise tasks                              # List all available mise tasks
