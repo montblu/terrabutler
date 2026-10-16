@@ -195,6 +195,7 @@ All subcommands require `-site <site>`:
 
 | Command    | Flag          | Description                                                              |
 |------------|---------------|---------------------------------------------------------------------------|
+| `fmt`      | `--check`     | Check if files are formatted; exits non-zero if not; does not write      |
 | `fmt`      | `--diff`      | Display diffs of formatting changes                                       |
 | `fmt`      | `--recursive` | Also process files in subdirectories                                      |
 | `fmt`      | `--no-color`  | Output without color                                                      |
@@ -328,9 +329,7 @@ Each `site_*` directory follows a convention:
 
 ### Formatting
 - All `.tf` files must pass formatting checks (typically enforced by CI).
-- To confirm formatting: `terrabutler tf -site <site> fmt --diff --recursive` (note: like plain
-  `fmt`, this still rewrites files — terrabutler's `fmt` has no non-mutating check-only mode,
-  unlike raw `terraform fmt -check`).
+- To confirm formatting: `terrabutler tf -site <site> fmt --check --recursive`
 - To apply formatting: `terrabutler tf -site <site> fmt --recursive`
 
 ### Secrets
