@@ -435,6 +435,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						Usage:     "Reformat your configuration in the standardstyle",
 						UsageText: appName + " tf fmt [OPTIONS]",
 						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "check", Usage: "Check if the input is formatted. Exits non-zero if not, without writing any file."},
 							&cli.BoolFlag{Name: "diff", Usage: "Display diffs of formatting changes."},
 							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
 							&cli.BoolFlag{Name: "recursive", Usage: "Also process files in subdirectories. By default, only the given directory (or current directory) is processed."},
@@ -443,6 +444,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
 						Action: func(ctx context.Context, c *cli.Command) error {
 							options := []string{}
+							if c.Bool("check") {
+								options = append(options, "-check")
+							}
 							if c.Bool("diff") {
 								options = append(options, "-diff")
 							}
