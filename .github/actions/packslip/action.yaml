@@ -10,7 +10,7 @@ runs:
   using: composite
   steps:
     - name: Run packslip
-      uses: jdx/packslip@v1.2.0
+      uses: jdx/packslip@v1
       with:
         artifacts: dist/*.tar.gz
         bin: terrabutler
