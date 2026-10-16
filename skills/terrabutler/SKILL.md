@@ -219,6 +219,7 @@ the correct flag names.
 | `--target`       | ✅      | ✅     | ✅        | Limit to given module/resource (repeatable)   |
 | `--var`          | ✅      | ✅     | ✅        | Set an input variable (repeatable)            |
 | `--out`          |         | ✅     |           | (plan only) Write plan file to given path     |
+| `--compact-warnings` | ✅  | ✅     |           | Show warnings in compact format               |
 
 ---
 
