@@ -64,7 +64,7 @@ That is the complete list. Nothing else may be executed.
 - `plan` (including `--out`)
 - `init`, `import`, `refresh`, `taint`, `untaint`, `force-unlock`, `console`, `providers`
 - `state rm|mv|push|pull|replace-provider|list|show` (all state subcommands)
-- `env select`, `env new`, `env delete`, `env reload`
+- `env select`, `env new`, `env delete`, `env reload` (including `env reload --upgrade`)
 - `mise run tf:all-sites-on-*` and any `mise login*` / `az:*` tasks
 - Any command that mutates infrastructure, state, environments, or cloud auth
 
