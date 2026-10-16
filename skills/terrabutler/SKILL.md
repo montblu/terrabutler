@@ -327,8 +327,11 @@ Each `site_*` directory follows a convention:
 - **Out of scope**: Application code (Java/Python/TypeScript) unless explicitly asked
 
 ### Formatting
-- All `.tf` files must pass `terraform fmt -check` (typically enforced by CI)
-- Run `terraform fmt -recursive` before committing
+- All `.tf` files must pass formatting checks (typically enforced by CI).
+- To confirm formatting: `terrabutler tf -site <site> fmt --diff --recursive` (note: like plain
+  `fmt`, this still rewrites files — terrabutler's `fmt` has no non-mutating check-only mode,
+  unlike raw `terraform fmt -check`).
+- To apply formatting: `terrabutler tf -site <site> fmt --recursive`
 
 ### Secrets
 - Secrets are commonly AWS KMS encrypted maps: `var.global_encrypted_secrets` / `var.site_encrypted_secrets`
