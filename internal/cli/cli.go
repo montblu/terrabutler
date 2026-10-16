@@ -52,9 +52,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 		Version:   version,
 		// Hides Help Command to "Remove" HelpCommand, you need to hide it for each command
 		HideHelpCommand:       true,
-		HideVersion:              true,
-		EnableShellCompletion:    true,
-		Suggest:                  true,
+		HideVersion:           true,
+		EnableShellCompletion: true,
+		Suggest:               true,
 		// Users source the output to enable tab-completion in their shell:
 		//   source <(terrabutler completion bash)   # ~/.bashrc
 		//   source <(terrabutler completion zsh)    # ~/.zshrc
@@ -69,7 +69,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 				"# .zshrc\n" +
 				"source <(" + appName + " completion zsh)\n\n" +
 				"# fish\n" +
-				 appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
+				appName + " completion fish > ~/.config/fish/completions/" + appName + ".fish\n"
 			filtered := make([]*cli.Command, 0, len(c.Commands))
 			for _, sub := range c.Commands {
 				if sub.Name != "pwsh" {
@@ -97,10 +97,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 			{
 				Name:  "version",
 				Usage: "Show version and exit",
-			Action: func(ctx context.Context, c *cli.Command) error {
-				_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
-				return nil
-			},
+				Action: func(ctx context.Context, c *cli.Command) error {
+					_, _ = fmt.Fprintf(c.Root().Writer, "%s %s (commit: %s, date: %s)\n", appName, version, commit, date)
+					return nil
+				},
 				CommandNotFound:          CommandNotFound,
 				OnUsageError:             OnUsageError,
 				InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -150,12 +150,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							return env.DeleteEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("d"), fs)
 						}},
 					{
-						Name:      "list",
-						Aliases:   []string{""},
-						Usage:     "List environments",
-						UsageText: appName + " env list [OPTIONS]",
-						HideHelp:  true,
-						Suggest:   true,
+						Name:                     "list",
+						Aliases:                  []string{""},
+						Usage:                    "List environments",
+						UsageText:                appName + " env list [OPTIONS]",
+						HideHelp:                 true,
+						Suggest:                  true,
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -208,15 +208,24 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							return env.CreateEnv(c.StringArg("ENV"), c.Bool("y"), c.Bool("t"), c.Bool("a"), fs)
 						}},
 					{
-						Name:                     "reload",
-						Aliases:                  []string{""},
-						HideHelp:                 true,
-						Usage:                    "Reload the current environment",
-						UsageText:                appName + " env reload [OPTIONS]",
+						Name:      "reload",
+						Aliases:   []string{""},
+						HideHelp:  true,
+						Usage:     "Reload the current environment",
+						UsageText: appName + " env reload [OPTIONS]",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "upgrade",
+								Usage: "Upgrade the modules and providers of all sites, including inception.",
+							},
+						},
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-						Action: func(context.Context, *cli.Command) error {
+						Action: func(ctx context.Context, c *cli.Command) error {
+							if c.Bool("upgrade") {
+								return tf.UpgradeAllSites()
+							}
 							return tf.InitAllSites()
 						}},
 					{
@@ -252,10 +261,10 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageError,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
-					Action: func(ctx context.Context, c *cli.Command) error {
-						_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
-						return nil
-					}},
+						Action: func(ctx context.Context, c *cli.Command) error {
+							_, _ = fmt.Fprintf(c.Root().Writer, "%s\n", utils.GetCurrentEnv())
+							return nil
+						}},
 				},
 				Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 					return ctx, inception.InitNeeded(fs)
@@ -302,6 +311,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.BoolFlag{Name: "no-refresh", Usage: "Skip checking for external changes to remote objects while creating the plan. This can potentially make planning faster, but at the expense of possibly planning against a stale record of the remote system state."},
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
+							&cli.BoolFlag{Name: "compact-warnings", Usage: "If specified, warnings will be printed in a more compact format."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -336,6 +346,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							}
 							for _, v := range c.StringSlice("var") {
 								options = append(options, "-var="+v)
+							}
+							if c.Bool("compact-warnings") {
+								options = append(options, "-compact-warnings")
 							}
 							return tf.CommandRunner("apply", c.String("site"), []string{}, options, "var")
 						},
@@ -648,6 +661,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							&cli.StringSliceFlag{Name: "target", Usage: "Limit the planning operation to only the given module, resource, or resource instance and all of its dependencies. You can use this option multiple times to include more than one object. This is for exceptional use only."},
 							&cli.StringSliceFlag{Name: "var", Usage: "Set a value for one of the input variables in the root module of the configuration. Use this option more than once to set more than one variable."},
 							&cli.StringFlag{Name: "out", Usage: "Write a plan file to the given path. This can be used as input to the \"apply\" command."},
+							&cli.BoolFlag{Name: "compact-warnings", Usage: "If specified, warnings will be printed in a more compact format."},
 						},
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -683,6 +697,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 							if c.String("out") != "" {
 								options = append(options, "-out="+c.String("out"))
 							}
+							if c.Bool("compact-warnings") {
+								options = append(options, "-compact-warnings")
+							}
 
 							return tf.CommandRunner("plan", c.String("site"), []string{}, options, "var")
 						},
@@ -692,6 +709,9 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						HideHelp:  true,
 						Usage:     "Show the providers required for this configuration",
 						UsageText: appName + " tf providers [OPTIONS] COMMAND [ARGS]...",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{Name: "no-color", Usage: "If specified, output won't contain any color."},
+						},
 						Commands: []*cli.Command{
 							{
 								Name:      "lock",
@@ -777,6 +797,19 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 						CommandNotFound:          CommandNotFound,
 						OnUsageError:             OnUsageErrorSite,
 						InvalidFlagAccessHandler: InvalidFlagAccessHandler,
+						Action: func(ctx context.Context, c *cli.Command) error {
+							// With an Action set, unmatched arguments reach here instead of
+							// CommandNotFound, so unknown subcommands are rejected explicitly.
+							if c.Args().Present() {
+								CommandNotFound(ctx, c, c.Args().First())
+								return nil
+							}
+							options := []string{}
+							if c.Bool("no-color") {
+								options = append(options, "-no-color")
+							}
+							return tf.CommandRunner("providers", c.String("site"), []string{}, options, "")
+						},
 					},
 					{
 						Name:      "refresh",
@@ -893,6 +926,8 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									&cli.BoolFlag{Name: "no-lock", Usage: "Don't hold a state lock during the operation. This is dangerous if others might concurrently run commands against the same workspace."},
 									&cli.StringFlag{Name: "lock-timeout", Usage: "Duration to retry a state lock."},
 									&cli.BoolFlag{Name: "ignore-remote-version", Usage: "A rare option used for the remote backend only. See the remote backend documentation for more information."},
+									&cli.StringFlag{Name: "state", Usage: "Overrides the state filename to the provided value when reading the prior state snapshot."},
+									&cli.StringFlag{Name: "state-out", Usage: "Overrides the state filename to the provided value when writing new state snapshots."},
 								},
 								OnUsageError:             OnUsageErrorSite,
 								InvalidFlagAccessHandler: InvalidFlagAccessHandler,
@@ -905,7 +940,7 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									if c.StringArg("DESTINATION") == "" {
 										return errors.New("missing argument 'DESTINATION'")
 									}
-									args = append(args, c.String("SOURCE"), c.String("DESTINATION"))
+									args = append(args, c.StringArg("SOURCE"), c.StringArg("DESTINATION"))
 									if c.Bool("dry-run") {
 										options = append(options, "-dry-run")
 									}
@@ -917,6 +952,12 @@ func Run(appName, version, commit, date string, fs afero.Fs) error {
 									}
 									if c.Bool("ignore-remote-version") {
 										options = append(options, "-ignore-remote-version")
+									}
+									if c.String("state") != "" {
+										options = append(options, "-state="+c.String("state"))
+									}
+									if c.String("state-out") != "" {
+										options = append(options, "-state-out="+c.String("state-out"))
 									}
 									return tf.CommandRunner("state mv", c.String("site"), args, options, "")
 								},

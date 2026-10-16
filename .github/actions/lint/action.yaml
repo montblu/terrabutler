@@ -7,10 +7,10 @@ runs:
     - name: Setup Go
       uses: actions/setup-go@v7
       with:
-        go-version: "1.26"
+        go-version: "1.27"
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v9
       with:
-        version: v2.12.2
+        version: v2.14.0
         args: --config=.github/lint/golangci.yaml

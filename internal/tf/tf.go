@@ -108,17 +108,18 @@ func CommandBuilder(command string, site string, args []string, options []string
 	return base_command
 }
 
-// trapTerminationSignals prevents Go's default terminate-on-signal behavior so the
-// parent can wait for the terraform child to exit cleanly, and forwards the signal
-// to the child process. Do not read sigChan for any other purpose.
+// trapTerminationSignals stops Go from killing terrabutler immediately on
+// SIGINT/SIGTERM, so we can wait for terraform to exit cleanly instead.
+// We don't forward the signal to terraform ourselves - it's already in our
+// process group, so the terminal sends it there directly. Forwarding it again
+// was the bug in #234: terraform got the signal twice and treated that as a
+// hard-stop instead of a graceful shutdown.
 func trapTerminationSignals(cmd *exec.Cmd) (stop func()) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		for sig := range sigChan {
-			if cmd.Process != nil {
-				_ = cmd.Process.Signal(sig)
-			}
+		for range sigChan {
+			// Just drain - terraform already got the signal.
 		}
 	}()
 	return func() {
@@ -265,9 +266,31 @@ func ApplyAllSites() error {
 var commandRunnerNoVisibleOutputVar = CommandRunnerNoVisibleOutput
 
 func InitAllSites() error {
+	return initAllSites(false)
+}
+
+// Same as InitAllSites, but also upgrades the modules and providers of every site, inception included
+func UpgradeAllSites() error {
+	return initAllSites(true)
+}
+
+// Options used to init a site when initializing all sites
+func initAllSitesOptions(site string, upgrade bool) []string {
+	options := []string{}
+	// Inception keeps its saved backend configuration, since it holds the current environment.
+	if site != "inception" {
+		options = append(options, "-reconfigure")
+	}
+	if upgrade {
+		options = append(options, "-upgrade")
+	}
+	return options
+}
+
+func initAllSites(upgrade bool) error {
 	sites := settings.Conf.Strings("sites.ordered")
-	// Remove "inception" from the list of sites to be initialized.
-	if index := slices.Index(sites, "inception"); index != -1 {
+	// Remove "inception" from the list of sites to be initialized, unless upgrading.
+	if index := slices.Index(sites, "inception"); index != -1 && !upgrade {
 		sites = slices.Delete(sites, index, index+1)
 	}
 
@@ -276,7 +299,11 @@ func InitAllSites() error {
 	}
 
 	total := len(sites)
-	logger.Zap.Info(fmt.Sprintf("Initializing %d sites in parallel...", total))
+	if upgrade {
+		logger.Zap.Info(fmt.Sprintf("Initializing and upgrading %d sites in parallel...", total))
+	} else {
+		logger.Zap.Info(fmt.Sprintf("Initializing %d sites in parallel...", total))
+	}
 
 	type result struct {
 		site string
@@ -290,7 +317,7 @@ func InitAllSites() error {
 		wg.Add(1)
 		go func(s string) {
 			defer wg.Done()
-			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, []string{"-reconfigure"}, "backend")
+			_, err := commandRunnerNoVisibleOutputVar("init", s, []string{}, initAllSitesOptions(s, upgrade), "backend")
 			results <- result{site: s, err: err}
 		}(site)
 	}
