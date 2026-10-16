@@ -1,0 +1,19 @@
+name: Publish packslip manifest
+description: Publishes a signed packslip manifest for the release artifacts
+
+inputs:
+  token:
+    description: Github token
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run packslip
+      uses: jdx/packslip@v1
+      with:
+        artifacts: dist/*.tar.gz
+        bin: terrabutler
+        resources: |
+          skill/terrabutler=archive:skills/terrabutler
+        token: ${{ inputs.token }}

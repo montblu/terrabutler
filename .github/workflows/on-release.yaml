@@ -29,11 +29,20 @@ jobs:
     needs:
       - lint
       - test
+    permissions:
+      contents: write      # upload release assets (goreleaser) and the packslip bundle
+      id-token: write      # sign the packslip manifest with the workflow's OIDC identity
+      attestations: write  # publish build provenance for the released artifacts
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Release
         uses: ./.github/actions/goreleaser
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Publish packslip manifest
+        uses: ./.github/actions/packslip
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
